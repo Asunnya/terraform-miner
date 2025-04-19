@@ -56,7 +56,6 @@ def parse_patch_to_dataframe(patch: str) -> pd.DataFrame:
             change = 'meta'
             content = line
             
-            # Parse line numbers from @@ -a,b +c,d @@ format
             match = re.search(r'@@ -(\d+),\d+ \+(\d+),\d+ @@', line)
             if match:
                 old_lineno = int(match.group(1))
@@ -70,7 +69,6 @@ def parse_patch_to_dataframe(patch: str) -> pd.DataFrame:
                 'change': change,
                 'content': content
             })
-        # Added line
         elif line.startswith('+') and not line.startswith('+++'):
             change = 'added'
             content = line[1:]
@@ -83,7 +81,6 @@ def parse_patch_to_dataframe(patch: str) -> pd.DataFrame:
                 'content': content
             })
             new_lineno += 1
-        # Removed line
         elif line.startswith('-') and not line.startswith('---'):
             change = 'removed'
             content = line[1:]
@@ -96,7 +93,6 @@ def parse_patch_to_dataframe(patch: str) -> pd.DataFrame:
                 'content': content
             })
             old_lineno += 1
-        # Context line
         else:
             change = 'context'
             content = line
@@ -133,10 +129,8 @@ def enrich_dataframe_with_terraform_semantics(df: pd.DataFrame) -> pd.DataFrame:
     """
     Add Terraform semantic information to the DataFrame.
     """
-    # This is a simplified version - you'd need more sophisticated parsing
-    # for real Terraform contexts
+    # TODO implement a better way to extract resource info to terraform
     def extract_resource_info(content: str) -> Dict:
-        # Try to match resource blocks like 'resource "aws_instance" "example" {'
         resource_match = re.search(r'resource\s+"([^"]+)"\s+"([^"]+)"\s+{', content)
         if resource_match:
             return {
@@ -144,7 +138,6 @@ def enrich_dataframe_with_terraform_semantics(df: pd.DataFrame) -> pd.DataFrame:
                 'resource_name': resource_match.group(2)
             }
         
-        # Try to match attribute assignments like 'ami = "ami-12345"'
         attr_match = re.search(r'(\w+)\s+=\s+(.+)', content)
         if attr_match:
             return {
@@ -154,7 +147,6 @@ def enrich_dataframe_with_terraform_semantics(df: pd.DataFrame) -> pd.DataFrame:
         
         return {}
     
-    # Apply the extraction to each row
     enriched_rows = []
     for _, row in df.iterrows():
         new_row = row.to_dict()

@@ -62,7 +62,6 @@ def main():
 
         try:
             commits = miner.mine(path)
-            # Filtrar apenas arquivos .tf válidos
             commits = [c for c in commits if is_real_infra_file(c['file'])]
             if commits:
                 exporter.export(full_name, commits)
