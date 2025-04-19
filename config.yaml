@@ -1,0 +1,15 @@
+# config.yaml
+
+# Estrelas mínimas para filtrar repositórios
+stars: 10
+# Palavras‑chave para identificar commits de correção
+keywords:
+  - fix
+  - bug
+  - issue
+  - resolve
+  - error
+  - failure
+  - incorrect
+# Limite de repositórios a processar
+limit: 50

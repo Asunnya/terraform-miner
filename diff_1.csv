@@ -1,0 +1,14 @@
+change,content
+meta,"@@ -2,7 +2,8 @@ provider ""aws"" {"
+context,"   region = ""us-west-2"""
+context, }
+context, 
+added,
+context," resource ""aws_instance"" ""example"" {"
+removed,"  ami           = ""ami-01ed306a12b7d1c96)"""
+removed,"  instance_type = ""t2.micro"""
+removed,}
+added,"  ami                    = ""ami-01ed306a12b7d1c96)"""
+added,"  instance_type          = ""t2.micro"""
+added,}
+context,\ No newline at end of file
