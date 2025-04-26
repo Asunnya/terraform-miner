@@ -4,9 +4,24 @@ __pycache__/
 build/
 dist/
 wheels/
-*.egg-info
+*.egg-info/
 
 # Virtual environments
-.venv
+.venv/
+venv/
+env/
+
+# Project specific
 dataset/
 reports/
+repos/
+data/
+.cursor/
+terraform_analysis.log
+*.csv
+*.html
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
