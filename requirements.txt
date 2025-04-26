@@ -1,0 +1,15 @@
+GitPython
+pandas
+python-hcl2
+tqdm
+networkx
+matplotlib
+jupyter
+notebook
+PyGithub
+requests
+numpy
+scikit-learn
+seaborn
+plotly
+pyarrow
