@@ -13,3 +13,10 @@ scikit-learn
 seaborn
 plotly
 pyarrow
+sentence-transformers
+umap-learn
+hdbscan
+bertopic
+nltk
+emoji
+langdetect

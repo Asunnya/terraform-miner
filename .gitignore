@@ -25,3 +25,9 @@ terraform_analysis.log
 .vscode/
 .idea/
 *.swp
+
+dashboard/
+diagrams/
+src/nlp_analysis/OLD/
+src/notebooks/
+OLD/

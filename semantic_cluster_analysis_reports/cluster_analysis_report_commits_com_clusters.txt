@@ -1,0 +1,2545 @@
+Semantic Analysis of Commit Message Clusters (HDBSCAN - English Focus)
+Analysis Date: 2025-06-13 19:59:51
+Input Data File: commits_com_clusters.jsonl
+Total clusters (including noise -1): 18
+Total messages analyzed: 6749
+Stopwords used (total): 346
+Lemmatization with spaCy: Yes
+Lemmatization with NLTK: No
+===============================================================
+
+---------------------------------------------------------------
+Cluster: Noise (Outliers)
+  Number of Messages: 542 (8.03%)
+
+  These are considered outliers and do not form a cohesive theme.
+  Sample Messages (Max. 10):
+    - "fixes - switch elbow health check to ssl"
+    - "final vmss custom script extension fixes"
+    - "fix huge bug in agent definition"
+    - "fixup"
+    - "fix for perma-diff when using psc negs."
+    - "remove kv cert inherited tags - fix without foreach"
+    - "docs: fixing broken links."
+    - "remove unnecessary http callout and security rule"
+    - "make sure iam credentials api is enabled and fix most linting issues in preconditions script"
+    - "fix: change for_each splat syntax on update variants, closes (#415)"
+
+---------------------------------------------------------------
+Cluster: Cluster 0
+  Number of Messages: 104 (1.54%)
+
+  TERMOS MAIS FREQUENTES (Top 25):
+    - main: 99
+    - origin: 7
+    - master: 4
+    - awslab: 1
+    - int: 1
+
+==============================================================
+ANÁLISE CONTEXTUAL DOS TERMOS PRINCIPAIS (15 exemplos por termo)
+==============================================================
+
+TERMO 1: 'main' (99 ocorrências no cluster)
+--------------------------------------------------
+  EXEMPLO 1: "**main**"
+  EXEMPLO 2: "**main**"
+  EXEMPLO 3: "**main**"
+  EXEMPLO 4: "awslabs **main**"
+  EXEMPLO 5: "**main**"
+  EXEMPLO 6: "**main**"
+  EXEMPLO 7: "origin **main**"
+  EXEMPLO 8: "**main**"
+  EXEMPLO 9: "**main**"
+  EXEMPLO 10: "**main**"
+  (... e mais 89 ocorrências ...)
+
+TERMO 2: 'origin' (7 ocorrências no cluster)
+--------------------------------------------------
+  EXEMPLO 1: "**origin** main"
+  EXEMPLO 2: "**origin** master"
+  EXEMPLO 3: "**origin** master"
+  EXEMPLO 4: "**origin** master"
+  EXEMPLO 5: "**origin** master"
+  EXEMPLO 6: "**origin** int 5 7 0"
+  EXEMPLO 7: "**origin** main"
+
+TERMO 3: 'master' (4 ocorrências no cluster)
+--------------------------------------------------
+  EXEMPLO 1: "origin **master**"
+  EXEMPLO 2: "origin **master**"
+  EXEMPLO 3: "origin **master**"
+  EXEMPLO 4: "origin **master**"
+
+TERMO 4: 'awslab' (1 ocorrências no cluster)
+--------------------------------------------------
+  EXEMPLO 1: "**awslabs** main"
+
+TERMO 5: 'int' (1 ocorrências no cluster)
+--------------------------------------------------
+  EXEMPLO 1: "origin **int** 5 7 0"
+
+  Hipótese de Tema do Cluster (Sua Interpretação):
+    __________________________________________________________________
+
+  Potencial Operador de Mutação Terraform Derivado (Sua Análise):
+    __________________________________________________________________
+
+---------------------------------------------------------------
+Cluster: Cluster 1
+  Number of Messages: 31 (0.46%)
+
+  TERMOS MAIS FREQUENTES (Top 25):
+    - resolve: 31
+    - conflict: 28
+    - confict: 2
+    - fis: 1
+
+==============================================================
+ANÁLISE CONTEXTUAL DOS TERMOS PRINCIPAIS (15 exemplos por termo)
+==============================================================
+
+TERMO 1: 'resolve' (31 ocorrências no cluster)
+--------------------------------------------------
+  EXEMPLO 1: "**resolve** conflicts"
+  EXEMPLO 2: "**resolve** conflicts"
+  EXEMPLO 3: "**resolve** conflicts"
+  EXEMPLO 4: "**resolve** conflicts"
+  EXEMPLO 5: "**resolve** conflicts"
+  EXEMPLO 6: "**resolve** conflicts"
+  EXEMPLO 7: "**resolve** conflicts"
+  EXEMPLO 8: "**resolve** conflicts"
+  EXEMPLO 9: "**resolve** conflicts"
+  EXEMPLO 10: "**resolve** conflicts"
+  (... e mais 21 ocorrências ...)
+
+TERMO 2: 'conflict' (28 ocorrências no cluster)
+--------------------------------------------------
+  EXEMPLO 1: "resolve **conflicts**"
+  EXEMPLO 2: "resolve **conflicts**"
+  EXEMPLO 3: "resolve **conflicts**"
+  EXEMPLO 4: "resolve **conflicts**"
+  EXEMPLO 5: "resolve **conflicts**"
+  EXEMPLO 6: "resolve **conflicts**"
+  EXEMPLO 7: "resolve **conflicts**"
+  EXEMPLO 8: "resolve **conflicts**"
+  EXEMPLO 9: "resolve **conflicts**"
+  EXEMPLO 10: "resolve **conflicts**"
+  (... e mais 18 ocorrências ...)
+
+TERMO 3: 'confict' (2 ocorrências no cluster)
+--------------------------------------------------
+  EXEMPLO 1: "resolve **conficts**"
+  EXEMPLO 2: "resolve **conficts**"
+
+TERMO 4: 'fis' (1 ocorrências no cluster)
+--------------------------------------------------
+  EXEMPLO 1: "**fis**: resolve conflicts"
+
+  Hipótese de Tema do Cluster (Sua Interpretação):
+    __________________________________________________________________
+
+  Potencial Operador de Mutação Terraform Derivado (Sua Análise):
+    __________________________________________________________________
+
+---------------------------------------------------------------
+Cluster: Cluster 2
+  Number of Messages: 82 (1.21%)
+
+  TERMOS MAIS FREQUENTES (Top 25):
+    - master: 82
+    - aztfmod: 1
+    - upstream: 1
+    - address: 1
+
+==============================================================
+ANÁLISE CONTEXTUAL DOS TERMOS PRINCIPAIS (15 exemplos por termo)
+==============================================================
+
+TERMO 1: 'master' (82 ocorrências no cluster)
+--------------------------------------------------
+  EXEMPLO 1: "aztfmod **master**"
+  EXEMPLO 2: "**master**"
+  EXEMPLO 3: "**master**"
+  EXEMPLO 4: "**master**"
+  EXEMPLO 5: "**master**"
+  EXEMPLO 6: "**master**"
+  EXEMPLO 7: "**master**"
+  EXEMPLO 8: "**master**"
+  EXEMPLO 9: "**master**"
+  EXEMPLO 10: "**master**"
+  (... e mais 72 ocorrências ...)
+
+TERMO 2: 'aztfmod' (1 ocorrências no cluster)
+--------------------------------------------------
+  EXEMPLO 1: "**aztfmod** master"
+
+TERMO 3: 'upstream' (1 ocorrências no cluster)
+--------------------------------------------------
+  EXEMPLO 1: "**upstream** master"
+
+TERMO 4: 'address' (1 ocorrências no cluster)
+--------------------------------------------------
+  EXEMPLO 1: "master **addresses**"
+
+  Hipótese de Tema do Cluster (Sua Interpretação):
+    __________________________________________________________________
+
+  Potencial Operador de Mutação Terraform Derivado (Sua Análise):
+    __________________________________________________________________
+
+---------------------------------------------------------------
+Cluster: Cluster 3
+  Number of Messages: 58 (0.86%)
+
+  TERMOS MAIS FREQUENTES (Top 25):
+    - conflict: 34
+    - resolve: 21
+    - issue: 5
+    - master: 4
+    - change: 3
+    - main: 3
+    - origin: 2
+    - auto: 2
+    - small: 2
+    - post: 2
+    - develop: 2
+    - regression: 1
+    - tag: 1
+    - merging: 1
+    - sequence: 1
+    - rebase: 1
+    - miss: 1
+    - function: 1
+    - app: 1
+    - module: 1
+    - restore: 1
+    - lose: 1
+    - previous: 1
+    - development: 1
+    - mege: 1
+
+==============================================================
+ANÁLISE CONTEXTUAL DOS TERMOS PRINCIPAIS (15 exemplos por termo)
+==============================================================
+
+TERMO 1: 'conflict' (34 ocorrências no cluster)
+--------------------------------------------------
+  EXEMPLO 1: "fixed merge **conflict**"
+  EXEMPLO 2: "fix missing **conflict**"
+  EXEMPLO 3: "fix **conflicts**"
+  EXEMPLO 4: "merge origin/main and fix **conflicts**"
+  EXEMPLO 5: "resolve merge **conflict**"
+  EXEMPLO 6: "resolve merge **conflicts**"
+  EXEMPLO 7: "resolve merge **conflicts**"
+  EXEMPLO 8: "resolve merge **conflicts**"
+  EXEMPLO 9: "resolve merge **conflicts**"
+  EXEMPLO 10: "resolve merge **conflict**"
+  (... e mais 24 ocorrências ...)
+
+TERMO 2: 'resolve' (21 ocorrências no cluster)
+--------------------------------------------------
+  EXEMPLO 1: "**resolve** merge conflict"
+  EXEMPLO 2: "**resolve** merge conflicts"
+  EXEMPLO 3: "**resolve** merge conflicts"
+  EXEMPLO 4: "**resolve** merge conflicts"
+  EXEMPLO 5: "**resolve** merge conflicts"
+  EXEMPLO 6: "**resolve** merge conflict"
+  EXEMPLO 7: "**resolve** merge conflicts"
+  EXEMPLO 8: "**resolve** merge conflicts"
+  EXEMPLO 9: "**resolve** merge conflicts"
+  EXEMPLO 10: "**resolve** merge conflicts"
+  (... e mais 11 ocorrências ...)
+
+TERMO 3: 'issue' (5 ocorrências no cluster)
+--------------------------------------------------
+  EXEMPLO 1: "fix a merge **issue**"
+  EXEMPLO 2: "fix merge **issue**"
+  EXEMPLO 3: "fix merge **issue** in function app module"
+  EXEMPLO 4: "fixed merge **issues**"
+  EXEMPLO 5: "fixed merge **issues**"
+
+TERMO 4: 'master' (4 ocorrências no cluster)
+--------------------------------------------------
+  EXEMPLO 1: "fix rebase from **master**"
+  EXEMPLO 2: "fix conflict coming from changes from **master**"
+  EXEMPLO 3: "small fix post merging **master**"
+  EXEMPLO 4: "small fix post merging **master**"
+
+TERMO 5: 'change' (3 ocorrências no cluster)
+--------------------------------------------------
+  EXEMPLO 1: "fix: restore lost **changes** during merging next (#2824)"
+  EXEMPLO 2: "resolve merge conflicts from latest **changes**."
+  EXEMPLO 3: "fix conflict coming from **changes** from master"
+
+TERMO 6: 'main' (3 ocorrências no cluster)
+--------------------------------------------------
+  EXEMPLO 1: "merge origin/**main** and fix conflicts"
+  EXEMPLO 2: "merge and fix origin/**main**"
+  EXEMPLO 3: "fixed: resolved conflicts with **main** branch"
+
+TERMO 7: 'origin' (2 ocorrências no cluster)
+--------------------------------------------------
+  EXEMPLO 1: "merge **origin**/main and fix conflicts"
+  EXEMPLO 2: "merge and fix **origin**/main"
+
+TERMO 8: 'auto' (2 ocorrências no cluster)
+--------------------------------------------------
+  EXEMPLO 1: "fix **auto** merge"
+  EXEMPLO 2: "fix **auto** merge"
+
+TERMO 9: 'small' (2 ocorrências no cluster)
+--------------------------------------------------
+  EXEMPLO 1: "**small** fix post merging master"
+  EXEMPLO 2: "**small** fix post merging master"
+
+TERMO 10: 'post' (2 ocorrências no cluster)
+--------------------------------------------------
+  EXEMPLO 1: "small fix **post** merging master"
+  EXEMPLO 2: "small fix **post** merging master"
+
+TERMO 11: 'develop' (2 ocorrências no cluster)
+--------------------------------------------------
+  EXEMPLO 1: "merge **development** branch (#44)"
+  EXEMPLO 2: "merge **develop** and fix merge conflict"
+  EXEMPLO 3: "fix merge conflict with **develop**"
+
+TERMO 12: 'regression' (1 ocorrências no cluster)
+--------------------------------------------------
+  EXEMPLO 1: "fix merge **regression**"
+
+TERMO 13: 'tag' (1 ocorrências no cluster)
+--------------------------------------------------
+  EXEMPLO 1: "fix **tag** merging sequence"
+
+TERMO 14: 'merging' (1 ocorrências no cluster)
+--------------------------------------------------
+  EXEMPLO 1: "fix tag **merging** sequence"
+  EXEMPLO 2: "fix: restore lost changes during **merging** next (#2824)"
+  EXEMPLO 3: "small fix post **merging** master"
+  EXEMPLO 4: "small fix post **merging** master"
+
+TERMO 15: 'sequence' (1 ocorrências no cluster)
+--------------------------------------------------
+  EXEMPLO 1: "fix tag merging **sequence**"
+
+  Hipótese de Tema do Cluster (Sua Interpretação):
+    __________________________________________________________________
+
+  Potencial Operador de Mutação Terraform Derivado (Sua Análise):
+    __________________________________________________________________
+
+---------------------------------------------------------------
+Cluster: Cluster 4
+  Number of Messages: 68 (1.01%)
+
+  TERMOS MAIS FREQUENTES (Top 25):
+    - format: 39
+    - formatting: 12
+    - whitespace: 7
+    - issue: 6
+    - indentation: 6
+    - autogen: 4
+    - aaron: 3
+    - lane: 3
+    - remove: 2
+    - style: 2
+    - styling: 2
+    - cilium: 2
+    - documentation: 2
+    - minor: 2
+    - cosmetic: 2
+    - file: 2
+    - autogenerate: 2
+    - input: 2
+    - trail: 2
+    - group: 1
+    - webapp: 1
+    - variable: 1
+    - codespell: 1
+    - copy: 1
+    - past: 1
+
+==============================================================
+ANÁLISE CONTEXTUAL DOS TERMOS PRINCIPAIS (15 exemplos por termo)
+==============================================================
+
+TERMO 1: 'format' (39 ocorrências no cluster)
+--------------------------------------------------
+  EXEMPLO 1: "fix **formatting**"
+  EXEMPLO 2: "fixing **formatting** (#126)"
+  EXEMPLO 3: "fixing **formatting**"
+  EXEMPLO 4: "fix **formatting**"
+  EXEMPLO 5: "fix **format**"
+  EXEMPLO 6: "fix **format**"
+  EXEMPLO 7: "fixed **formatting**"
+  EXEMPLO 8: "fix **formatting** issues"
+  EXEMPLO 9: "fix **formating**"
+  EXEMPLO 10: "fix **formatting** and group webapp variables"
+  (... e mais 37 ocorrências ...)
+
+TERMO 2: 'formatting' (12 ocorrências no cluster)
+--------------------------------------------------
+  EXEMPLO 1: "fix **formatting**"
+  EXEMPLO 2: "fixing **formatting** (#126)"
+  EXEMPLO 3: "fixing **formatting**"
+  EXEMPLO 4: "fix **formatting**"
+  EXEMPLO 5: "fixed **formatting**"
+  EXEMPLO 6: "fix **formatting** issues"
+  EXEMPLO 7: "fix **formatting** and group webapp variables"
+  EXEMPLO 8: "fixed **formatting**"
+  EXEMPLO 9: "fix **formatting**"
+  EXEMPLO 10: "fixed **formatting**"
+  (... e mais 24 ocorrências ...)
+
+TERMO 3: 'whitespace' (7 ocorrências no cluster)
+--------------------------------------------------
+  EXEMPLO 1: "**whitespace** fix"
+  EXEMPLO 2: "remove **whitespace**"
+  EXEMPLO 3: "codespell / **whitespace** fixes"
+  EXEMPLO 4: "style fix (**whitespaces**)"
+  EXEMPLO 5: "**whitespace** fixes"
+  EXEMPLO 6: "aaron lane fix trailing **whitespace** fix trailing **whitespace**"
+
+TERMO 4: 'issue' (6 ocorrências no cluster)
+--------------------------------------------------
+  EXEMPLO 1: "fix formatting **issues**"
+  EXEMPLO 2: "feature automation script fix fixed formatting **issue** in documentation"
+  EXEMPLO 3: "fixed formatting **issue** in doccumentation"
+  EXEMPLO 4: "fixed formatting **issue**..."
+  EXEMPLO 5: "fixed formatting **issue**..."
+  EXEMPLO 6: "fix format **issues** in autogen templates"
+
+TERMO 5: 'indentation' (6 ocorrências no cluster)
+--------------------------------------------------
+  EXEMPLO 1: "fix **indentation**"
+  EXEMPLO 2: "fixed space **indentation**"
+  EXEMPLO 3: "fix(cilium): remove **indentation** from cilium values and do not add it to kustomizations"
+  EXEMPLO 4: "fix **indentation**"
+  EXEMPLO 5: "fix **indentation**"
+  EXEMPLO 6: "fix **indentation** for zone_count"
+
+TERMO 6: 'autogen' (4 ocorrências no cluster)
+--------------------------------------------------
+  EXEMPLO 1: "fix **autogen** formatting"
+  EXEMPLO 2: "fix format issues in **autogen** templates"
+  EXEMPLO 3: "fix format of **autogen** files"
+  EXEMPLO 4: "aaron lane format **autogen** fix format of **autogenerated** files"
+  EXEMPLO 5: "update documentation and fix skew between **autogenerated** code and"
+
+TERMO 7: 'aaron' (3 ocorrências no cluster)
+--------------------------------------------------
+  EXEMPLO 1: "**aaron** lane format autogen fix format of autogenerated files"
+  EXEMPLO 2: "**aaron** lane fix inputs format fix inputs table format"
+  EXEMPLO 3: "**aaron** lane fix trailing whitespace fix trailing whitespace"
+
+TERMO 8: 'lane' (3 ocorrências no cluster)
+--------------------------------------------------
+  EXEMPLO 1: "aaron **lane** format autogen fix format of autogenerated files"
+  EXEMPLO 2: "aaron **lane** fix inputs format fix inputs table format"
+  EXEMPLO 3: "aaron **lane** fix trailing whitespace fix trailing whitespace"
+
+TERMO 9: 'remove' (2 ocorrências no cluster)
+--------------------------------------------------
+  EXEMPLO 1: "**remove** whitespace"
+  EXEMPLO 2: "fix(cilium): **remove** indentation from cilium values and do not add it to kustomizations"
+
+TERMO 10: 'style' (2 ocorrências no cluster)
+--------------------------------------------------
+  EXEMPLO 1: "**style** fix (whitespaces)"
+  EXEMPLO 2: "**style** fixes"
+
+TERMO 11: 'styling' (2 ocorrências no cluster)
+--------------------------------------------------
+  EXEMPLO 1: "fixed **styling**"
+  EXEMPLO 2: "fixed **styling**"
+
+TERMO 12: 'cilium' (2 ocorrências no cluster)
+--------------------------------------------------
+  EXEMPLO 1: "fix(**cilium**): remove indentation from **cilium** values and do not add it to kustomizations"
+
+TERMO 13: 'documentation' (2 ocorrências no cluster)
+--------------------------------------------------
+  EXEMPLO 1: "feature automation script fix fixed formatting issue in **documentation**"
+  EXEMPLO 2: "update **documentation** and fix skew between autogenerated code and"
+
+TERMO 14: 'minor' (2 ocorrências no cluster)
+--------------------------------------------------
+  EXEMPLO 1: "formatting fixes formatting and **minor** cosmetic fixes"
+  EXEMPLO 2: "formatting and **minor** cosmetic fixes"
+
+TERMO 15: 'cosmetic' (2 ocorrências no cluster)
+--------------------------------------------------
+  EXEMPLO 1: "formatting fixes formatting and minor **cosmetic** fixes"
+  EXEMPLO 2: "formatting and minor **cosmetic** fixes"
+
+  Hipótese de Tema do Cluster (Sua Interpretação):
+    __________________________________________________________________
+
+  Potencial Operador de Mutação Terraform Derivado (Sua Análise):
+    __________________________________________________________________
+
+---------------------------------------------------------------
+Cluster: Cluster 5
+  Number of Messages: 67 (0.99%)
+
+  TERMOS MAIS FREQUENTES (Top 25):
+    - comment: 6
+    - description: 2
+    - accord: 2
+    - small: 2
+    - asr: 1
+    - outout: 1
+    - link: 1
+    - fmt: 1
+    - correct: 1
+    - wrong: 1
+    - collab: 1
+    - type: 1
+
+==============================================================
+ANÁLISE CONTEXTUAL DOS TERMOS PRINCIPAIS (15 exemplos por termo)
+==============================================================
+
+TERMO 1: 'comment' (6 ocorrências no cluster)
+--------------------------------------------------
+  EXEMPLO 1: "fixed according to **comments**"
+  EXEMPLO 2: "fixed according to **comments**"
+  EXEMPLO 3: "fix **comment**"
+  EXEMPLO 4: "fix: corrected **comment**."
+  EXEMPLO 5: "fixed **comment**"
+  EXEMPLO 6: "fixed **comment**"
+
+TERMO 2: 'description' (2 ocorrências no cluster)
+--------------------------------------------------
+  EXEMPLO 1: "fix **description**"
+  EXEMPLO 2: "fix **description**"
+
+TERMO 3: 'accord' (2 ocorrências no cluster)
+--------------------------------------------------
+  EXEMPLO 1: "fixed **according** to comments"
+  EXEMPLO 2: "fixed **according** to comments"
+
+TERMO 4: 'small' (2 ocorrências no cluster)
+--------------------------------------------------
+  EXEMPLO 1: "**small** fix"
+  EXEMPLO 2: "**small** fix"
+
+TERMO 5: 'asr' (1 ocorrências no cluster)
+--------------------------------------------------
+  EXEMPLO 1: "fix **asr**"
+
+TERMO 6: 'outout' (1 ocorrências no cluster)
+--------------------------------------------------
+  EXEMPLO 1: "fixed **outout**"
+
+TERMO 7: 'link' (1 ocorrências no cluster)
+--------------------------------------------------
+  EXEMPLO 1: "fix **link**"
+
+TERMO 8: 'fmt' (1 ocorrências no cluster)
+--------------------------------------------------
+  EXEMPLO 1: "**fmt** fix"
+
+TERMO 9: 'correct' (1 ocorrências no cluster)
+--------------------------------------------------
+  EXEMPLO 1: "fix: **corrected** comment."
+
+TERMO 10: 'wrong' (1 ocorrências no cluster)
+--------------------------------------------------
+  EXEMPLO 1: "fix, **wrong** collab type"
+
+TERMO 11: 'collab' (1 ocorrências no cluster)
+--------------------------------------------------
+  EXEMPLO 1: "fix, wrong **collab** type"
+
+TERMO 12: 'type' (1 ocorrências no cluster)
+--------------------------------------------------
+  EXEMPLO 1: "fix, wrong collab **type**"
+
+  Hipótese de Tema do Cluster (Sua Interpretação):
+    __________________________________________________________________
+
+  Potencial Operador de Mutação Terraform Derivado (Sua Análise):
+    __________________________________________________________________
+
+---------------------------------------------------------------
+Cluster: Cluster 6
+  Number of Messages: 49 (0.73%)
+
+  TERMOS MAIS FREQUENTES (Top 25):
+    - ad: 1
+    - issue: 1
+    - try: 1
+    - msi: 1
+    - ips: 1
+    - miss: 1
+    - metalink: 1
+    - add: 1
+    - asciinema: 1
+    - youtube: 1
+    - video: 1
+    - ru: 1
+    - link: 1
+    - slack: 1
+    - url: 1
+    - mak: 1
+    - remark: 1
+    - fp: 1
+
+==============================================================
+ANÁLISE CONTEXTUAL DOS TERMOS PRINCIPAIS (15 exemplos por termo)
+==============================================================
+
+TERMO 1: 'ad' (1 ocorrências no cluster)
+--------------------------------------------------
+  EXEMPLO 1: "fixed **ad** issue"
+  EXEMPLO 2: "**added** asciinema and youtube video(ru) links (#37)"
+
+TERMO 2: 'issue' (1 ocorrências no cluster)
+--------------------------------------------------
+  EXEMPLO 1: "fixed ad **issue**"
+
+TERMO 3: 'try' (1 ocorrências no cluster)
+--------------------------------------------------
+  EXEMPLO 1: "**trying** to fix"
+
+TERMO 4: 'msi' (1 ocorrências no cluster)
+--------------------------------------------------
+  EXEMPLO 1: "fixed **msi**"
+
+TERMO 5: 'ips' (1 ocorrências no cluster)
+--------------------------------------------------
+  EXEMPLO 1: "fixed **ips**"
+
+TERMO 6: 'miss' (1 ocorrências no cluster)
+--------------------------------------------------
+  EXEMPLO 1: "fixed for **missing** metalink"
+
+TERMO 7: 'metalink' (1 ocorrências no cluster)
+--------------------------------------------------
+  EXEMPLO 1: "fixed for missing **metalink**"
+
+TERMO 8: 'add' (1 ocorrências no cluster)
+--------------------------------------------------
+  EXEMPLO 1: "**added** asciinema and youtube video(ru) links (#37)"
+
+TERMO 9: 'asciinema' (1 ocorrências no cluster)
+--------------------------------------------------
+  EXEMPLO 1: "added **asciinema** and youtube video(ru) links (#37)"
+
+TERMO 10: 'youtube' (1 ocorrências no cluster)
+--------------------------------------------------
+  EXEMPLO 1: "added asciinema and **youtube** video(ru) links (#37)"
+
+TERMO 11: 'video' (1 ocorrências no cluster)
+--------------------------------------------------
+  EXEMPLO 1: "added asciinema and youtube **video**(ru) links (#37)"
+
+TERMO 12: 'ru' (1 ocorrências no cluster)
+--------------------------------------------------
+  EXEMPLO 1: "added asciinema and youtube video(**ru**) links (#37)"
+
+TERMO 13: 'link' (1 ocorrências no cluster)
+--------------------------------------------------
+  EXEMPLO 1: "added asciinema and youtube video(ru) **links** (#37)"
+
+TERMO 14: 'slack' (1 ocorrências no cluster)
+--------------------------------------------------
+  EXEMPLO 1: "fixed **slack** url"
+
+TERMO 15: 'url' (1 ocorrências no cluster)
+--------------------------------------------------
+  EXEMPLO 1: "fixed slack **url**"
+
+  Hipótese de Tema do Cluster (Sua Interpretação):
+    __________________________________________________________________
+
+  Potencial Operador de Mutação Terraform Derivado (Sua Análise):
+    __________________________________________________________________
+
+---------------------------------------------------------------
+Cluster: Cluster 7
+  Number of Messages: 50 (0.74%)
+
+  TERMOS MAIS FREQUENTES (Top 25):
+    - pagerduty: 29
+    - fixngo: 27
+    - add: 26
+    - dsos: 20
+    - dc: 16
+    - dsos-2635: 15
+    - dso: 11
+    - issue: 11
+    - enable: 11
+    - prod: 10
+    - domain: 9
+    - controller: 9
+    - second: 9
+    - access: 8
+    - ad: 7
+    - alarm: 5
+    - high: 5
+    - priority: 5
+    - service: 5
+    - hmpp: 5
+    - revert: 4
+    - subscription: 4
+    - alert: 4
+    - time: 4
+    - integration: 4
+
+==============================================================
+ANÁLISE CONTEXTUAL DOS TERMOS PRINCIPAIS (15 exemplos por termo)
+==============================================================
+
+TERMO 1: 'pagerduty' (29 ocorrências no cluster)
+--------------------------------------------------
+  EXEMPLO 1: "tm 1218 dso **pagerduty** more tweaks **pagerduty**: fix to dso rota"
+  EXEMPLO 2: "**pagerduty**: fix to dso rota"
+  EXEMPLO 3: "issue 9831 add **pagerduty** issue/9831 - sets root account usage alarm to route to high priority slack channel"
+  EXEMPLO 4: "revert 9954 issue 9831 sns revert "issue/9831 - **pagerduty** subscription for high-priority alerts.""
+  EXEMPLO 5: "revert "issue/9831 - **pagerduty** subscription for high-priority alerts.""
+  EXEMPLO 6: "issue 9831 sns issue/9831 - **pagerduty** subscription for high-priority alerts."
+  EXEMPLO 7: "issue 9831 - adds new **pagerduty** resources for routing high priority alerts without on-call workflow."
+  EXEMPLO 8: "issue 9306 **pagerduty** issue/9306 **pagerduty**"
+  EXEMPLO 9: "added a depends_on to temporarily resolve sns topic subscription to **pagerduty**"
+  EXEMPLO 10: "tm 781 dso **pagerduty** fix tm-781: disable **pagerduty** alarm auto resolve for dso services"
+  (... e mais 13 ocorrências ...)
+
+TERMO 2: 'fixngo' (27 ocorrências no cluster)
+--------------------------------------------------
+  EXEMPLO 1: "dsos 2746 patch mod domain controllers add patch schedules to **fixngo** servers"
+  EXEMPLO 2: "dsos 2711 add second hmpp domain controller again dsos-2711: ad-**fixngo**: add 2nd hmpp domain controller"
+  EXEMPLO 3: "dsos-2711: ad-**fixngo**: add 2nd hmpp domain controller"
+  EXEMPLO 4: "dsos 2635 mothball prod **fixngo** dcs dsos-2635: mothball **fixngo** dc"
+  EXEMPLO 5: "dsos-2635: mothball **fixngo** dc - will be rebuilt later in different subnet"
+  EXEMPLO 6: "dsos 2635 add firewall rules for dcs dsos-2635: add firewall rules for **fixngo** dcs"
+  EXEMPLO 7: "dsos 2635 re enable first prod **fixngo** dc dsos-2635: re-enable first prod **fixngo** dc"
+  EXEMPLO 8: "dsos-2635: re-enable first prod **fixngo** dc"
+  EXEMPLO 9: "dsos 2635 enable second prod **fixngo** dc dsos-2635: enable second prod **fixngo** dc"
+  EXEMPLO 10: "dsos-2635: enable second prod **fixngo** dc"
+  (... e mais 11 ocorrências ...)
+
+TERMO 3: 'add' (26 ocorrências no cluster)
+--------------------------------------------------
+  EXEMPLO 1: "issue 9831 **add** pagerduty issue/9831 - sets root account usage alarm to route to high priority slack channel"
+  EXEMPLO 2: "issue 9831 - **adds** new pagerduty resources for routing high priority alerts without on-call workflow."
+  EXEMPLO 3: "**added** a depends_on to temporarily resolve sns topic subscription to pagerduty"
+  EXEMPLO 4: "dpr2-1127: **add** glue:getconnection to dpr sso so problems with connection details can be debugged."
+  EXEMPLO 5: "ndh dsos 2847 **add** pagerduty integration fix ndh: dsos-2847: **add** pagerduty integration fix"
+  EXEMPLO 6: "dsos-2847: **add** pagerduty integration for ndh fix"
+  EXEMPLO 7: "dsos 2746 patch mod domain controllers **add** patch schedules to fixngo servers"
+  EXEMPLO 8: "dsos 2711 **add** second hmpp domain controller again dsos-2711: ad-fixngo: **add** 2nd hmpp domain controller"
+  EXEMPLO 9: "dsos-2711: ad-fixngo: **add** 2nd hmpp domain controller"
+  EXEMPLO 10: "dsos 2711 **add** second hmpp domain controller fix dsos-2711: temporarily commenting out second azure.hmpp.root dc"
+  (... e mais 10 ocorrências ...)
+
+TERMO 4: 'dsos' (20 ocorrências no cluster)
+--------------------------------------------------
+  EXEMPLO 1: "dso **dsos** 2903 syntax error once more with feeling"
+  EXEMPLO 2: "dso **dsos** 2903 try fix time check dso/**dsos** 2903/try fix time check"
+  EXEMPLO 3: "dso **dsos** 2903 fix pagerduty expression time syntax use correct syntax for time conditions"
+  EXEMPLO 4: "dso **dsos** 2903 fix pagerduty expression shema limit at least it's easier to understand"
+  EXEMPLO 5: "ndh **dsos** 2847 add pagerduty integration fix ndh: **dsos**-2847: add pagerduty integration fix"
+  EXEMPLO 6: "**dsos**-2847: add pagerduty integration for ndh fix"
+  EXEMPLO 7: "**dsos** 2746 patch mod domain controllers add patch schedules to fixngo servers"
+  EXEMPLO 8: "**dsos** 2711 add second hmpp domain controller again **dsos**-2711: ad-fixngo: add 2nd hmpp domain controller"
+  EXEMPLO 9: "**dsos**-2711: ad-fixngo: add 2nd hmpp domain controller"
+  EXEMPLO 10: "**dsos** 2711 add second hmpp domain controller fix **dsos**-2711: temporarily commenting out second azure.hmpp.root dc"
+  (... e mais 19 ocorrências ...)
+
+TERMO 5: 'dc' (16 ocorrências no cluster)
+--------------------------------------------------
+  EXEMPLO 1: "dsos 2711 add second hmpp domain controller fix dsos-2711: temporarily commenting out second azure.hmpp.root **dc**"
+  EXEMPLO 2: "dsos 2635 mothball prod fixngo **dcs** dsos-2635: mothball fixngo **dc**"
+  EXEMPLO 3: "dsos-2635: mothball fixngo **dc** - will be rebuilt later in different subnet"
+  EXEMPLO 4: "dsos 2635 add firewall rules for **dcs** dsos-2635: add firewall rules for fixngo **dcs**"
+  EXEMPLO 5: "dsos 2635 re enable first prod fixngo **dc** dsos-2635: re-enable first prod fixngo **dc**"
+  EXEMPLO 6: "dsos-2635: re-enable first prod fixngo **dc**"
+  EXEMPLO 7: "dsos 2635 enable second prod fixngo **dc** dsos-2635: enable second prod fixngo **dc**"
+  EXEMPLO 8: "dsos-2635: enable second prod fixngo **dc**"
+  EXEMPLO 9: "dsos 2635 enable first prod fixngo **dc** dsos-2635: enable first prod fixngo **dc**"
+  EXEMPLO 10: "dsos-2635: enable first prod fixngo **dc**"
+  (... e mais 4 ocorrências ...)
+
+TERMO 6: 'dsos-2635' (15 ocorrências no cluster)
+--------------------------------------------------
+  EXEMPLO 1: "dsos 2635 mothball prod fixngo dcs **dsos-2635**: mothball fixngo dc"
+  EXEMPLO 2: "**dsos-2635**: mothball fixngo dc - will be rebuilt later in different subnet"
+  EXEMPLO 3: "dsos 2635 add firewall rules for dcs **dsos-2635**: add firewall rules for fixngo dcs"
+  EXEMPLO 4: "dsos 2635 re enable first prod fixngo dc **dsos-2635**: re-enable first prod fixngo dc"
+  EXEMPLO 5: "**dsos-2635**: re-enable first prod fixngo dc"
+  EXEMPLO 6: "dsos 2635 enable second prod fixngo dc **dsos-2635**: enable second prod fixngo dc"
+  EXEMPLO 7: "**dsos-2635**: enable second prod fixngo dc"
+  EXEMPLO 8: "dsos 2635 enable first prod fixngo dc **dsos-2635**: enable first prod fixngo dc"
+  EXEMPLO 9: "**dsos-2635**: enable first prod fixngo dc"
+  EXEMPLO 10: "dsos 2635 enable second fixngo dc **dsos-2635**: add second devtest dc for fixngo migration"
+  (... e mais 5 ocorrências ...)
+
+TERMO 7: 'dso' (11 ocorrências no cluster)
+--------------------------------------------------
+  EXEMPLO 1: "tm 1218 **dso** pagerduty more tweaks pagerduty: fix to **dso** rota"
+  EXEMPLO 2: "pagerduty: fix to **dso** rota"
+  EXEMPLO 3: "tm 781 **dso** pagerduty fix tm-781: disable pagerduty alarm auto resolve for **dso** services"
+  EXEMPLO 4: "tm-781: disable pagerduty alarm auto resolve for **dso** services"
+  EXEMPLO 5: "**dso** **dsos** 2903 syntax error once more with feeling"
+  EXEMPLO 6: "**dso** **dsos** 2903 try fix time check **dso**/**dsos** 2903/try fix time check"
+  EXEMPLO 7: "**dso** **dsos** 2903 fix pagerduty expression time syntax use correct syntax for time conditions"
+  EXEMPLO 8: "**dso** **dsos** 2903 fix pagerduty expression shema limit at least it's easier to understand"
+  EXEMPLO 9: "ndh **dsos** 2847 add pagerduty integration fix ndh: **dsos**-2847: add pagerduty integration fix"
+  EXEMPLO 10: "**dsos**-2847: add pagerduty integration for ndh fix"
+  (... e mais 23 ocorrências ...)
+
+TERMO 8: 'issue' (11 ocorrências no cluster)
+--------------------------------------------------
+  EXEMPLO 1: "**issue** 9831 add pagerduty **issue**/9831 - sets root account usage alarm to route to high priority slack channel"
+  EXEMPLO 2: "revert 9954 **issue** 9831 sns revert "**issue**/9831 - pagerduty subscription for high-priority alerts.""
+  EXEMPLO 3: "revert "**issue**/9831 - pagerduty subscription for high-priority alerts.""
+  EXEMPLO 4: "**issue** 9831 sns **issue**/9831 - pagerduty subscription for high-priority alerts."
+  EXEMPLO 5: "**issue** 9831 - adds new pagerduty resources for routing high priority alerts without on-call workflow."
+  EXEMPLO 6: "**issue** 9306 pagerduty **issue**/9306 pagerduty"
+  EXEMPLO 7: "feature add dms to pagerduty adds david.sibley to pagerduty users, solves an **issue** with adding users programatically."
+
+TERMO 9: 'enable' (11 ocorrências no cluster)
+--------------------------------------------------
+  EXEMPLO 1: "dsos 2635 re **enable** first prod fixngo dc dsos-2635: re-**enable** first prod fixngo dc"
+  EXEMPLO 2: "dsos-2635: re-**enable** first prod fixngo dc"
+  EXEMPLO 3: "dsos 2635 **enable** second prod fixngo dc dsos-2635: **enable** second prod fixngo dc"
+  EXEMPLO 4: "dsos-2635: **enable** second prod fixngo dc"
+  EXEMPLO 5: "dsos 2635 **enable** first prod fixngo dc dsos-2635: **enable** first prod fixngo dc"
+  EXEMPLO 6: "dsos-2635: **enable** first prod fixngo dc"
+  EXEMPLO 7: "dsos 2635 **enable** second fixngo dc dsos-2635: add second devtest dc for fixngo migration"
+  EXEMPLO 8: "dsos 2615 add first fixngo domain controller dsos-2615: **enable** ad-azure-dc-a ec2 in core-shared-services-production"
+
+TERMO 10: 'prod' (10 ocorrências no cluster)
+--------------------------------------------------
+  EXEMPLO 1: "dsos 2635 mothball **prod** fixngo dcs dsos-2635: mothball fixngo dc"
+  EXEMPLO 2: "dsos 2635 re enable first **prod** fixngo dc dsos-2635: re-enable first **prod** fixngo dc"
+  EXEMPLO 3: "dsos-2635: re-enable first **prod** fixngo dc"
+  EXEMPLO 4: "dsos 2635 enable second **prod** fixngo dc dsos-2635: enable second **prod** fixngo dc"
+  EXEMPLO 5: "dsos-2635: enable second **prod** fixngo dc"
+  EXEMPLO 6: "dsos 2635 enable first **prod** fixngo dc dsos-2635: enable first **prod** fixngo dc"
+  EXEMPLO 7: "dsos-2635: enable first **prod** fixngo dc"
+  EXEMPLO 8: "dsos 2615 add first fixngo domain controller dsos-2615: enable ad-azure-dc-a ec2 in core-shared-services-**production**"
+
+TERMO 11: 'domain' (9 ocorrências no cluster)
+--------------------------------------------------
+  EXEMPLO 1: "dsos 2746 patch mod **domain** controllers add patch schedules to fixngo servers"
+  EXEMPLO 2: "dsos 2711 add second hmpp **domain** controller again dsos-2711: ad-fixngo: add 2nd hmpp **domain** controller"
+  EXEMPLO 3: "dsos-2711: ad-fixngo: add 2nd hmpp **domain** controller"
+  EXEMPLO 4: "dsos 2711 add second hmpp **domain** controller fix dsos-2711: temporarily commenting out second azure.hmpp.root dc"
+  EXEMPLO 5: "dsos 2615 fixngo **domain** controller static analysis fix dsos-2615: fix static analysis for fixngo **domain** controllers"
+  EXEMPLO 6: "dsos-2615: fix static analysis for fixngo **domain** controllers"
+  EXEMPLO 7: "dsos 2615 add first fixngo **domain** controller dsos-2615: enable ad-azure-dc-a ec2 in core-shared-services-production"
+
+TERMO 12: 'controller' (9 ocorrências no cluster)
+--------------------------------------------------
+  EXEMPLO 1: "dsos 2746 patch mod domain **controllers** add patch schedules to fixngo servers"
+  EXEMPLO 2: "dsos 2711 add second hmpp domain **controller** again dsos-2711: ad-fixngo: add 2nd hmpp domain **controller**"
+  EXEMPLO 3: "dsos-2711: ad-fixngo: add 2nd hmpp domain **controller**"
+  EXEMPLO 4: "dsos 2711 add second hmpp domain **controller** fix dsos-2711: temporarily commenting out second azure.hmpp.root dc"
+  EXEMPLO 5: "dsos 2615 fixngo domain **controller** static analysis fix dsos-2615: fix static analysis for fixngo domain **controllers**"
+  EXEMPLO 6: "dsos-2615: fix static analysis for fixngo domain **controllers**"
+  EXEMPLO 7: "dsos 2615 add first fixngo domain **controller** dsos-2615: enable ad-azure-dc-a ec2 in core-shared-services-production"
+
+TERMO 13: 'second' (9 ocorrências no cluster)
+--------------------------------------------------
+  EXEMPLO 1: "dsos 2711 add **second** hmpp domain controller again dsos-2711: ad-fixngo: add 2nd hmpp domain controller"
+  EXEMPLO 2: "dsos 2711 add **second** hmpp domain controller fix dsos-2711: temporarily commenting out **second** azure.hmpp.root dc"
+  EXEMPLO 3: "dsos 2635 enable **second** prod fixngo dc dsos-2635: enable **second** prod fixngo dc"
+  EXEMPLO 4: "dsos-2635: enable **second** prod fixngo dc"
+  EXEMPLO 5: "dsos 2635 enable **second** fixngo dc dsos-2635: add **second** devtest dc for fixngo migration"
+  EXEMPLO 6: "dsos-2635: add **second** devtest dc for fixngo migration"
+
+TERMO 14: 'access' (8 ocorrências no cluster)
+--------------------------------------------------
+  EXEMPLO 1: "fix pagerduty **access** restore pagerduty for stephen linden"
+  EXEMPLO 2: "dsos 2720 instance **access** docs and fix dsos-2720: instance **access** docs and fix"
+  EXEMPLO 3: "dsos 2635 allow permissions to assume ad **access** role dsos-2635: add permissions for assuming ad-fixngo-ec2-**access** role"
+  EXEMPLO 4: "dsos-2635: add permissions for assuming ad-fixngo-ec2-**access** role"
+  EXEMPLO 5: "dsos 2635 add fleetmanager **access** for fixngo dcs dsos-2635: add ability to login via fleetmanager"
+  EXEMPLO 6: "allow **access** to pagerduty secret for other accounts (#1961)"
+
+TERMO 15: 'ad' (7 ocorrências no cluster)
+--------------------------------------------------
+  EXEMPLO 1: "issue 9831 **add** pagerduty issue/9831 - sets root account usage alarm to route to high priority slack channel"
+  EXEMPLO 2: "issue 9831 - **adds** new pagerduty resources for routing high priority alerts without on-call workflow."
+  EXEMPLO 3: "**added** a depends_on to temporarily resolve sns topic subscription to pagerduty"
+  EXEMPLO 4: "dpr2-1127: **add** glue:getconnection to dpr sso so problems with connection details can be debugged."
+  EXEMPLO 5: "ndh dsos 2847 **add** pagerduty integration fix ndh: dsos-2847: **add** pagerduty integration fix"
+  EXEMPLO 6: "dsos-2847: **add** pagerduty integration for ndh fix"
+  EXEMPLO 7: "dsos 2746 patch mod domain controllers **add** patch schedules to fixngo servers"
+  EXEMPLO 8: "dsos 2711 **add** second hmpp domain controller again dsos-2711: **ad**-fixngo: **add** 2nd hmpp domain controller"
+  EXEMPLO 9: "dsos-2711: **ad**-fixngo: **add** 2nd hmpp domain controller"
+  EXEMPLO 10: "dsos 2711 **add** second hmpp domain controller fix dsos-2711: temporarily commenting out second azure.hmpp.root dc"
+  (... e mais 11 ocorrências ...)
+
+  Hipótese de Tema do Cluster (Sua Interpretação):
+    __________________________________________________________________
+
+  Potencial Operador de Mutação Terraform Derivado (Sua Análise):
+    __________________________________________________________________
+
+---------------------------------------------------------------
+Cluster: Cluster 8
+  Number of Messages: 34 (0.50%)
+
+  TERMOS MAIS FREQUENTES (Top 25):
+    - ci: 21
+    - cilium: 16
+    - add: 5
+    - issue: 4
+    - timer: 2
+    - compute: 2
+    - change: 2
+    - location: 2
+    - selinux: 2
+    - wrong: 2
+    - mtu: 2
+    - calculation: 2
+    - taint: 2
+    - install: 2
+    - wip: 2
+    - v1: 2
+    - support: 2
+    - tags: 1
+    - standalone: 1
+    - fw: 1
+    - patch: 1
+    - close: 1
+    - docker: 1
+    - selenium: 1
+    - run: 1
+
+==============================================================
+ANÁLISE CONTEXTUAL DOS TERMOS PRINCIPAIS (15 exemplos por termo)
+==============================================================
+
+TERMO 1: 'ci' (21 ocorrências no cluster)
+--------------------------------------------------
+  EXEMPLO 1: "**ci** tags 1593 fixes issue"
+  EXEMPLO 2: "fix **ci**"
+  EXEMPLO 3: "fix **ci**"
+  EXEMPLO 4: "fix **ci**"
+  EXEMPLO 5: "fix **ci**"
+  EXEMPLO 6: "fix **ci**"
+  EXEMPLO 7: "fix **ci** issues"
+  EXEMPLO 8: "fixing standalone **ci**"
+  EXEMPLO 9: "fix **ci**"
+  EXEMPLO 10: "fixing **ci** and timer"
+  (... e mais 23 ocorrências ...)
+
+TERMO 2: 'cilium' (16 ocorrências no cluster)
+--------------------------------------------------
+  EXEMPLO 1: "fix **cilium** error fixes **cilium** selinux issues"
+  EXEMPLO 2: "fixed **cilium** selinux issues"
+  EXEMPLO 3: "staging fix wrong mtu calculation for **cilium**"
+  EXEMPLO 4: "fix wrong mtu calculation for **cilium**"
+  EXEMPLO 5: "**cilium** fix"
+  EXEMPLO 6: "**cilium** fix attempt"
+  EXEMPLO 7: "master fix(**cilium**): add taint and install **cilium** first - wip"
+  EXEMPLO 8: "fix(**cilium**): add taint and install **cilium** first - wip"
+  EXEMPLO 9: "small fixes and ability to add config via an optional **cilium**_values.yaml file"
+  EXEMPLO 10: "workaround problems in **cilium** v1.14 partial kube-proxy replacement"
+  (... e mais 3 ocorrências ...)
+
+TERMO 3: 'add' (5 ocorrências no cluster)
+--------------------------------------------------
+  EXEMPLO 1: "close - **add** ci (#3)"
+  EXEMPLO 2: "master fix(cilium): **add** taint and install cilium first - wip"
+  EXEMPLO 3: "fix(cilium): **add** taint and install cilium first - wip"
+  EXEMPLO 4: "small fixes and ability to **add** config via an optional cilium_values.yaml file"
+  EXEMPLO 5: "**add** experimental cilium cni provider"
+
+TERMO 4: 'issue' (4 ocorrências no cluster)
+--------------------------------------------------
+  EXEMPLO 1: "ci tags 1593 fixes **issue**"
+  EXEMPLO 2: "fix ci **issues**"
+  EXEMPLO 3: "fix cilium error fixes cilium selinux **issues**"
+  EXEMPLO 4: "fixed cilium selinux **issues**"
+
+TERMO 5: 'timer' (2 ocorrências no cluster)
+--------------------------------------------------
+  EXEMPLO 1: "fixing ci and **timer**"
+  EXEMPLO 2: "fixing ci and **timer**"
+
+TERMO 6: 'compute' (2 ocorrências no cluster)
+--------------------------------------------------
+  EXEMPLO 1: "patch ci 2012 fix **compute** ci - change location"
+  EXEMPLO 2: "fix **compute** ci - change location"
+
+TERMO 7: 'change' (2 ocorrências no cluster)
+--------------------------------------------------
+  EXEMPLO 1: "patch ci 2012 fix compute ci - **change** location"
+  EXEMPLO 2: "fix compute ci - **change** location"
+
+TERMO 8: 'location' (2 ocorrências no cluster)
+--------------------------------------------------
+  EXEMPLO 1: "patch ci 2012 fix compute ci - change **location**"
+  EXEMPLO 2: "fix compute ci - change **location**"
+
+TERMO 9: 'selinux' (2 ocorrências no cluster)
+--------------------------------------------------
+  EXEMPLO 1: "fix cilium error fixes cilium **selinux** issues"
+  EXEMPLO 2: "fixed cilium **selinux** issues"
+
+TERMO 10: 'wrong' (2 ocorrências no cluster)
+--------------------------------------------------
+  EXEMPLO 1: "staging fix **wrong** mtu calculation for cilium"
+  EXEMPLO 2: "fix **wrong** mtu calculation for cilium"
+
+TERMO 11: 'mtu' (2 ocorrências no cluster)
+--------------------------------------------------
+  EXEMPLO 1: "staging fix wrong **mtu** calculation for cilium"
+  EXEMPLO 2: "fix wrong **mtu** calculation for cilium"
+
+TERMO 12: 'calculation' (2 ocorrências no cluster)
+--------------------------------------------------
+  EXEMPLO 1: "staging fix wrong mtu **calculation** for cilium"
+  EXEMPLO 2: "fix wrong mtu **calculation** for cilium"
+
+TERMO 13: 'taint' (2 ocorrências no cluster)
+--------------------------------------------------
+  EXEMPLO 1: "master fix(cilium): add **taint** and install cilium first - wip"
+  EXEMPLO 2: "fix(cilium): add **taint** and install cilium first - wip"
+
+TERMO 14: 'install' (2 ocorrências no cluster)
+--------------------------------------------------
+  EXEMPLO 1: "master fix(cilium): add taint and **install** cilium first - wip"
+  EXEMPLO 2: "fix(cilium): add taint and **install** cilium first - wip"
+
+TERMO 15: 'wip' (2 ocorrências no cluster)
+--------------------------------------------------
+  EXEMPLO 1: "master fix(cilium): add taint and install cilium first - **wip**"
+  EXEMPLO 2: "fix(cilium): add taint and install cilium first - **wip**"
+
+  Hipótese de Tema do Cluster (Sua Interpretação):
+    __________________________________________________________________
+
+  Potencial Operador de Mutação Terraform Derivado (Sua Análise):
+    __________________________________________________________________
+
+---------------------------------------------------------------
+Cluster: Cluster 9
+  Number of Messages: 46 (0.68%)
+
+  TERMOS MAIS FREQUENTES (Top 25):
+    - tflint: 13
+    - linte: 11
+    - linting: 9
+    - issue: 8
+    - lint: 7
+    - linter: 5
+    - add: 4
+    - warning: 4
+    - tf: 3
+    - ci: 3
+    - file: 3
+    - variable: 3
+    - dev: 3
+    - tool: 3
+    - version: 2
+    - aw: 2
+    - chore: 2
+    - aurora: 2
+    - format: 2
+    - small: 2
+    - create: 1
+    - quota: 1
+    - user: 1
+    - provide: 1
+    - pin: 1
+
+==============================================================
+ANÁLISE CONTEXTUAL DOS TERMOS PRINCIPAIS (15 exemplos por termo)
+==============================================================
+
+TERMO 1: 'tflint' (13 ocorrências no cluster)
+--------------------------------------------------
+  EXEMPLO 1: "fix **tflint** for aws plugin (#421)"
+  EXEMPLO 2: "[aurora-postgres] fix **tflint** and markdownlint (#872)"
+  EXEMPLO 3: "[vpc] bugfix, [aurora-postgres] & [cloudtrail-bucket] **tflint** fixes (#776)"
+  EXEMPLO 4: "fix **tflint** violations in account-map (#745)"
+  EXEMPLO 5: "fix!: change runner labels to list[string] and apply **tflint** (#3410)"
+  EXEMPLO 6: "add **tflint** to pipelines (#2220)"
+  EXEMPLO 7: "[**tflint**] fix layer2-k8s issues"
+  EXEMPLO 8: "[**tflint**] fix layer1-aws issues"
+  EXEMPLO 9: "feature sca warnings cont fix **tflint** warnings"
+  EXEMPLO 10: "fix **tflint** warnings"
+  (... e mais 3 ocorrências ...)
+
+TERMO 2: 'linte' (11 ocorrências no cluster)
+--------------------------------------------------
+  EXEMPLO 1: "add more validations to **linter**"
+  EXEMPLO 2: "fixed **linter**"
+  EXEMPLO 3: "enable **linters**"
+  EXEMPLO 4: "fix **linter** errors"
+  EXEMPLO 5: "fix **linters**"
+
+TERMO 3: 'linting' (9 ocorrências no cluster)
+--------------------------------------------------
+  EXEMPLO 1: "chore: fix **linting** errors to pass ci checks (#242)"
+  EXEMPLO 2: "add code review workflow and fix **linting** issues (#50)"
+  EXEMPLO 3: "fixed **linting** for variables file"
+  EXEMPLO 4: "**linting** error"
+  EXEMPLO 5: "trying to fix **linting**"
+  EXEMPLO 6: "fix **linting** errors"
+  EXEMPLO 7: "fix **linting**."
+  EXEMPLO 8: "fix **linting**"
+  EXEMPLO 9: "fix **linting**"
+  EXEMPLO 10: "fixed **linting**"
+  (... e mais 10 ocorrências ...)
+
+TERMO 4: 'issue' (8 ocorrências no cluster)
+--------------------------------------------------
+  EXEMPLO 1: "fix **issue** preventing int-5.7.0 to initialise"
+  EXEMPLO 2: "add code review workflow and fix linting **issues** (#50)"
+  EXEMPLO 3: "ecs-service: fix lint **issues** (#636)"
+  EXEMPLO 4: "[tflint] fix layer2-k8s **issues**"
+  EXEMPLO 5: "[tflint] fix layer1-aws **issues**"
+  EXEMPLO 6: "caught some small linting **issues**, pointed the environments at a theoretical new tag which does not presently exist"
+  EXEMPLO 7: "more linting **issues**"
+  EXEMPLO 8: "chore: fixes for **issues** reported by tflint (#768)"
+
+TERMO 5: 'lint' (7 ocorrências no cluster)
+--------------------------------------------------
+  EXEMPLO 1: "fix: create quota if user provided one, pin and use previous tf **lint** version (#820)"
+  EXEMPLO 2: "chore: fix **linting** errors to pass ci checks (#242)"
+  EXEMPLO 3: "add code review workflow and fix **linting** issues (#50)"
+  EXEMPLO 4: "ci: **lint** all files with megalinter (#580)"
+  EXEMPLO 5: "ecs-service: fix **lint** issues (#636)"
+  EXEMPLO 6: "fixed **linting** for variables file"
+  EXEMPLO 7: "**linting** error"
+  EXEMPLO 8: "trying to fix **linting**"
+  EXEMPLO 9: "re-ordered variables per **lint** error"
+  EXEMPLO 10: "fix **linting** errors"
+  (... e mais 22 ocorrências ...)
+
+TERMO 6: 'linter' (5 ocorrências no cluster)
+--------------------------------------------------
+  EXEMPLO 1: "add more validations to **linter**"
+  EXEMPLO 2: "fixed **linter**"
+  EXEMPLO 3: "enable **linters**"
+  EXEMPLO 4: "fix **linter** errors"
+  EXEMPLO 5: "fix **linters**"
+
+TERMO 7: 'add' (4 ocorrências no cluster)
+--------------------------------------------------
+  EXEMPLO 1: "**add** code review workflow and fix linting issues (#50)"
+  EXEMPLO 2: "**add** tflint to pipelines (#2220)"
+  EXEMPLO 3: "**add** more validations to linter"
+  EXEMPLO 4: "**add** versions to fix tflint warnings"
+
+TERMO 8: 'warning' (4 ocorrências no cluster)
+--------------------------------------------------
+  EXEMPLO 1: "feature sca **warnings** cont fix tflint **warnings**"
+  EXEMPLO 2: "fix tflint **warnings**"
+  EXEMPLO 3: "add versions to fix tflint **warnings**"
+
+TERMO 9: 'tf' (3 ocorrências no cluster)
+--------------------------------------------------
+  EXEMPLO 1: "fix: create quota if user provided one, pin and use previous **tf** lint version (#820)"
+  EXEMPLO 2: "fix **tflint** for aws plugin (#421)"
+  EXEMPLO 3: "[aurora-postgres] fix **tflint** and markdownlint (#872)"
+  EXEMPLO 4: "[vpc] bugfix, [aurora-postgres] & [cloudtrail-bucket] **tflint** fixes (#776)"
+  EXEMPLO 5: "fix **tflint** violations in account-map (#745)"
+  EXEMPLO 6: "fix!: change runner labels to list[string] and apply **tflint** (#3410)"
+  EXEMPLO 7: "add **tflint** to pipelines (#2220)"
+  EXEMPLO 8: "fixed linting error on autoscaler-agents.**tf** formatting"
+  EXEMPLO 9: "fixed linting error on variables.**tf** formatting"
+  EXEMPLO 10: "[**tflint**] fix layer2-k8s issues"
+  (... e mais 6 ocorrências ...)
+
+TERMO 10: 'ci' (3 ocorrências no cluster)
+--------------------------------------------------
+  EXEMPLO 1: "chore: fix linting errors to pass **ci** checks (#242)"
+  EXEMPLO 2: "**ci**: lint all files with megalinter (#580)"
+  EXEMPLO 3: "fix: lint for dev-tools and **ci** (#839)"
+
+TERMO 11: 'file' (3 ocorrências no cluster)
+--------------------------------------------------
+  EXEMPLO 1: "ci: lint all **files** with megalinter (#580)"
+  EXEMPLO 2: "fixed linting for variables **file**"
+  EXEMPLO 3: "fix python linting errors and **file** headers"
+
+TERMO 12: 'variable' (3 ocorrências no cluster)
+--------------------------------------------------
+  EXEMPLO 1: "fixed linting for **variables** file"
+  EXEMPLO 2: "re-ordered **variables** per lint error"
+  EXEMPLO 3: "fixed linting error on **variables**.tf formatting"
+
+TERMO 13: 'dev' (3 ocorrências no cluster)
+--------------------------------------------------
+  EXEMPLO 1: "fix: lint updates for **dev**-tools v1.16 (#1742)"
+  EXEMPLO 2: "fix: fixes for tflint and **dev**-tools 1.10 (#1598)"
+  EXEMPLO 3: "fix: lint for **dev**-tools and ci (#839)"
+
+TERMO 14: 'tool' (3 ocorrências no cluster)
+--------------------------------------------------
+  EXEMPLO 1: "fix: lint updates for dev-**tools** v1.16 (#1742)"
+  EXEMPLO 2: "fix: fixes for tflint and dev-**tools** 1.10 (#1598)"
+  EXEMPLO 3: "fix: lint for dev-**tools** and ci (#839)"
+
+TERMO 15: 'version' (2 ocorrências no cluster)
+--------------------------------------------------
+  EXEMPLO 1: "fix: create quota if user provided one, pin and use previous tf lint **version** (#820)"
+  EXEMPLO 2: "add **versions** to fix tflint warnings"
+
+  Hipótese de Tema do Cluster (Sua Interpretação):
+    __________________________________________________________________
+
+  Potencial Operador de Mutação Terraform Derivado (Sua Análise):
+    __________________________________________________________________
+
+---------------------------------------------------------------
+Cluster: Cluster 10
+  Number of Messages: 46 (0.68%)
+
+  TERMOS MAIS FREQUENTES (Top 25):
+    - example: 44
+    - try: 5
+    - update: 3
+    - ci: 3
+    - add: 3
+    - examples: 2
+    - broken: 2
+    - web: 2
+    - app: 2
+    - linux: 2
+    - cai: 2
+    - migration: 1
+    - converge: 1
+    - vllm: 1
+    - ray: 1
+    - tde: 1
+    - preparation: 1
+    - code: 1
+    - webapps: 1
+    - destroy: 1
+    - condition: 1
+    - cd: 1
+    - ad: 1
+    - group: 1
+    - break: 1
+
+==============================================================
+ANÁLISE CONTEXTUAL DOS TERMOS PRINCIPAIS (15 exemplos por termo)
+==============================================================
+
+TERMO 1: 'example' (44 ocorrências no cluster)
+--------------------------------------------------
+  EXEMPLO 1: "**examples** migration (#176)"
+  EXEMPLO 2: "fix: converge vllm **examples** (#580)"
+  EXEMPLO 3: "fixes and updates to **examples**"
+  EXEMPLO 4: "fix to ray **example**"
+  EXEMPLO 5: "fix **example** for tde preparation"
+  EXEMPLO 6: "fixing **examples** from ci errors"
+  EXEMPLO 7: "fix **example** 105"
+  EXEMPLO 8: "adding **examples** and code fixes"
+  EXEMPLO 9: "fix **examples**"
+  EXEMPLO 10: "fix ci **examples** webapps 103"
+  (... e mais 35 ocorrências ...)
+
+TERMO 2: 'try' (5 ocorrências no cluster)
+--------------------------------------------------
+  EXEMPLO 1: "**try** to fix example"
+  EXEMPLO 2: "**try** to fix example"
+  EXEMPLO 3: "**try** to fix example"
+  EXEMPLO 4: "**try** to fix example"
+  EXEMPLO 5: "**try** to fix example"
+
+TERMO 3: 'update' (3 ocorrências no cluster)
+--------------------------------------------------
+  EXEMPLO 1: "fixes and **updates** to examples"
+  EXEMPLO 2: "**update** cai example (#274)"
+  EXEMPLO 3: "fix: **update** examples to show integration and usage of new irsa submodule (#1882)"
+
+TERMO 4: 'ci' (3 ocorrências no cluster)
+--------------------------------------------------
+  EXEMPLO 1: "fixing examples from **ci** errors"
+  EXEMPLO 2: "fix **ci** examples webapps 103"
+  EXEMPLO 3: "fixing examples in **ci**/cd"
+
+TERMO 5: 'add' (3 ocorrências no cluster)
+--------------------------------------------------
+  EXEMPLO 1: "**adding** examples and code fixes"
+  EXEMPLO 2: "fixed ad group and **added** examples"
+  EXEMPLO 3: "fixed rancher, **added** example for arm"
+
+TERMO 6: 'examples' (2 ocorrências no cluster)
+--------------------------------------------------
+  EXEMPLO 1: "**examples** migration (#176)"
+  EXEMPLO 2: "fix: converge vllm **examples** (#580)"
+  EXEMPLO 3: "fixes and updates to **examples**"
+  EXEMPLO 4: "fixing **examples** from ci errors"
+  EXEMPLO 5: "adding **examples** and code fixes"
+  EXEMPLO 6: "fix **examples**"
+  EXEMPLO 7: "fix ci **examples** webapps 103"
+  EXEMPLO 8: "fix **examples** and destroy condition"
+  EXEMPLO 9: "fixing **examples** in ci/cd"
+  EXEMPLO 10: "fixed ad group and added **examples**"
+  (... e mais 5 ocorrências ...)
+
+TERMO 7: 'broken' (2 ocorrências no cluster)
+--------------------------------------------------
+  EXEMPLO 1: "fix **broken** examples (#84)"
+  EXEMPLO 2: "fix **broken** example (#201)"
+  EXEMPLO 3: "fix **broken** example (#199)"
+
+TERMO 8: 'web' (2 ocorrências no cluster)
+--------------------------------------------------
+  EXEMPLO 1: "fix ci examples **webapps** 103"
+  EXEMPLO 2: "fix 101-**web**-app-linux-java example (#174)"
+  EXEMPLO 3: "fix 101-**web**-app-linux-container example (#175)"
+
+TERMO 9: 'app' (2 ocorrências no cluster)
+--------------------------------------------------
+  EXEMPLO 1: "fix 101-web-**app**-linux-java example (#174)"
+  EXEMPLO 2: "fix 101-web-**app**-linux-container example (#175)"
+  EXEMPLO 3: "ilb for **appliances** example (#122)"
+
+TERMO 10: 'linux' (2 ocorrências no cluster)
+--------------------------------------------------
+  EXEMPLO 1: "fix 101-web-app-**linux**-java example (#174)"
+  EXEMPLO 2: "fix 101-web-app-**linux**-container example (#175)"
+
+TERMO 11: 'cai' (2 ocorrências no cluster)
+--------------------------------------------------
+  EXEMPLO 1: "**cai** 01 fix 'scheduled-asset-inventory-export-bq' example"
+  EXEMPLO 2: "update **cai** example (#274)"
+
+TERMO 12: 'migration' (1 ocorrências no cluster)
+--------------------------------------------------
+  EXEMPLO 1: "examples **migration** (#176)"
+
+TERMO 13: 'converge' (1 ocorrências no cluster)
+--------------------------------------------------
+  EXEMPLO 1: "fix: **converge** vllm examples (#580)"
+
+TERMO 14: 'vllm' (1 ocorrências no cluster)
+--------------------------------------------------
+  EXEMPLO 1: "fix: converge **vllm** examples (#580)"
+
+TERMO 15: 'ray' (1 ocorrências no cluster)
+--------------------------------------------------
+  EXEMPLO 1: "fix to **ray** example"
+
+  Hipótese de Tema do Cluster (Sua Interpretação):
+    __________________________________________________________________
+
+  Potencial Operador de Mutação Terraform Derivado (Sua Análise):
+    __________________________________________________________________
+
+---------------------------------------------------------------
+Cluster: Cluster 11
+  Number of Messages: 93 (1.38%)
+
+  TERMOS MAIS FREQUENTES (Top 25):
+    - typo: 83
+    - spelling: 8
+    - docs: 5
+    - master: 5
+    - correct: 5
+    - comment: 4
+    - chore: 3
+    - mistake: 3
+    - copy: 2
+    - paste: 2
+    - jump: 2
+    - server: 2
+    - update: 2
+    - small: 2
+    - remove: 2
+    - memberinfra: 2
+    - role: 2
+    - semver: 2
+    - constraint: 2
+    - network: 1
+    - azurermfw: 1
+    - vnet: 1
+    - block: 1
+    - fw: 1
+    - use: 1
+
+==============================================================
+ANÁLISE CONTEXTUAL DOS TERMOS PRINCIPAIS (15 exemplos por termo)
+==============================================================
+
+TERMO 1: 'typo' (83 ocorrências no cluster)
+--------------------------------------------------
+  EXEMPLO 1: "docs: fix **typos** (#1314)"
+  EXEMPLO 2: "fix **typo**"
+  EXEMPLO 3: "fixing **typos**"
+  EXEMPLO 4: "fix **typo**"
+  EXEMPLO 5: "fix **typo**"
+  EXEMPLO 6: "fix **typos**"
+  EXEMPLO 7: "fix **typo**"
+  EXEMPLO 8: "**typo** fix in networking"
+  EXEMPLO 9: "**typo** fix"
+  EXEMPLO 10: "fix **typo** azurermfw vnet"
+  (... e mais 70 ocorrências ...)
+
+TERMO 2: 'spelling' (8 ocorrências no cluster)
+--------------------------------------------------
+  EXEMPLO 1: "master **spelling** fixes"
+  EXEMPLO 2: "**spelling** fixes"
+  EXEMPLO 3: "fix **spelling** error in ds permissions correcting **spelling** error on memberinfra role."
+  EXEMPLO 4: "correcting **spelling** error on memberinfra role."
+  EXEMPLO 5: "**spelling** fix **spelling** mistake"
+  EXEMPLO 6: "fix **spelling** mistake"
+  EXEMPLO 7: "docs: correct **spelling** mistakes (#2334)"
+
+TERMO 3: 'docs' (5 ocorrências no cluster)
+--------------------------------------------------
+  EXEMPLO 1: "**docs**: fix typos (#1314)"
+  EXEMPLO 2: "**docs**: fix typo (#501)"
+  EXEMPLO 3: "**docs**: fix typos using `codespell` (#1114)"
+  EXEMPLO 4: "**docs**: fix typo (#3657)"
+  EXEMPLO 5: "**docs**: fix typos and markdown syntaxes (#2354)"
+  EXEMPLO 6: "**docs**: correct spelling mistakes (#2334)"
+
+TERMO 4: 'master' (5 ocorrências no cluster)
+--------------------------------------------------
+  EXEMPLO 1: "**master** fixing some typos"
+  EXEMPLO 2: "**master** updating a few files to fix typos"
+  EXEMPLO 3: "**master** fixing typos"
+  EXEMPLO 4: "**master** spelling fixes"
+  EXEMPLO 5: "**master** fix typo. update changelog"
+
+TERMO 5: 'correct' (5 ocorrências no cluster)
+--------------------------------------------------
+  EXEMPLO 1: "errors **corrected**"
+  EXEMPLO 2: "fix spelling error in ds permissions **correcting** spelling error on memberinfra role."
+  EXEMPLO 3: "**correcting** spelling error on memberinfra role."
+  EXEMPLO 4: "**correcting** copy/paste errors"
+  EXEMPLO 5: "docs: **correct** spelling mistakes (#2334)"
+
+TERMO 6: 'comment' (4 ocorrências no cluster)
+--------------------------------------------------
+  EXEMPLO 1: "fix a few typos in **comments**"
+  EXEMPLO 2: "fix typo in list of maps **comment**"
+  EXEMPLO 3: "fix **comment** typo fix typo with --node-labels"
+  EXEMPLO 4: "fix: misspellings in **comments** and min_cpu_platform (#1207)"
+
+TERMO 7: 'chore' (3 ocorrências no cluster)
+--------------------------------------------------
+  EXEMPLO 1: "**chore**: fix typo (#749)"
+  EXEMPLO 2: "**chore**: "desirec" misspelling fix (#1450)"
+  EXEMPLO 3: "**chore**: fix typos (#2198)"
+
+TERMO 8: 'mistake' (3 ocorrências no cluster)
+--------------------------------------------------
+  EXEMPLO 1: "spelling fix spelling **mistake**"
+  EXEMPLO 2: "fix spelling **mistake**"
+  EXEMPLO 3: "docs: correct spelling **mistakes** (#2334)"
+
+TERMO 9: 'copy' (2 ocorrências no cluster)
+--------------------------------------------------
+  EXEMPLO 1: "**copy**/paste error"
+  EXEMPLO 2: "correcting **copy**/paste errors"
+
+TERMO 10: 'paste' (2 ocorrências no cluster)
+--------------------------------------------------
+  EXEMPLO 1: "copy/**paste** error"
+  EXEMPLO 2: "correcting copy/**paste** errors"
+
+TERMO 11: 'jump' (2 ocorrências no cluster)
+--------------------------------------------------
+  EXEMPLO 1: "fw fix typo fix typo - **jump** to server"
+  EXEMPLO 2: "fix typo - **jump** to server"
+
+TERMO 12: 'server' (2 ocorrências no cluster)
+--------------------------------------------------
+  EXEMPLO 1: "fw fix typo fix typo - jump to **server**"
+  EXEMPLO 2: "fix typo - jump to **server**"
+
+TERMO 13: 'update' (2 ocorrências no cluster)
+--------------------------------------------------
+  EXEMPLO 1: "master fix typo. **update** changelog"
+
+TERMO 14: 'small' (2 ocorrências no cluster)
+--------------------------------------------------
+  EXEMPLO 1: "**small** typo fixes"
+  EXEMPLO 2: "fixed a **small** typo (#6153)"
+
+TERMO 15: 'remove' (2 ocorrências no cluster)
+--------------------------------------------------
+  EXEMPLO 1: "+ fix typos and **remove** unneeded environment"
+  EXEMPLO 2: "integration key typo fix fix: **remove** duplicate underscore"
+
+  Hipótese de Tema do Cluster (Sua Interpretação):
+    __________________________________________________________________
+
+  Potencial Operador de Mutação Terraform Derivado (Sua Análise):
+    __________________________________________________________________
+
+---------------------------------------------------------------
+Cluster: Cluster 12
+  Number of Messages: 102 (1.51%)
+
+  TERMOS MAIS FREQUENTES (Top 25):
+    - azure: 78
+    - azuread: 32
+    - group: 21
+    - add: 18
+    - issue: 8
+    - module: 8
+    - use: 8
+    - service: 7
+    - support: 7
+    - app: 7
+    - dns: 7
+    - resource: 7
+    - application: 6
+    - principal: 6
+    - ad: 6
+    - membership: 5
+    - prefix: 5
+    - provider: 5
+    - image: 5
+    - subnet: 5
+    - attribute: 5
+    - var: 4
+    - patch: 4
+    - ak: 4
+    - tf: 4
+
+==============================================================
+ANÁLISE CONTEXTUAL DOS TERMOS PRINCIPAIS (15 exemplos por termo)
+==============================================================
+
+TERMO 1: 'azure' (78 ocorrências no cluster)
+--------------------------------------------------
+  EXEMPLO 1: "add diagnostic on **azure** recovery service vault (#1824)"
+  EXEMPLO 2: "fix minor issues1 fix minor issues, tag + **azuread**_group_membership"
+  EXEMPLO 3: "fix minor issues, tag + **azuread**_group_membership"
+  EXEMPLO 4: "add support for **azure** maps account (#1727)"
+  EXEMPLO 5: "fix **azuread** application var bug fixed bad var name"
+  EXEMPLO 6: "fix **azuread** app id_token_issuance_enabledgit push --set-upstream origin fix.**azuread**.app"
+  EXEMPLO 7: "patch combined objects **azuread** service principals fix combined_objects_azuread_service_principals"
+  EXEMPLO 8: "patch ci **azureadapp** fix example **azuread** 106"
+  EXEMPLO 9: "fix the example **azuread** 106"
+  EXEMPLO 10: "fix(aks_clusters.tf): each.value.admin_groups.**azuread**_group_keys"
+  (... e mais 88 ocorrências ...)
+
+TERMO 2: 'azuread' (32 ocorrências no cluster)
+--------------------------------------------------
+  EXEMPLO 1: "fix minor issues1 fix minor issues, tag + **azuread**_group_membership"
+  EXEMPLO 2: "fix minor issues, tag + **azuread**_group_membership"
+  EXEMPLO 3: "fix **azuread** application var bug fixed bad var name"
+  EXEMPLO 4: "fix **azuread** app id_token_issuance_enabledgit push --set-upstream origin fix.**azuread**.app"
+  EXEMPLO 5: "patch combined objects **azuread** service principals fix combined_objects_azuread_service_principals"
+  EXEMPLO 6: "patch ci **azureadapp** fix example **azuread** 106"
+  EXEMPLO 7: "fix the example **azuread** 106"
+  EXEMPLO 8: "fix(aks_clusters.tf): each.value.admin_groups.**azuread**_group_keys"
+  EXEMPLO 9: "rimehta fix support group oid in mssql managed instances module add support for literals **azuread**_group_id in sql managed instances"
+  EXEMPLO 10: "a ferri fix mssql server **azuread** admin"
+  (... e mais 16 ocorrências ...)
+
+TERMO 3: 'group' (21 ocorrências no cluster)
+--------------------------------------------------
+  EXEMPLO 1: "rimehta fix support **group** oid in mssql managed instances module add support for literals azuread_group_id in sql managed instances"
+  EXEMPLO 2: "azuread **groups** membership landingzone awareness fix make azuread_groups_membership module landingzone aware"
+  EXEMPLO 3: "making rule collection **group** dependent of azure firewall in order for dnat rules to work"
+  EXEMPLO 4: "fix missing azuread **group**_id"
+  EXEMPLO 5: "fix azuread **group** membership to support remote **groups**"
+  EXEMPLO 6: "fix - azure ad **group** passthrough support"
+  EXEMPLO 7: "pet lz fix add launchpad_identities for azuread **groups** and msi from launchpad to propagate"
+  EXEMPLO 8: "azure resource **group** name regex fix: loosen tectonic's azure resource **group** capture"
+  EXEMPLO 9: "fix: loosen tectonic's azure resource **group** capture"
+  EXEMPLO 10: "azure/network: conform azure network security **groups** to tectonic generic platform standards (#991)"
+  (... e mais 2 ocorrências ...)
+
+TERMO 4: 'add' (18 ocorrências no cluster)
+--------------------------------------------------
+  EXEMPLO 1: "**add** diagnostic on azure recovery service vault (#1824)"
+  EXEMPLO 2: "**add** support for azure maps account (#1727)"
+  EXEMPLO 3: "rimehta fix support group oid in mssql managed instances module **add** support for literals azuread_group_id in sql managed instances"
+  EXEMPLO 4: "fixed bug for azure firewall management ip id and **added** example"
+  EXEMPLO 5: "fix azurerouteserver **add** azure route server compatibility"
+  EXEMPLO 6: "fix - azure ad applications - **add** passthrough support"
+  EXEMPLO 7: "main fixes storage account issues for reading script as blob in azure devops agent **add**-on"
+  EXEMPLO 8: "pet lz fix **add** launchpad_identities for azuread groups and msi from launchpad to propagate"
+  EXEMPLO 9: "fix expressroute 101-azure-expressroute: **added** necessary output"
+  EXEMPLO 10: "**add** azure managed disk to pv resource (#1011)"
+  (... e mais 10 ocorrências ...)
+
+TERMO 5: 'issue' (8 ocorrências no cluster)
+--------------------------------------------------
+  EXEMPLO 1: "fix minor **issues**1 fix minor **issues**, tag + azuread_group_membership"
+  EXEMPLO 2: "fix minor **issues**, tag + azuread_group_membership"
+  EXEMPLO 3: "ak azuread app fix regression **issue** for azure ad app naming and cycle **issue**"
+  EXEMPLO 4: "fix regression **issue** for azure ad app naming and cycle **issue**"
+  EXEMPLO 5: "akeloth fd azure frontdoor, keyvault certificate **issuer** with global sign, azure dns_zone, domain_name_registrations"
+  EXEMPLO 6: "main fixes storage account **issues** for reading script as blob in azure devops agent add-on"
+  EXEMPLO 7: "fix azure **issue**"
+
+TERMO 6: 'module' (8 ocorrências no cluster)
+--------------------------------------------------
+  EXEMPLO 1: "rimehta fix support group oid in mssql managed instances **module** add support for literals azuread_group_id in sql managed instances"
+  EXEMPLO 2: "azuread groups membership landingzone awareness fix make azuread_groups_membership **module** landingzone aware"
+  EXEMPLO 3: "created azure caf **module** for pip-prefix"
+  EXEMPLO 4: "updated vmss windows **module**, pending azure_caf to limit 9 characters for computer prefix name"
+  EXEMPLO 5: "fix azure provider for **module**"
+  EXEMPLO 6: "patch 1 azure/vnet: custom vnet error when using **module**"
+  EXEMPLO 7: "**modules**/azure: enable the use of external master & worker subnets (#550)"
+  EXEMPLO 8: "add stricter types to azure **modules**"
+
+TERMO 7: 'use' (8 ocorrências no cluster)
+--------------------------------------------------
+  EXEMPLO 1: "remove - in azure ad app when no prefix is **used**"
+  EXEMPLO 2: "fix - azure ad **users** (#74)"
+  EXEMPLO 3: "azure: restore create_dns_zone and make **use**_custom_fqdn optional (#803)"
+  EXEMPLO 4: "modules/azure: enable the **use** of external master & worker subnets (#550)"
+  EXEMPLO 5: "fix(azure-tf): **use** unique stack id instead of stack_name variable (#795)"
+  EXEMPLO 6: "**use** new azure subnet to set address_prefixes list"
+  EXEMPLO 7: "restore **use** of flatcar linux azure marketplace image"
+
+TERMO 8: 'service' (7 ocorrências no cluster)
+--------------------------------------------------
+  EXEMPLO 1: "add diagnostic on azure recovery **service** vault (#1824)"
+  EXEMPLO 2: "patch combined objects azuread **service** principals fix combined_objects_azuread_service_principals"
+  EXEMPLO 3: "fix azuread role for **service**_principal"
+
+TERMO 9: 'support' (7 ocorrências no cluster)
+--------------------------------------------------
+  EXEMPLO 1: "add **support** for azure maps account (#1727)"
+  EXEMPLO 2: "rimehta fix **support** group oid in mssql managed instances module add **support** for literals azuread_group_id in sql managed instances"
+  EXEMPLO 3: "fix azuread group membership to **support** remote groups"
+  EXEMPLO 4: "fix - azure ad applications - add passthrough **support**"
+  EXEMPLO 5: "fix - azure ad group passthrough **support**"
+  EXEMPLO 6: "add flatcar linux arm64 **support** on azure"
+
+TERMO 10: 'app' (7 ocorrências no cluster)
+--------------------------------------------------
+  EXEMPLO 1: "fix azuread **application** var bug fixed bad var name"
+  EXEMPLO 2: "fix azuread **app** id_token_issuance_enabledgit push --set-upstream origin fix.azuread.**app**"
+  EXEMPLO 3: "remove - in azure ad **app** when no prefix is used"
+  EXEMPLO 4: "ak azuread **app** fix regression issue for azure ad **app** naming and cycle issue"
+  EXEMPLO 5: "fix regression issue for azure ad **app** naming and cycle issue"
+  EXEMPLO 6: "fix - azure ad **applications** - add passthrough support"
+  EXEMPLO 7: "add ability to load balance tcp/udp **applications** on azure"
+
+TERMO 11: 'dns' (7 ocorrências no cluster)
+--------------------------------------------------
+  EXEMPLO 1: "bug fix 414 **dns** proxy_enabled not processed in azure firewall policy"
+  EXEMPLO 2: "akeloth fd azure frontdoor, keyvault certificate issuer with global sign, azure **dns**_zone, domain_name_registrations"
+  EXEMPLO 3: "azure fix external **dns** azure: correct api endpoint fqdn when using external **dns**"
+  EXEMPLO 4: "azure: **dns** nits + docs update (#1480)"
+  EXEMPLO 5: "platforms/azure: fix the usage of an existing **dns** zone resource group (#417)"
+
+TERMO 12: 'resource' (7 ocorrências no cluster)
+--------------------------------------------------
+  EXEMPLO 1: "fixed azurecaf_name **resource** type"
+  EXEMPLO 2: "azure **resource** group name regex fix: loosen tectonic's azure **resource** group capture"
+  EXEMPLO 3: "fix: loosen tectonic's azure **resource** group capture"
+  EXEMPLO 4: "platforms/azure: fix the usage of an existing dns zone **resource** group (#417)"
+  EXEMPLO 5: "azure: rename "k8" **resources** to "api""
+  EXEMPLO 6: "add azure managed disk to pv **resource** (#1011)"
+
+TERMO 13: 'application' (6 ocorrências no cluster)
+--------------------------------------------------
+  EXEMPLO 1: "fix azuread **application** var bug fixed bad var name"
+  EXEMPLO 2: "fix - azure ad **applications** - add passthrough support"
+  EXEMPLO 3: "add ability to load balance tcp/udp **applications** on azure"
+
+TERMO 14: 'principal' (6 ocorrências no cluster)
+--------------------------------------------------
+  EXEMPLO 1: "patch combined objects azuread service **principals** fix combined_objects_azuread_service_principals"
+
+TERMO 15: 'ad' (6 ocorrências no cluster)
+--------------------------------------------------
+  EXEMPLO 1: "**add** diagnostic on azure recovery service vault (#1824)"
+  EXEMPLO 2: "**add** support for azure maps account (#1727)"
+  EXEMPLO 3: "fix(aks_clusters.tf): each.value.**admin**_groups.azuread_group_keys"
+  EXEMPLO 4: "rimehta fix support group oid in mssql managed instances module **add** support for literals azuread_group_id in sql managed instances"
+  EXEMPLO 5: "a ferri fix mssql server azuread **admin**"
+  EXEMPLO 6: "fix mssql server azuread **admin**"
+  EXEMPLO 7: "fix logic for mssql server azuread **administrator**"
+  EXEMPLO 8: "fixed bug for azure firewall management ip id and **added** example"
+  EXEMPLO 9: "fix azurerouteserver **add** azure route server compatibility"
+  EXEMPLO 10: "remove - in azure **ad** app when no prefix is used"
+  (... e mais 20 ocorrências ...)
+
+  Hipótese de Tema do Cluster (Sua Interpretação):
+    __________________________________________________________________
+
+  Potencial Operador de Mutação Terraform Derivado (Sua Análise):
+    __________________________________________________________________
+
+---------------------------------------------------------------
+Cluster: Cluster 13
+  Number of Messages: 45 (0.67%)
+
+  TERMOS MAIS FREQUENTES (Top 25):
+    - apigee: 34
+    - bigquery: 18
+    - module: 15
+    - add: 12
+    - config: 9
+    - instance: 9
+    - analytic: 8
+    - environment: 7
+    - iam: 7
+    - binding: 5
+    - table: 5
+    - payg: 5
+    - node: 5
+    - variable: 4
+    - try: 4
+    - blueprint: 4
+    - block: 4
+    - dataset: 3
+    - support: 3
+    - new: 3
+    - type: 3
+    - jccb: 3
+    - column: 3
+    - family: 3
+    - sink: 3
+
+==============================================================
+ANÁLISE CONTEXTUAL DOS TERMOS PRINCIPAIS (15 exemplos por termo)
+==============================================================
+
+TERMO 1: 'apigee' (34 ocorrências no cluster)
+--------------------------------------------------
+  EXEMPLO 1: "fix modules to support new **apigee** x environment types (#1841)"
+  EXEMPLO 2: "**apigee** iam fix added iam_bindings and iam_bindings_additive to **apigee** module"
+  EXEMPLO 3: "fix **apigee** add-ons configuration (#1798)"
+  EXEMPLO 4: "**apigee** module fixes removed unnecessary try statements"
+  EXEMPLO 5: "**apigee** module fix try"
+  EXEMPLO 6: "fixed problem with try in **apigee** module"
+  EXEMPLO 7: "fixed problem with try in **apigee** module"
+  EXEMPLO 8: "eddern fix **apigee** addons config fix **apigee** addons config conditional expression"
+  EXEMPLO 9: "**apigee** module fix fixed, added back environments to each instance, that way we can also…"
+  EXEMPLO 10: "jccb **apigee** fixes fixes to the **apigee** module"
+  (... e mais 16 ocorrências ...)
+
+TERMO 2: 'bigquery' (18 ocorrências no cluster)
+--------------------------------------------------
+  EXEMPLO 1: "**bigquery** dataset routines (#2570)"
+  EXEMPLO 2: "add outputs to **bigquery** dataset module (#1752)"
+  EXEMPLO 3: "add materialized views for **bigquery** (#1726)"
+  EXEMPLO 4: "add **bigquery** authorized resources (#1480)"
+  EXEMPLO 5: "apigee **bigquery** analytics fix fix in iam binding of apigee **bigquery** analytics blueprint"
+  EXEMPLO 6: "fix in iam binding of apigee **bigquery** analytics blueprint"
+  EXEMPLO 7: "**bigquery** analytics fix fix because of changes in the cloud functions module and the apigee a…"
+  EXEMPLO 8: "apigee **bigquery** analytics fixes fixes in apigee **bigquery** analytics blueprint"
+  EXEMPLO 9: "fixes in apigee **bigquery** analytics blueprint"
+  EXEMPLO 10: "jccb fix 990 only set partitioned table when sink type is **bigquery**"
+  (... e mais 6 ocorrências ...)
+
+TERMO 3: 'module' (15 ocorrências no cluster)
+--------------------------------------------------
+  EXEMPLO 1: "fix **modules** to support new apigee x environment types (#1841)"
+  EXEMPLO 2: "apigee iam fix added iam_bindings and iam_bindings_additive to apigee **module**"
+  EXEMPLO 3: "apigee **module** fixes removed unnecessary try statements"
+  EXEMPLO 4: "add outputs to bigquery dataset **module** (#1752)"
+  EXEMPLO 5: "apigee **module** fix try"
+  EXEMPLO 6: "fixed problem with try in apigee **module**"
+  EXEMPLO 7: "fixed problem with try in apigee **module**"
+  EXEMPLO 8: "apigee **module** fix fixed, added back environments to each instance, that way we can also…"
+  EXEMPLO 9: "jccb apigee fixes fixes to the apigee **module**"
+  EXEMPLO 10: "bigquery analytics fix fix because of changes in the cloud functions **module** and the apigee a…"
+  (... e mais 5 ocorrências ...)
+
+TERMO 4: 'add' (12 ocorrências no cluster)
+--------------------------------------------------
+  EXEMPLO 1: "**added** variable for activating nat and implementation in google_apigee… (#2999)"
+  EXEMPLO 2: "apigee iam fix **added** iam_bindings and iam_bindings_additive to apigee module"
+  EXEMPLO 3: "fix apigee **add**-ons configuration (#1798)"
+  EXEMPLO 4: "**add** outputs to bigquery dataset module (#1752)"
+  EXEMPLO 5: "**add** materialized views for bigquery (#1726)"
+  EXEMPLO 6: "eddern fix apigee **addons** config fix apigee **addons** config conditional expression"
+  EXEMPLO 7: "apigee module fix fixed, **added** back environments to each instance, that way we can also…"
+  EXEMPLO 8: "fixed, **added** back environments to each instance, that way we can also create instances for already existing environments"
+  EXEMPLO 9: "**add** bigquery authorized resources (#1480)"
+  EXEMPLO 10: "jccb fix 701 **add** `consumer_accept_list` to `apigee-x-instance`"
+  (... e mais 4 ocorrências ...)
+
+TERMO 5: 'config' (9 ocorrências no cluster)
+--------------------------------------------------
+  EXEMPLO 1: "fix apigee add-ons **configuration** (#1798)"
+  EXEMPLO 2: "eddern fix apigee addons **config** fix apigee addons **config** conditional expression"
+  EXEMPLO 3: "fix apigee payg env node **config** dynamic block"
+  EXEMPLO 4: "fix apigee payg node **config** dynamic block"
+  EXEMPLO 5: "fix apigee payg env node **config** aggregate count fix apigee payg environment node **config**"
+  EXEMPLO 6: "fix apigee payg environment node **config**"
+  EXEMPLO 7: "fix transfer **config** fix bigquery transfer **config**"
+
+TERMO 6: 'instance' (9 ocorrências no cluster)
+--------------------------------------------------
+  EXEMPLO 1: "apigee module fix fixed, added back environments to each **instance**, that way we can also…"
+  EXEMPLO 2: "fixed, added back environments to each **instance**, that way we can also create **instances** for already existing environments"
+  EXEMPLO 3: "fix apigee **instance** nat"
+  EXEMPLO 4: "apigee-x-**instance**.ip_range cannot take support cidr (#727)"
+  EXEMPLO 5: "jccb fix 701 add `consumer_accept_list` to `apigee-x-**instance**`"
+  EXEMPLO 6: "add `consumer_accept_list` to `apigee-x-**instance**`"
+  EXEMPLO 7: "fix apigee x **instance** ip range allow multiple cidr blocks in the ip_range for apigee **instance**"
+
+TERMO 7: 'analytic' (8 ocorrências no cluster)
+--------------------------------------------------
+  EXEMPLO 1: "apigee bigquery **analytics** fix fix in iam binding of apigee bigquery **analytics** blueprint"
+  EXEMPLO 2: "fix in iam binding of apigee bigquery **analytics** blueprint"
+  EXEMPLO 3: "bigquery **analytics** fix fix because of changes in the cloud functions module and the apigee a…"
+  EXEMPLO 4: "fix because of changes in the cloud functions module and the apigee **analytics** export schema"
+  EXEMPLO 5: "apigee bigquery **analytics** fixes fixes in apigee bigquery **analytics** blueprint"
+  EXEMPLO 6: "fixes in apigee bigquery **analytics** blueprint"
+
+TERMO 8: 'environment' (7 ocorrências no cluster)
+--------------------------------------------------
+  EXEMPLO 1: "fix modules to support new apigee x **environment** types (#1841)"
+  EXEMPLO 2: "apigee module fix fixed, added back **environments** to each instance, that way we can also…"
+  EXEMPLO 3: "fixed, added back **environments** to each instance, that way we can also create instances for already existing **environments**"
+  EXEMPLO 4: "fix apigee payg env node config aggregate count fix apigee payg **environment** node config"
+  EXEMPLO 5: "fix apigee payg **environment** node config"
+  EXEMPLO 6: "use new **environments** module release"
+
+TERMO 9: 'iam' (7 ocorrências no cluster)
+--------------------------------------------------
+  EXEMPLO 1: "apigee **iam** fix added **iam**_bindings and **iam**_bindings_additive to apigee module"
+  EXEMPLO 2: "apigee bigquery analytics fix fix in **iam** binding of apigee bigquery analytics blueprint"
+  EXEMPLO 3: "fix in **iam** binding of apigee bigquery analytics blueprint"
+  EXEMPLO 4: "fix and streamline bigtable module, add tests, align to new **iam** variable name"
+  EXEMPLO 5: "refactor **iam** additive bindings variables (#103)"
+
+TERMO 10: 'binding' (5 ocorrências no cluster)
+--------------------------------------------------
+  EXEMPLO 1: "apigee bigquery analytics fix fix in iam **binding** of apigee bigquery analytics blueprint"
+  EXEMPLO 2: "fix in iam **binding** of apigee bigquery analytics blueprint"
+  EXEMPLO 3: "refactor iam additive **bindings** variables (#103)"
+
+TERMO 11: 'table' (5 ocorrências no cluster)
+--------------------------------------------------
+  EXEMPLO 1: "fix column families allow **tables** with several column families in bigtable"
+  EXEMPLO 2: "a **table** can have more than one column family."
+  EXEMPLO 3: "jccb fix 990 only set partitioned **table** when sink type is bigquery"
+  EXEMPLO 4: "only set partitioned **table** when sink type is bigquery"
+  EXEMPLO 5: "add support for partitioned **tables** on organization sinks (#380)"
+
+TERMO 12: 'payg' (5 ocorrências no cluster)
+--------------------------------------------------
+  EXEMPLO 1: "fix apigee **payg** env node config dynamic block"
+  EXEMPLO 2: "fix apigee **payg** node config dynamic block"
+  EXEMPLO 3: "fix apigee **payg** env node config aggregate count fix apigee **payg** environment node config"
+  EXEMPLO 4: "fix apigee **payg** environment node config"
+
+TERMO 13: 'node' (5 ocorrências no cluster)
+--------------------------------------------------
+  EXEMPLO 1: "fix apigee payg env **node** config dynamic block"
+  EXEMPLO 2: "fix apigee payg **node** config dynamic block"
+  EXEMPLO 3: "fix apigee payg env **node** config aggregate count fix apigee payg environment **node** config"
+  EXEMPLO 4: "fix apigee payg environment **node** config"
+
+TERMO 14: 'variable' (4 ocorrências no cluster)
+--------------------------------------------------
+  EXEMPLO 1: "added **variable** for activating nat and implementation in google_apigee… (#2999)"
+  EXEMPLO 2: "apigee module **variable** description fixes"
+  EXEMPLO 3: "fix and streamline bigtable module, add tests, align to new iam **variable** name"
+  EXEMPLO 4: "refactor iam additive bindings **variables** (#103)"
+
+TERMO 15: 'try' (4 ocorrências no cluster)
+--------------------------------------------------
+  EXEMPLO 1: "apigee module fixes removed unnecessary **try** statements"
+  EXEMPLO 2: "apigee module fix **try**"
+  EXEMPLO 3: "fixed problem with **try** in apigee module"
+  EXEMPLO 4: "fixed problem with **try** in apigee module"
+
+  Hipótese de Tema do Cluster (Sua Interpretação):
+    __________________________________________________________________
+
+  Potencial Operador de Mutação Terraform Derivado (Sua Análise):
+    __________________________________________________________________
+
+---------------------------------------------------------------
+Cluster: Cluster 14
+  Number of Messages: 49 (0.73%)
+
+  TERMOS MAIS FREQUENTES (Top 25):
+    - sca: 44
+    - warning: 18
+    - checkov: 17
+    - ignore: 15
+    - failure: 10
+    - address: 7
+    - add: 6
+    - feature: 5
+    - exclude: 5
+    - check: 4
+    - suppress: 4
+    - rule: 4
+    - secret: 3
+    - skip: 3
+    - ckv: 3
+    - log: 3
+    - bucket: 3
+    - issue: 3
+    - pra: 3
+    - iam: 3
+    - enable: 3
+    - update: 2
+    - kms: 2
+    - key: 2
+    - mp: 2
+
+==============================================================
+ANÁLISE CONTEXTUAL DOS TERMOS PRINCIPAIS (15 exemplos por termo)
+==============================================================
+
+TERMO 1: 'sca' (44 ocorrências no cluster)
+--------------------------------------------------
+  EXEMPLO 1: "**sca** secret warning fix **sca** warning and update kms key"
+  EXEMPLO 2: "fix **sca** warning and update kms key"
+  EXEMPLO 3: "address **sca** errors"
+  EXEMPLO 4: "addressed **sca** failures"
+  EXEMPLO 5: "fix **sca** warnings address **sca** alert"
+  EXEMPLO 6: "fix **sca** module reference improve **sca** compliance of `core-shared-services`"
+  EXEMPLO 7: "fix **sca** add checkov skip for false positive on firehose error logging bucket"
+  EXEMPLO 8: "**sca** fix warnings fix **sca** failures"
+  EXEMPLO 9: "fix **sca** failures"
+  EXEMPLO 10: "**sca** fix ignores (#5381)"
+  (... e mais 22 ocorrências ...)
+
+TERMO 2: 'warning' (18 ocorrências no cluster)
+--------------------------------------------------
+  EXEMPLO 1: "sca secret **warning** fix sca **warning** and update kms key"
+  EXEMPLO 2: "fix sca **warning** and update kms key"
+  EXEMPLO 3: "fix sca **warnings** address sca alert"
+  EXEMPLO 4: "sca fix **warnings** fix sca failures"
+  EXEMPLO 5: "add opa status check and pr **warnings** (#6281)"
+  EXEMPLO 6: "temporarily suppress sca **warnings** (#5322)"
+  EXEMPLO 7: "fix checkov **warnings** (#4446)"
+  EXEMPLO 8: "fix ignore sca rotation **warnings** ignore rotation **warnings**"
+  EXEMPLO 9: "fix missed **warning** add missed sca ignore"
+  EXEMPLO 10: "fix sca **warnings** ignore sca **warnings**"
+  (... e mais 5 ocorrências ...)
+
+TERMO 3: 'checkov' (17 ocorrências no cluster)
+--------------------------------------------------
+  EXEMPLO 1: "**checkov** fix"
+  EXEMPLO 2: "addressed **checkov** failures"
+  EXEMPLO 3: "bugfix **checkov** errors skip some unrequired **checkov** checks"
+  EXEMPLO 4: "fix **checkov** error ckv_tf_2"
+  EXEMPLO 5: "fix sca add **checkov** skip for false positive on firehose error logging bucket"
+  EXEMPLO 6: "addressing **checkov** failures (#5738)"
+  EXEMPLO 7: "fix pra secrets sca skip fix **checkov** fail for pra-register"
+  EXEMPLO 8: "addressed **checkov** failures (#4477)"
+  EXEMPLO 9: "fix **checkov** warnings (#4446)"
+  EXEMPLO 10: "resolve **checkov** issues with firewalls (#3924)"
+  (... e mais 5 ocorrências ...)
+
+TERMO 4: 'ignore' (15 ocorrências no cluster)
+--------------------------------------------------
+  EXEMPLO 1: "chore fix mp static analysis failures add **ignore** statements for trivy avd-aws-0345"
+  EXEMPLO 2: "sca fix **ignores** (#5381)"
+  EXEMPLO 3: "feature sca fixes sca **ignores** for new rule"
+  EXEMPLO 4: "sca **ignore** corrections (#3964)"
+  EXEMPLO 5: "feature more sca fixes more sca fixes and **ignores**"
+  EXEMPLO 6: "more sca fixes and **ignores**"
+  EXEMPLO 7: "feature more sca fixes sca **ignores** and fixes"
+  EXEMPLO 8: "fix sca **ignores** add more **ignores** for sca"
+  EXEMPLO 9: "fix **ignore** sca rotation warnings **ignore** rotation warnings"
+  EXEMPLO 10: "fix missed warning add missed sca **ignore**"
+  (... e mais 2 ocorrências ...)
+
+TERMO 5: 'failure' (10 ocorrências no cluster)
+--------------------------------------------------
+  EXEMPLO 1: "chore fix mp static analysis **failures** add ignore statements for trivy avd-aws-0345"
+  EXEMPLO 2: "addressed sca **failures**"
+  EXEMPLO 3: "addressed checkov **failures**"
+  EXEMPLO 4: "sca fix warnings fix sca **failures**"
+  EXEMPLO 5: "fix sca **failures**"
+  EXEMPLO 6: "addressing checkov **failures** (#5738)"
+  EXEMPLO 7: "addressed checkov **failures** (#4477)"
+  EXEMPLO 8: "fix suppress checkov iam **failures** for core and unrestricted suppress checkov iam **failure** messages"
+  EXEMPLO 9: "suppress checkov iam **failure** messages"
+
+TERMO 6: 'address' (7 ocorrências no cluster)
+--------------------------------------------------
+  EXEMPLO 1: "**address** sca errors"
+  EXEMPLO 2: "**addressed** sca failures"
+  EXEMPLO 3: "fix sca warnings **address** sca alert"
+  EXEMPLO 4: "**addressed** checkov failures"
+  EXEMPLO 5: "**addressing** checkov failures (#5738)"
+  EXEMPLO 6: "**address** sca issues for data-platform-apps-and-tools and observability-platform (#5257)"
+  EXEMPLO 7: "**addressed** checkov failures (#4477)"
+
+TERMO 7: 'add' (6 ocorrências no cluster)
+--------------------------------------------------
+  EXEMPLO 1: "**address** sca errors"
+  EXEMPLO 2: "chore fix mp static analysis failures **add** ignore statements for trivy avd-aws-0345"
+  EXEMPLO 3: "**addressed** sca failures"
+  EXEMPLO 4: "fix sca warnings **address** sca alert"
+  EXEMPLO 5: "**addressed** checkov failures"
+  EXEMPLO 6: "fix sca **add** checkov skip for false positive on firehose error logging bucket"
+  EXEMPLO 7: "**add** opa status check and pr warnings (#6281)"
+  EXEMPLO 8: "**addressing** checkov failures (#5738)"
+  EXEMPLO 9: "**address** sca issues for data-platform-apps-and-tools and observability-platform (#5257)"
+  EXEMPLO 10: "**addressed** checkov failures (#4477)"
+  (... e mais 3 ocorrências ...)
+
+TERMO 8: 'feature' (5 ocorrências no cluster)
+--------------------------------------------------
+  EXEMPLO 1: "**feature** sca fixes sca ignores for new rule"
+  EXEMPLO 2: "**feature** more sca fixes more sca fixes and ignores"
+  EXEMPLO 3: "**feature** more sca fixes sca ignores and fixes"
+  EXEMPLO 4: "**feature** sca remediation sca exclusions, remediations and fixes"
+  EXEMPLO 5: "**feature** fix sca warnings ignore sca warnings"
+
+TERMO 9: 'exclude' (5 ocorrências no cluster)
+--------------------------------------------------
+  EXEMPLO 1: "fix **exclude** cross regional replication sca warning for acm pca bucket ignoring lack of cross-regional replication for acm-cma bucket"
+  EXEMPLO 2: "fix sca **exclude** default sec group rule **exclude** checkov warning regarding default sgs and full traffic restriction"
+  EXEMPLO 3: "fix **exclude** sca rule for xray tracing fix/**exclude** sca rule for xray tracing"
+
+TERMO 10: 'check' (4 ocorrências no cluster)
+--------------------------------------------------
+  EXEMPLO 1: "**checkov** fix"
+  EXEMPLO 2: "addressed **checkov** failures"
+  EXEMPLO 3: "bugfix **checkov** errors skip some unrequired **checkov** **checks**"
+  EXEMPLO 4: "fix **checkov** error ckv_tf_2"
+  EXEMPLO 5: "fix sca add **checkov** skip for false positive on firehose error logging bucket"
+  EXEMPLO 6: "add opa status **check** and pr warnings (#6281)"
+  EXEMPLO 7: "addressing **checkov** failures (#5738)"
+  EXEMPLO 8: "fix pra secrets sca skip fix **checkov** fail for pra-register"
+  EXEMPLO 9: "addressed **checkov** failures (#4477)"
+  EXEMPLO 10: "fix **checkov** warnings (#4446)"
+  (... e mais 7 ocorrências ...)
+
+TERMO 11: 'suppress' (4 ocorrências no cluster)
+--------------------------------------------------
+  EXEMPLO 1: "temporarily **suppress** sca warnings (#5322)"
+  EXEMPLO 2: "fix **suppress** checkov iam failures for core and unrestricted **suppress** checkov iam failure messages"
+  EXEMPLO 3: "**suppress** checkov iam failure messages"
+
+TERMO 12: 'rule' (4 ocorrências no cluster)
+--------------------------------------------------
+  EXEMPLO 1: "feature sca fixes sca ignores for new **rule**"
+  EXEMPLO 2: "fix sca exclude default sec group **rule** exclude checkov warning regarding default sgs and full traffic restriction"
+  EXEMPLO 3: "fix exclude sca **rule** for xray tracing fix/exclude sca **rule** for xray tracing"
+
+TERMO 13: 'secret' (3 ocorrências no cluster)
+--------------------------------------------------
+  EXEMPLO 1: "sca **secret** warning fix sca warning and update kms key"
+  EXEMPLO 2: "fix pra **secrets** sca skip fix checkov fail for pra-register"
+  EXEMPLO 3: "adjusted **secrets** for pra-register to fix sca errors (#4773)"
+
+TERMO 14: 'skip' (3 ocorrências no cluster)
+--------------------------------------------------
+  EXEMPLO 1: "bugfix checkov errors **skip** some unrequired checkov checks"
+  EXEMPLO 2: "fix sca add checkov **skip** for false positive on firehose error logging bucket"
+  EXEMPLO 3: "fix pra secrets sca **skip** fix checkov fail for pra-register"
+
+TERMO 15: 'ckv' (3 ocorrências no cluster)
+--------------------------------------------------
+  EXEMPLO 1: "fix checkov error **ckv**_tf_2"
+  EXEMPLO 2: "fix checkov enable bastion ebs encryption enable root volume encryption to squash **ckv**_aws_8"
+  EXEMPLO 3: "checkov fix log retention explicitly set log retention to squash **ckv**_aws_66"
+
+  Hipótese de Tema do Cluster (Sua Interpretação):
+    __________________________________________________________________
+
+  Potencial Operador de Mutação Terraform Derivado (Sua Análise):
+    __________________________________________________________________
+
+---------------------------------------------------------------
+Cluster: Cluster 15
+  Number of Messages: 231 (3.42%)
+
+  TERMOS MAIS FREQUENTES (Top 25):
+    - module: 38
+    - update: 28
+    - provider: 27
+    - issue: 23
+    - version: 22
+    - tf: 20
+    - fmt: 20
+    - format: 18
+    - add: 15
+    - support: 11
+    - bump: 11
+    - v0: 11
+    - config: 11
+    - plan: 11
+    - aws: 10
+    - use: 9
+    - test: 9
+    - public: 9
+    - refactor: 8
+    - resource: 8
+    - typo: 8
+    - require: 8
+    - allow: 7
+    - output: 6
+    - change: 6
+
+==============================================================
+ANÁLISE CONTEXTUAL DOS TERMOS PRINCIPAIS (15 exemplos por termo)
+==============================================================
+
+TERMO 1: 'module' (38 ocorrências no cluster)
+--------------------------------------------------
+  EXEMPLO 1: "[tf] refactor apps terraform **module** to use the new `tf_lambda` **module** (#656)"
+  EXEMPLO 2: "fix: add support for terraform v1.3+ using local version of partner **modules** temporarily (#1037)"
+  EXEMPLO 3: "update terraform-aws-**module**/eks to v18.17.0 to fix cloudwatch logs issue (#376)"
+  EXEMPLO 4: "emr eks blueprints leveraging the sub terraform **modules** (#174)"
+  EXEMPLO 5: "eks terraform **module** variable type fix (#674)"
+  EXEMPLO 6: "config: pin versions of terraform **modules** (#1908)"
+  EXEMPLO 7: "fix fmt {**modules**/,platforms/}: fix terraform format"
+  EXEMPLO 8: "{**modules**/,platforms/}: fix terraform format"
+  EXEMPLO 9: "fix(**modules**/kms): use the `google_tags_location_tag_binding` terraform resource to bind tags on kms key rings (#2501)"
+  EXEMPLO 10: "fix terraform formatting and add **module**_prefix attribute to **modules**_config (#1162)"
+  (... e mais 25 ocorrências ...)
+
+TERMO 2: 'update' (28 ocorrências no cluster)
+--------------------------------------------------
+  EXEMPLO 1: "issue-1318 **update** aws terraform provider (#1328)"
+  EXEMPLO 2: "**update** terraform-aws-module/eks to v18.17.0 to fix cloudwatch logs issue (#376)"
+  EXEMPLO 3: "**update** senstive = true to addess an issue with terraform 14"
+  EXEMPLO 4: "convert pulumi to terraform, misc. image **updates** (#886)"
+  EXEMPLO 5: "**update** ami ids for terraform"
+  EXEMPLO 6: "**update** terraform to v0.9.6-fcdf494 (#766)"
+  EXEMPLO 7: "**update** terraform github to v2.9.2 (#14021)"
+  EXEMPLO 8: "**update** terraform github to v2.9.0 (#13978)"
+  EXEMPLO 9: "**update** terraform sdk to v2 (#1027)"
+  EXEMPLO 10: "fixup secret deps terraform: **update** secret iam to depend on secrets"
+  (... e mais 16 ocorrências ...)
+
+TERMO 3: 'provider' (27 ocorrências no cluster)
+--------------------------------------------------
+  EXEMPLO 1: "issue-1318 update aws terraform **provider** (#1328)"
+  EXEMPLO 2: "fix: map the terraform entity into the cluster as admin to allow deploying kubernetes, helm, and kubectl resources via **providers** (#1878)"
+  EXEMPLO 3: "terrajet aws **provider** for crossplane (#272)"
+  EXEMPLO 4: "terrajet aws **provider** for crossplane (#272)"
+  EXEMPLO 5: "feat: bump terraform-oci-**provider** to v0.0.10 (#1538)"
+  EXEMPLO 6: "bump terraform-**provider**-cosign to v0.0.10 (#1177)"
+  EXEMPLO 7: "bump terraform-**provider**-apko to v0.9.2 (#1121)"
+  EXEMPLO 8: "terraform **providers**: bump versions to latests releases (#2208)"
+  EXEMPLO 9: "fix: loosen the aws terraform **provider** constraint (#3708)"
+  EXEMPLO 10: "fix: limit aws terraform **provider** to 3.* (#1741)"
+  (... e mais 15 ocorrências ...)
+
+TERMO 4: 'issue' (23 ocorrências no cluster)
+--------------------------------------------------
+  EXEMPLO 1: "**issue**-1318 update aws terraform provider (#1328)"
+  EXEMPLO 2: "update terraform-aws-module/eks to v18.17.0 to fix cloudwatch logs **issue** (#376)"
+  EXEMPLO 3: "update senstive = true to addess an **issue** with terraform 14"
+  EXEMPLO 4: "fix terraform outputs for azure - **issue**628"
+  EXEMPLO 5: "win10 activation fix win10 activation **issue** on terraform"
+  EXEMPLO 6: "fix win10 activation **issue** on terraform"
+  EXEMPLO 7: "**issues** 216 dns configuration via terraform-native options, **issue**"
+  EXEMPLO 8: "address **issues** in by utilizing terraform-native options"
+  EXEMPLO 9: "fix: bug/terragrunt deploy cluster **issuer** (#332)"
+  EXEMPLO 10: "fix: **issue** layer2-aws terraform plan error (#305)"
+  (... e mais 13 ocorrências ...)
+
+TERMO 5: 'version' (22 ocorrências no cluster)
+--------------------------------------------------
+  EXEMPLO 1: "fix: add support for terraform v1.3+ using local **version** of partner modules temporarily (#1037)"
+  EXEMPLO 2: "fix: pin terraform **version** to `< 1.3.0` due to use of optional attribute experiment that was removed in `v1.3.0` (#984)"
+  EXEMPLO 3: "new **version** to deploy azure devops and tf cloud/enterprise with caf_solution (#1678)"
+  EXEMPLO 4: "fix **versions** & mlsources to make publicnetworkaccess=disabled work in the related terraform template"
+  EXEMPLO 5: "terraform providers: bump **versions** to latests releases (#2208)"
+  EXEMPLO 6: "config: pin **versions** of terraform modules (#1908)"
+  EXEMPLO 7: "config.tf: restrict terraform **version** (#268)"
+  EXEMPLO 8: "bump terraform required **version** (#864)"
+  EXEMPLO 9: "chore(cloudflare)!: upgrade terraform provider **version**"
+  EXEMPLO 10: "fix bump terraform environments **version** bumping environments module **version**."
+  (... e mais 10 ocorrências ...)
+
+TERMO 6: 'tf' (20 ocorrências no cluster)
+--------------------------------------------------
+  EXEMPLO 1: "[**tf**] refactor apps terraform module to use the new `**tf**_lambda` module (#656)"
+  EXEMPLO 2: "[**tf**] fix to address terraform support for cloudtrail event_selector (#644)"
+  EXEMPLO 3: "[cli][**tf**] fix a bug in athena cloudwatch monitoring terraform configuration"
+  EXEMPLO 4: "jacknaglieri **tf** cli bug fixes cli bug fixes and terraform cloudtrail/cloudwatch enhancements"
+  EXEMPLO 5: "[**tf**] cloudwatch and cloudtrail enhancements"
+  EXEMPLO 6: "[**tf**] fixing a few terraform bugs"
+  EXEMPLO 7: "new version to deploy azure devops and **tf** cloud/enterprise with caf_solution (#1678)"
+  EXEMPLO 8: "master fix ansible inventory creation in terraform main.**tf**"
+  EXEMPLO 9: "fix ansible inventory creation in terraform main.**tf**"
+  EXEMPLO 10: "fix fmt config.**tf**: fix terraform fmt of config.**tf**"
+  (... e mais 6 ocorrências ...)
+
+TERMO 7: 'fmt' (20 ocorrências no cluster)
+--------------------------------------------------
+  EXEMPLO 1: "terraform **fmt** + fixes"
+  EXEMPLO 2: "fix **fmt** config.tf: fix terraform **fmt** of config.tf"
+  EXEMPLO 3: "config.tf: fix terraform **fmt** of config.tf"
+  EXEMPLO 4: "fix **fmt** {modules/,platforms/}: fix terraform format"
+  EXEMPLO 5: "fixed terraform **fmt**"
+  EXEMPLO 6: "fixed weird autoformatting from `terraform **fmt**`"
+  EXEMPLO 7: "fix terraform **fmt**, enable traefik by default & return null if no lb"
+  EXEMPLO 8: "[terraform **fmt**] fix format issues"
+  EXEMPLO 9: "terraform **fmt** to fix spacing"
+  EXEMPLO 10: "fix terraform **fmt** in firewall rules"
+  (... e mais 9 ocorrências ...)
+
+TERMO 8: 'format' (18 ocorrências no cluster)
+--------------------------------------------------
+  EXEMPLO 1: "[terraform][cli] bug fixes and **formatting** changes"
+  EXEMPLO 2: "[terraform][flow_logs] **format**, fix readme"
+  EXEMPLO 3: "fix fmt {modules/,platforms/}: fix terraform **format**"
+  EXEMPLO 4: "{modules/,platforms/}: fix terraform **format**"
+  EXEMPLO 5: "fix: **formatted** the terraform files for pr validation"
+  EXEMPLO 6: "fix terraform **formatting** and add module_prefix attribute to modules_config (#1162)"
+  EXEMPLO 7: "terraform **formatting** fixed"
+  EXEMPLO 8: "cleanup incorrect terraform **formatting**"
+  EXEMPLO 9: "fix - terraform **format**"
+  EXEMPLO 10: "fix terraform **format** in modules dir"
+  (... e mais 9 ocorrências ...)
+
+TERMO 9: 'add' (15 ocorrências no cluster)
+--------------------------------------------------
+  EXEMPLO 1: "[tf] fix to **address** terraform support for cloudtrail event_selector (#644)"
+  EXEMPLO 2: "fix: **add** support for terraform v1.3+ using local version of partner modules temporarily (#1037)"
+  EXEMPLO 3: "terraform state file fix **added** for local state'"
+  EXEMPLO 4: "update senstive = true to **addess** an issue with terraform 14"
+  EXEMPLO 5: "**address** issues in by utilizing terraform-native options"
+  EXEMPLO 6: "fix: **add** runners binaries bucket as terraform output"
+  EXEMPLO 7: ":bug: - **add** parameter to terraform to set max number of runners (#31)"
+  EXEMPLO 8: "fix terraform formatting and **add** module_prefix attribute to modules_config (#1162)"
+  EXEMPLO 9: "fix typo tf/k8s-infra-monitoring: **add** missing project field"
+  EXEMPLO 10: "**added** - `region` to terraform output"
+  (... e mais 7 ocorrências ...)
+
+TERMO 10: 'support' (11 ocorrências no cluster)
+--------------------------------------------------
+  EXEMPLO 1: "[tf] fix to address terraform **support** for cloudtrail event_selector (#644)"
+  EXEMPLO 2: "fix: add **support** for terraform v1.3+ using local version of partner modules temporarily (#1037)"
+  EXEMPLO 3: "fix: **support** terraform 1.x"
+  EXEMPLO 4: "**support** terraform 0.12 (fix ) (#84)"
+  EXEMPLO 5: "fix(awstf): **support** ssm resource resolution with aws terraform (#707)"
+  EXEMPLO 6: "fix(awstf): **support** sql deployments without migrations using terraform (#703)"
+  EXEMPLO 7: "fix: don't add tags on network interfaces because it's not **supported** yet in `terraform-provider-aws` (#1407)"
+  EXEMPLO 8: "fix: bump `terraform-aws-modules/http` provider version to **support** darwin arm64 release (#1369)"
+  EXEMPLO 9: "fixes : add **support** for terraform v0.12"
+  EXEMPLO 10: "fix: **support** passing service project number to shared_vpc_access to be terraform 0.13 compatible (#500)"
+  (... e mais 1 ocorrências ...)
+
+TERMO 11: 'bump' (11 ocorrências no cluster)
+--------------------------------------------------
+  EXEMPLO 1: "feat: **bump** terraform-oci-provider to v0.0.10 (#1538)"
+  EXEMPLO 2: "**bump** terraform-provider-cosign to v0.0.10 (#1177)"
+  EXEMPLO 3: "**bump** terraform-provider-apko to v0.9.2 (#1121)"
+  EXEMPLO 4: "terraform providers: **bump** versions to latests releases (#2208)"
+  EXEMPLO 5: "**bump** terraform required version (#864)"
+  EXEMPLO 6: "gcp: **bump** terraform provider for kubernetes-public"
+  EXEMPLO 7: "fix **bump** terraform environments version **bumping** environments module version."
+  EXEMPLO 8: "fix: **bump** `terraform-provider-http` required version to 2.4.1 to avoid tls cert pool issue on windows (#1387)"
+  EXEMPLO 9: "fix: **bump** `terraform-aws-modules/http` provider version to support darwin arm64 release (#1369)"
+  EXEMPLO 10: "fix: **bump** version of terraform-google-gcloud module to 1.0.0 (#399)"
+
+TERMO 12: 'v0' (11 ocorrências no cluster)
+--------------------------------------------------
+  EXEMPLO 1: "feat: bump terraform-oci-provider to **v0**.0.10 (#1538)"
+  EXEMPLO 2: "bump terraform-provider-cosign to **v0**.0.10 (#1177)"
+  EXEMPLO 3: "bump terraform-provider-apko to **v0**.9.2 (#1121)"
+  EXEMPLO 4: "update terraform to **v0**.9.6-fcdf494 (#766)"
+  EXEMPLO 5: "jono terraform **v0** 7 1 fix terraform **v0**.7.x breaking changes"
+  EXEMPLO 6: "fix bare-metal multiple apply/ssh on terraform **v0**.11.4+"
+  EXEMPLO 7: "fix: replace `list` with `tolist` function for working with terraform **v0**.15.0 (#1317)"
+  EXEMPLO 8: "fix: more compatibility fixes for terraform **v0**.13 and aws v3 (#976)"
+  EXEMPLO 9: "fixes : add support for terraform **v0**.12"
+  EXEMPLO 10: "terraform **v0**.15 (#1099)"
+
+TERMO 13: 'config' (11 ocorrências no cluster)
+--------------------------------------------------
+  EXEMPLO 1: "[cli][tf] fix a bug in athena cloudwatch monitoring terraform **configuration**"
+  EXEMPLO 2: "fix caldera terraform hardcode caldera **config** settings"
+  EXEMPLO 3: "issues 216 dns **configuration** via terraform-native options, issue"
+  EXEMPLO 4: "**config**: pin versions of terraform modules (#1908)"
+  EXEMPLO 5: "fix fmt **config**.tf: fix terraform fmt of **config**.tf"
+  EXEMPLO 6: "**config**.tf: fix terraform fmt of **config**.tf"
+  EXEMPLO 7: "**config**.tf: restrict terraform version (#268)"
+  EXEMPLO 8: "fix terraform **config** formatting"
+  EXEMPLO 9: "fix the terraform fmt of **configs**"
+  EXEMPLO 10: "fix the terraform fmt of **configs**"
+
+TERMO 14: 'plan' (11 ocorrências no cluster)
+--------------------------------------------------
+  EXEMPLO 1: "fix changes for terraform **plan** for non terraform managed attributes"
+  EXEMPLO 2: "command: fix most (but not all) "terraform **plan**" tests"
+  EXEMPLO 3: "terraform: ugly huge change to weave in new state and **plan** types"
+  EXEMPLO 4: "fix: issue layer2-aws terraform **plan** error (#305)"
+  EXEMPLO 5: "terraform **plan** error."
+  EXEMPLO 6: "fix for terraform **plan**"
+  EXEMPLO 7: "fixed conditional, fixed abort_multipart_upload block, tested with a terraform **plan** (#3855)"
+  EXEMPLO 8: "fix terraform **plan** issue with uncomputable list lengths"
+  EXEMPLO 9: "fix broken terraform **plan**/apply on a cluster < 1.14 (fix ) (#600)"
+  EXEMPLO 10: "fix 261 : invalid **plan** when re-applying terraform module"
+  (... e mais 1 ocorrências ...)
+
+TERMO 15: 'aws' (10 ocorrências no cluster)
+--------------------------------------------------
+  EXEMPLO 1: "issue-1318 update **aws** terraform provider (#1328)"
+  EXEMPLO 2: "update terraform-**aws**-module/eks to v18.17.0 to fix cloudwatch logs issue (#376)"
+  EXEMPLO 3: "terrajet **aws** provider for crossplane (#272)"
+  EXEMPLO 4: "terrajet **aws** provider for crossplane (#272)"
+  EXEMPLO 5: "terraform **aws** profile fixes"
+  EXEMPLO 6: "fix: loosen the **aws** terraform provider constraint (#3708)"
+  EXEMPLO 7: "fix: limit **aws** terraform provider to 3.* (#1741)"
+  EXEMPLO 8: "fix: issue layer2-**aws** terraform plan error (#305)"
+  EXEMPLO 9: "fix providers update required providers to always specify a minimum **aws** provider and terraform version"
+  EXEMPLO 10: "fix(**awstf**): support ssm resource resolution with **aws** terraform (#707)"
+  (... e mais 7 ocorrências ...)
+
+  Hipótese de Tema do Cluster (Sua Interpretação):
+    __________________________________________________________________
+
+  Potencial Operador de Mutação Terraform Derivado (Sua Análise):
+    __________________________________________________________________
+
+---------------------------------------------------------------
+Cluster: Cluster 16
+  Number of Messages: 5052 (74.86%)
+
+  TERMOS MAIS FREQUENTES (Top 25):
+    - add: 833
+    - module: 477
+    - update: 339
+    - issue: 303
+    - policy: 252
+    - variable: 242
+    - cluster: 235
+    - use: 233
+    - remove: 229
+    - support: 219
+    - test: 198
+    - role: 196
+    - service: 193
+    - config: 190
+    - version: 188
+    - feat: 185
+    - node: 183
+    - group: 183
+    - vpc: 174
+    - provider: 167
+    - resource: 165
+    - tf: 164
+    - default: 154
+    - account: 149
+    - tag: 148
+
+==============================================================
+ANÁLISE CONTEXTUAL DOS TERMOS PRINCIPAIS (15 exemplos por termo)
+==============================================================
+
+TERMO 1: 'add' (833 ocorrências no cluster)
+--------------------------------------------------
+  EXEMPLO 1: "**adds** optional prefix to sqs url (#960)"
+  EXEMPLO 2: "[tf][modules] fix readme typo and **add** doc reference for policy"
+  EXEMPLO 3: "jacknaglieri **add** vpc config to stream alert support alert processor in vpc, various bug fixes"
+  EXEMPLO 4: "[tf] **add** a dependency to the sns permission to fix resourcenotfoundexception"
+  EXEMPLO 5: "fix: **add** missing tag resource for efs-csi driver policy (#1573)"
+  EXEMPLO 6: "fix: **add** aws_iam_session_context issuer_arn as local aws_caller_identity (#1591)"
+  EXEMPLO 7: "fix: **add** missing tagresource permission needed for efs csi (#1581)"
+  EXEMPLO 8: "fix: **add** local copy of ondat due to ondat repository migration (#1523)"
+  EXEMPLO 9: "feat: **add** optional path variable for the karpenter aws_iam_policy (#1351)"
+  EXEMPLO 10: "refactor: iam policy improvements on karpenter **add**-on for tfsec compliance rules compliance. (#1365)"
+  (... e mais 863 ocorrências ...)
+
+TERMO 2: 'module' (477 ocorrências no cluster)
+--------------------------------------------------
+  EXEMPLO 1: "small fixes for s3 events tf **module**, rule test stats, and specifying region in athenaclient (#849)"
+  EXEMPLO 2: "[tf][cli] support filter_prefix filter_suffix for s3 event notification **module**"
+  EXEMPLO 3: "[tf][**modules**]fix bug in lambda s3 policy naming"
+  EXEMPLO 4: "[tf][**modules**] fix readme typo and add doc reference for policy"
+  EXEMPLO 5: "fix: update eks **module** min version to fix race condition during destroy (#1926)"
+  EXEMPLO 6: "fix: correcting namespace for csi-secret-store-provider-aws **module** (#1281)"
+  EXEMPLO 7: "feat: update crossplane **module** (#1220)"
+  EXEMPLO 8: "fix(addon): bugfix `argocd_manage_add_ons` not passed to `external_secrets` **module** (#957)"
+  EXEMPLO 9: "hotfix for oidc issue url for irsa **module** (#839)"
+  EXEMPLO 10: "fix: correct irsa **module** name used to not default to `null` through `coalesce()` (#808)"
+  (... e mais 458 ocorrências ...)
+
+TERMO 3: 'update' (339 ocorrências no cluster)
+--------------------------------------------------
+  EXEMPLO 1: "[docs][cli] doc **updates** to reflect athena changes, misc cli **updates** (#662)"
+  EXEMPLO 2: "ryandeivert athena minor **updates** [lambda][athena] athena minor tf **updates** and tf destroy fix"
+  EXEMPLO 3: "[lambda][output] output processor modular **updates**"
+  EXEMPLO 4: "fix: **update** eks module min version to fix race condition during destroy (#1926)"
+  EXEMPLO 5: "fix: replace un-maintained kubectl provider with an **updated** fork (#1901)"
+  EXEMPLO 6: "fix: pattern-blue-green-upgrade **update** example for `tfvars` (#1799)"
+  EXEMPLO 7: "fix: **update** csi secrets provider driver (#1538)"
+  EXEMPLO 8: "fix: **update** `externaldns` policy to support multiple route 53 zones (#1496)"
+  EXEMPLO 9: "feat: **update** karpenter to `v0.23.0` and add `awsinterruptionqueuename` to argocd gitops config (#1335)"
+  EXEMPLO 10: "feat: **update** crossplane module (#1220)"
+  (... e mais 305 ocorrências ...)
+
+TERMO 4: 'issue' (303 ocorrências no cluster)
+--------------------------------------------------
+  EXEMPLO 1: "fix: add aws_iam_session_context **issuer**_arn as local aws_caller_identity (#1591)"
+  EXEMPLO 2: "fix: fix spot instance **issue** in self managed node group template (#1540)"
+  EXEMPLO 3: "fix: remove variable validation - its causing more **issues** than value (#1521)"
+  EXEMPLO 4: "fix: added tags for cert-manager-irsa policy for **issue** (#1217)"
+  EXEMPLO 5: "fix: fix efs csi driver mount **issues** (#1191)"
+  EXEMPLO 6: "fix: update vault addon version to correct **issue** with default values data type (#1067)"
+  EXEMPLO 7: "hotfix for oidc **issue** url for irsa module (#839)"
+  EXEMPLO 8: "**issue** 655 - ability to configure cluster securitygroup (#673)"
+  EXEMPLO 9: "fix: add ignore rules for tfsec and correct remaining **issues** to ensure tfsec passes (#531)"
+  EXEMPLO 10: "aws pca **issuer** (#359)"
+  (... e mais 288 ocorrências ...)
+
+TERMO 5: 'policy' (252 ocorrências no cluster)
+--------------------------------------------------
+  EXEMPLO 1: "fixing duplicate **policy** bug with cloudtrail bucket (#907)"
+  EXEMPLO 2: "[tf] fixing bug with **policy** resource value (#752)"
+  EXEMPLO 3: "[tf][modules]fix bug in lambda s3 **policy** naming"
+  EXEMPLO 4: "[tf][modules] fix readme typo and add doc reference for **policy**"
+  EXEMPLO 5: "ryandeivert revert **policy** perm fix revert "[tf] quick fix for a accessdeniedexception introduced by aws""
+  EXEMPLO 6: "ryandeivert **policy** perm fix [tf] quick fix for a accessdeniedexception introduced by aws"
+  EXEMPLO 7: "fix: add missing tag resource for efs-csi driver **policy** (#1573)"
+  EXEMPLO 8: "fix: update `externaldns` **policy** to support multiple route 53 zones (#1496)"
+  EXEMPLO 9: "refactor: iam **policy** improvements on karpenter add-on for tfsec compliance rules compliance. (#1365)"
+  EXEMPLO 10: "refactor: iam **policy** improvements on external secrets add-on for tfsec compliance rules compliance. (#1367)"
+  (... e mais 159 ocorrências ...)
+
+TERMO 6: 'variable' (242 ocorrências no cluster)
+--------------------------------------------------
+  EXEMPLO 1: "[tf] fixing metrics **variable** name enforcing some dependencies that could cause race conditions"
+  EXEMPLO 2: "fix: remove **variable** validation - its causing more issues than value (#1521)"
+  EXEMPLO 3: "feat: add optional path **variable** for the karpenter aws_iam_policy (#1351)"
+  EXEMPLO 4: "fix: fix a typo in a **variable** description (#1252)"
+  EXEMPLO 5: "fix: remove optional **variable** attribute experiment from project (#1011)"
+  EXEMPLO 6: "fix: data eks readiness **variable**, increase timeout (#508)"
+  EXEMPLO 7: "fix/standardize **variables** across addons"
+  EXEMPLO 8: "fix **variable** type constraint"
+  EXEMPLO 9: "fix **variable** name"
+  EXEMPLO 10: "fix **variable** name for addon_config (#136)"
+  (... e mais 223 ocorrências ...)
+
+TERMO 7: 'cluster' (235 ocorrências no cluster)
+--------------------------------------------------
+  EXEMPLO 1: "fix: only tag **cluster** node security group for karpenter (#1985)"
+  EXEMPLO 2: "refactor: iam policy improvements on **cluster** autoscaler add-on for tfsec compliance rules compliance. (#1369)"
+  EXEMPLO 3: "fix: added required rules for adot **cluster** role (#1273)"
+  EXEMPLO 4: "fix: e2e cleanup log group one time & wait for **cluster** readiness before creating teams k8s resources (#1170)"
+  EXEMPLO 5: "fix: correct conditional logic check of **cluster** encryption config (#1137)"
+  EXEMPLO 6: "feat: set default **cluster** version to 1.23 & examples to 1.23 (#899)"
+  EXEMPLO 7: "fix: unique nth event rules names per **cluster** id (#744)"
+  EXEMPLO 8: "fix: correctly match **cluster**-autoscaler image version to **cluster** version (#684)"
+  EXEMPLO 9: "issue 655 - ability to configure **cluster** securitygroup (#673)"
+  EXEMPLO 10: "update addons versions | examples to use **cluster** version 1.22 | fix self-managed-node example (#634)"
+  (... e mais 198 ocorrências ...)
+
+TERMO 8: 'use' (233 ocorrências no cluster)
+--------------------------------------------------
+  EXEMPLO 1: "fix: ensure efa installer **uses** full path to efa bin and does not install if already present (#1780)"
+  EXEMPLO 2: "fix: **use** namespace resource to share across `istio` charts to avoid conflicts (#1768)"
+  EXEMPLO 3: "fix: correct irsa module name **used** to not default to `null` through `coalesce()` (#808)"
+  EXEMPLO 4: "fix: allow settting metadata endpoint options so **users** can configure or disable (#657)"
+  EXEMPLO 5: "update addons versions | examples to **use** cluster version 1.22 | fix self-managed-node example (#634)"
+  EXEMPLO 6: "[kubernetes addons module] - **use** eks outputs instead of data resources (#589)"
+  EXEMPLO 7: "add irsa policies for cert-manager; **use** default values.yaml (#509)"
+  EXEMPLO 8: "managed node groups **userdata** fix and kms support (#456)"
+  EXEMPLO 9: "fix: **use** eks module for access_entries for trn-inf blueprint (#646)"
+  EXEMPLO 10: "fix: **use** correct instancefamily for trainium (#339)"
+  (... e mais 221 ocorrências ...)
+
+TERMO 9: 'remove' (229 ocorrências no cluster)
+--------------------------------------------------
+  EXEMPLO 1: "[tf] **remove** alarm recover from lambda invocation errors (#765)"
+  EXEMPLO 2: "fix: **remove** unused hashicorp/template provider (#1842)"
+  EXEMPLO 3: "fix: **remove** variable validation - its causing more issues than value (#1521)"
+  EXEMPLO 4: "fix: **remove** optional variable attribute experiment from project (#1011)"
+  EXEMPLO 5: "fix: **remove** `app.kubernetes.io/managed-by` label (#591)"
+  EXEMPLO 6: "[addons/kubernetes-dashboard] **remove** fixed service account (#599)"
+  EXEMPLO 7: "fix: **remove** default managed addon versions (#530)"
+  EXEMPLO 8: "fix/**remove** hard coded aws partition from arns (#385)"
+  EXEMPLO 9: "fix: **remove** incubator referance for yunikorn (#369)"
+  EXEMPLO 10: "fix example new vpc add depndency allow usage of depends_on for accelerator module, **remove** fargate_profiles from base example"
+  (... e mais 192 ocorrências ...)
+
+TERMO 10: 'support' (219 ocorrências no cluster)
+--------------------------------------------------
+  EXEMPLO 1: "[tf][cli] **support** filter_prefix filter_suffix for s3 event notification module"
+  EXEMPLO 2: "jacknaglieri add vpc config to stream alert **support** alert processor in vpc, various bug fixes"
+  EXEMPLO 3: "fix: update `externaldns` policy to **support** multiple route 53 zones (#1496)"
+  EXEMPLO 4: "feat: add gitops **support** for `aws-node-termination-handler` (#1227)"
+  EXEMPLO 5: "fix: additional iam policy **support** for the aws-ebs-csi-driver addon role (#1146)"
+  EXEMPLO 6: "fix: enable `external-secrets` **support** via gitops and argocd (#1049)"
+  EXEMPLO 7: "**support** forcing type on helm chart `set` attribute (#943)"
+  EXEMPLO 8: "managed node groups userdata fix and kms **support** (#456)"
+  EXEMPLO 9: "fix/load balancer controller govcloud **support** (#381)"
+  EXEMPLO 10: "bug 306 **support** private endpoint bug/306 **support** private endpoint"
+  (... e mais 205 ocorrências ...)
+
+TERMO 11: 'test' (198 ocorrências no cluster)
+--------------------------------------------------
+  EXEMPLO 1: "small fixes for s3 events tf module, rule **test** stats, and specifying region in athenaclient (#849)"
+  EXEMPLO 2: "fix pr-**test** errors for amp"
+  EXEMPLO 3: "fix pr-**test** errors"
+  EXEMPLO 4: "adding argocd example. minor add-on bug fixes found while **testing**."
+  EXEMPLO 5: "region e2e fix **test**: e2e aws_region name instead of id"
+  EXEMPLO 6: "integration **tests** fix"
+  EXEMPLO 7: "fix and **test** communication_service"
+  EXEMPLO 8: "**test** and fix example"
+  EXEMPLO 9: "fix null error and added example config to **test** pipeline"
+  EXEMPLO 10: "sorting **test** cases, adding scenario, fixing var calls in automation example"
+  (... e mais 201 ocorrências ...)
+
+TERMO 12: 'role' (196 ocorrências no cluster)
+--------------------------------------------------
+  EXEMPLO 1: "[tf] fix bug in lambda **role** s3 permissions"
+  EXEMPLO 2: "fix: added required rules for adot cluster **role** (#1273)"
+  EXEMPLO 3: "fix: add tags to irsa created **roles** (#1250)"
+  EXEMPLO 4: "fix: additional iam policy support for the aws-ebs-csi-driver addon **role** (#1146)"
+  EXEMPLO 5: "fix: ensure kms key policy includes iam **role** path (#979)"
+  EXEMPLO 6: "irsa **role** condition fix (#742)"
+  EXEMPLO 7: "fix: add worker nodes **role** depndency, fix resource names"
+  EXEMPLO 8: "fix: resource per **role** policy attach, for_each input only"
+  EXEMPLO 9: "fix: add worker nodes **role** depndency, fix resource names"
+  EXEMPLO 10: "fix: resource per **role** policy attach, for_each input only"
+  (... e mais 155 ocorrências ...)
+
+TERMO 13: 'service' (193 ocorrências no cluster)
+--------------------------------------------------
+  EXEMPLO 1: "feat: override **service**-account-name for aws-load-balancer-controller addon (#1184)"
+  EXEMPLO 2: "[addons/kubernetes-dashboard] remove fixed **service** account (#599)"
+  EXEMPLO 3: "ensure **serviceaccount** created in correct namespace (#398)"
+  EXEMPLO 4: "bugfix ebs **service** account creation 2 fixing formatting"
+  EXEMPLO 5: "bugfix ebs **service** account creation bugfix/ebs **service** account creation"
+  EXEMPLO 6: "bug fix emr on eks emr on eks fix for **service** account"
+  EXEMPLO 7: "emr on eks fix for **service** account"
+  EXEMPLO 8: "fix: disable **service** mutation webhook when deploying lbc in jark-stack (#317)"
+  EXEMPLO 9: "feat: enhancement cognitive **services** (#2019)"
+  EXEMPLO 10: "feature 1066 appservice ip restriction fix ip_restriction issues for app **service**"
+  (... e mais 160 ocorrências ...)
+
+TERMO 14: 'config' (190 ocorrências no cluster)
+--------------------------------------------------
+  EXEMPLO 1: "[apps] slight refactor of apps **config** and migration to moto for ssm mocking (#795)"
+  EXEMPLO 2: "jacknaglieri cloudtrail patterns bug fixes (initialization, aws perms, **config**), cloudwatch event patterns, and more"
+  EXEMPLO 3: "jacknaglieri add vpc **config** to stream alert support alert processor in vpc, various bug fixes"
+  EXEMPLO 4: "feat: update karpenter to `v0.23.0` and add `awsinterruptionqueuename` to argocd gitops **config** (#1335)"
+  EXEMPLO 5: "fix: correct conditional logic check of cluster encryption **config** (#1137)"
+  EXEMPLO 6: "fix: allow settting metadata endpoint options so users can **configure** or disable (#657)"
+  EXEMPLO 7: "issue 655 - ability to **configure** cluster securitygroup (#673)"
+  EXEMPLO 8: "fix: moving teams auth **config** to root locals"
+  EXEMPLO 9: "fix windows vpc cni count fix: deploy vpc_cni windows **configmap** if needed"
+  EXEMPLO 10: "fix: deploy vpc_cni windows **configmap** if needed"
+  (... e mais 216 ocorrências ...)
+
+TERMO 15: 'version' (188 ocorrências no cluster)
+--------------------------------------------------
+  EXEMPLO 1: "fix: update eks module min **version** to fix race condition during destroy (#1926)"
+  EXEMPLO 2: "fix: corrections to the helm chart **versions** (#1837)"
+  EXEMPLO 3: "fix: kubecost container **version** health with eks 1.25+ (#1607)"
+  EXEMPLO 4: "fix: update vault addon **version** to correct issue with default values data type (#1067)"
+  EXEMPLO 5: "feat: set default cluster **version** to 1.23 & examples to 1.23 (#899)"
+  EXEMPLO 6: "fix: update eks module **version** to restrict tls provider **version** (#796)"
+  EXEMPLO 7: "fix: correctly match cluster-autoscaler image **version** to cluster **version** (#684)"
+  EXEMPLO 8: "fix: cert manager **version** for adot operator & java example (#665)"
+  EXEMPLO 9: "update addons **versions** | examples to use cluster **version** 1.22 | fix self-managed-node example (#634)"
+  EXEMPLO 10: "fix: remove default managed addon **versions** (#530)"
+  (... e mais 149 ocorrências ...)
+
+  Hipótese de Tema do Cluster (Sua Interpretação):
+    __________________________________________________________________
+
+  Potencial Operador de Mutação Terraform Derivado (Sua Análise):
+    __________________________________________________________________
+

@@ -134,6 +134,64 @@ print(f"Modified attributes: {len(changes['modified'])}")
 print(f"Dependency changes: {len(changes['dependency_changes'])}")
 ```
 
+## Configuration
+
+### NLP Analysis Configuration
+
+The NLP analysis module (`src/nlp_analysis/`) supports two clustering approaches that can be configured via the `src/nlp_analysis/config.yaml` file:
+
+#### Clustering Approaches
+
+```yaml
+clustering_settings:
+  # Abordagem de clustering:
+  # - true: Abordagem "Top-Down" (ATUAL) - Clusteriza todos os commits (7.240) e depois filtra
+  #   Hipótese: Cria um "mapa" completo das atividades, isolando merges e ruídos em clusters específicos
+  # - false: Abordagem "Bottom-Up" (NOVA) - Filtra commits primeiro e depois clusteriza
+  #   Hipótese: Produz clusters imediatamente focados nos tipos de commits desejados
+  use_all_commits_for_clustering: true
+```
+
+**Top-Down Approach** (default: `use_all_commits_for_clustering: true`):
+- Clusters all available commits (~7,240) without pre-filtering
+- Creates a complete "map" of activities, isolating merge commits and noise in specific clusters
+- May reveal non-obvious bugfix groupings by examining the complete dataset
+
+**Bottom-Up Approach** (`use_all_commits_for_clustering: false`):
+- Applies eligibility filters before clustering (removes merges, vendor-only changes, etc.)
+- Results in clusters immediately focused on desired commit types
+- Leads to more direct identification of topics like bugfixes
+
+#### Duplicate Handling
+
+```yaml
+clustering_settings:
+  # Controle de duplicatas no clustering:
+  # - true: Remove duplicatas (repo_name, commit_hash) - resultado similar à amostragem (~697 commits)
+  # - false: Mantém duplicatas - mais dados para clustering (~6749 commits) 
+  remove_duplicates_for_clustering: false
+```
+
+**Remove Duplicates** (`remove_duplicates_for_clustering: true`):
+- Results in unique commits only (~697 commits)
+- Avoids bias from repositories with many similar commits
+- Cleaner data, similar to sampling approach
+- Better for balanced representation across repositories
+
+**Keep Duplicates** (`remove_duplicates_for_clustering: false` - default):
+- Results in more data for clustering (~6749 commits)
+- Similar commits can reinforce thematic patterns
+- More volume can improve embedding quality
+- May introduce bias from highly active repositories
+
+### Filtering Criteria (Bottom-Up Approach)
+
+When using the Bottom-Up approach, commits are filtered using the following criteria:
+- Excludes generic merge commits (`is_merge: true`)
+- Excludes commits with empty or invalid messages
+- Excludes commits that only modify files in excluded directories (vendor/, tests/, examples/, etc.)
+- Uses the same `is_commit_relevant_for_sampling` function applied in data sampling
+
 ## Contributing
 
 Contributions are welcome! Please feel free to submit a Pull Request.
