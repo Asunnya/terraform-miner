@@ -1,0 +1,38 @@
+Connected to .venv (Python 3.12.9)
+
+Libraries imported successfully!
+Configuration loaded successfully from 'j:\projct-tcc\terraform-miner\terraform-miner\src\nlp_analysis\config_02_analyze.yaml'.
+Downloading NLTK resource: wordnet...
+[nltk_data] Downloading package wordnet to
+[nltk_data]     C:\Users\asu\AppData\Roaming\nltk_data...
+[nltk_data]   Package wordnet is already up-to-date!
+spaCy 'en_core_web_sm' model loaded for English lemmatization.
+Loaded 6497 records from j:\projct-tcc\terraform-miner\terraform-miner\src/nlp_analysis/analysis_results_nlp/commits_com_clusters.jsonl
+Output report will be saved to: j:\projct-tcc\terraform-miner\terraform-miner\.\semantic_cluster_analysis_reports\cluster_analysis_report_commits_com_clusters.txt
+Cluster analysis report saved to: j:\projct-tcc\terraform-miner\terraform-miner\.\semantic_cluster_analysis_reports\cluster_analysis_report_commits_com_clusters.txt
+
+--- Analysis complete. Report saved to: j:\projct-tcc\terraform-miner\terraform-miner\.\semantic_cluster_analysis_reports\cluster_analysis_report_commits_com_clusters.txt ---
+Libraries imported successfully!
+Configuration loaded successfully from 'j:\projct-tcc\terraform-miner\terraform-miner\src\nlp_analysis\config_02_analyze.yaml'.
+Downloading NLTK resource: wordnet...
+[nltk_data] Downloading package wordnet to
+[nltk_data]     C:\Users\asu\AppData\Roaming\nltk_data...
+[nltk_data]   Package wordnet is already up-to-date!
+spaCy 'en_core_web_sm' model loaded for English lemmatization.
+Loaded 6749 records from j:\projct-tcc\terraform-miner\terraform-miner\src/nlp_analysis/analysis_results_nlp/commits_com_clusters.jsonl
+Output report will be saved to: j:\projct-tcc\terraform-miner\terraform-miner\.\semantic_cluster_analysis_reports\cluster_analysis_report_commits_com_clusters.txt
+Cluster analysis report saved to: j:\projct-tcc\terraform-miner\terraform-miner\.\semantic_cluster_analysis_reports\cluster_analysis_report_commits_com_clusters.txt
+
+--- Analysis complete. Report saved to: j:\projct-tcc\terraform-miner\terraform-miner\.\semantic_cluster_analysis_reports\cluster_analysis_report_commits_com_clusters.txt ---
+Libraries imported successfully!
+Configuration loaded successfully from 'j:\projct-tcc\terraform-miner\terraform-miner\src\nlp_analysis\config_02_analyze.yaml'.
+Downloading NLTK resource: wordnet...
+[nltk_data] Downloading package wordnet to
+[nltk_data]     C:\Users\asu\AppData\Roaming\nltk_data...
+[nltk_data]   Package wordnet is already up-to-date!
+spaCy 'en_core_web_sm' model loaded for English lemmatization.
+Loaded 6749 records from j:\projct-tcc\terraform-miner\terraform-miner\src/nlp_analysis/analysis_results_nlp/commits_com_clusters.jsonl
+Output report will be saved to: j:\projct-tcc\terraform-miner\terraform-miner\.\semantic_cluster_analysis_reports\cluster_analysis_report_commits_com_clusters.txt
+Cluster analysis report saved to: j:\projct-tcc\terraform-miner\terraform-miner\.\semantic_cluster_analysis_reports\cluster_analysis_report_commits_com_clusters.txt
+
+--- Analysis complete. Report saved to: j:\projct-tcc\terraform-miner\terraform-miner\.\semantic_cluster_analysis_reports\cluster_analysis_report_commits_com_clusters.txt ---

@@ -1,0 +1,135 @@
+Usando 'output_paths.dataset_dir' de j:\projct-tcc\terraform-miner\terraform-miner\src\miner\config.yaml: j:\projct-tcc\terraform-miner\data\dataset
+AVISO: Módulos de análise avançada do usuário ('terraform_ast', 'diff_stats') não encontrados ou não importados.
+Todos os resultados, incluindo logs e arquivos gerados, serão salvos em: j:\projct-tcc\terraform-miner\terraform-miner\src\nlp_analysis\analysis_results_nlp
+Procurando arquivos JSON do minerador em: j:\projct-tcc\terraform-miner\data\dataset
+Encontrados 54 arquivos JSONL para processar.
+Processando arquivos JSON do minerador: 100%|██████████| 54/54 [00:02<00:00, 23.07it/s]
+Coleta de dados concluída. Total de 7240 commits únicos agrupados.
+
+Exemplo de dados de commits agrupados (primeiras linhas do DataFrame):
+                     repo_name                               commit_hash  \
+0  airbnb_streamalert_ae70d90b  cac313c6ba3f6c9a3dcb26ef86f2d4b7f9525b61   
+1  airbnb_streamalert_ae70d90b  b7971a0020c10049256020e20e1850776ba4b77e   
+2  airbnb_streamalert_ae70d90b  bfde778bc216bff1dfd7372164fd20cb78012dee   
+3  airbnb_streamalert_ae70d90b  4afadf5f51d02434ac1099ed22b89ab667514d5d   
+4  airbnb_streamalert_ae70d90b  1714b1edf2e4f0e33427cb96ead66ae922c12e57   
+
+                                        msg_original  \
+0  ISSUE-1318 Update AWS Terraform Provider (#132...   
+1  official release of v3.4.0 (#1292)\n\n* bumpin...   
+2  official release of v3.3.0 (#1287)\n\n* bumpin...   
+3  official release of v3.2.0 (#1234)\n\n* bumpin...   
+4  official release of v3.1.1 (#1215)\n\n* bumpin...   
+
+                 author_date  is_merge  
+0  2022-07-20 13:39:10-07:00     False  
+1  2020-08-26 15:22:02-07:00     False  
+2  2020-08-05 15:03:43-07:00     False  
+3  2020-04-09 16:12:40-07:00     False  
+4  2020-03-31 13:03:16-07:00     False  
+
+Convertendo all_commits_data para DataFrame e salvando all_commits.csv...
+Arquivo all_commits_nlp.csv salvo em: analysis_results_nlp\all_commits_nlp.csv
+Número total de mensagens (base para HDBSCAN params): 7240
+
+--- Iniciando Validação de all_commits.csv ---
+  Número total de commits esperado no CSV: 7240
+  Commits unicamente em diretórios 'vendor/' (calculado a partir de df_all_commits_processed): 6
+    INFO: Encontrados 6 commits que parecem ser apenas de 'vendor/'. Verifique se o filtro está adequado.
+--- Fim da Validação de all_commits.csv ---
+Processando commits para o corpus_overview.md...
+Calculando estatísticas do corpus: 100%|██████████| 7240/7240 [00:37<00:00, 192.14it/s]
+
+Arquivo corpus_overview.md salvo em: analysis_results_nlp\corpus_overview.md
+
+
+--- Iniciando Validação de corpus_overview.md ---
+  Validação de total_commits:
+    Overview: 7240, Calculado a partir de df_all_commits_processed: 7240
+  Validação de date_range:
+    Overview: 2014-05-24 – 2025-05-30
+    Calculado: 2014-05-24 – 2025-05-29
+    ALERTA: Divergência em date_range!
+  Validação de métricas de comprimento de mensagem (usando exatamente os mesmos valores):
+    Mean   - Overview: 49.65, Calculado: 49.65
+    Median - Overview: 49.0, Calculado: 49.0
+    P10    - Overview: 19.0, Calculado: 19.0
+    P90    - Overview: 78.0, Calculado: 78.0
+  Parâmetros UMAP/HDBSCAN: Verificar manualmente se os valores em corpus_overview.md são apropriados para 7240 commits.
+--- Fim da Validação de corpus_overview.md ---
+
+--- Iniciando Validação de token_freq.csv e keywords_stop.yml ---
+  Validação de token_freq.csv (Top 60 tokens):
+    Soma das frequências dos top tokens: 11067
+    Total de ocorrências de tokens (filtrados) no corpus: 26411
+    Cobertura dos top tokens: 41.90%
+    ALERTA: Cobertura (41.90%) abaixo de 60%. Considere aumentar TOP_N_TOKENS (atualmente 60).
+  Validação de keywords_stop.yml_suggestions.txt:
+    Número de stopwords únicas sugeridas: 60
+    INFO: Alguns tokens frequentes como ['use'] não estão nas sugestões. Verifique se devem ser adicionados.
+  Validação de top_bigrams.json (carregado):
+    Número de bigramas carregados: 20
+    Exemplo do primeiro bigrama carregado: 'pull request'
+--- Fim da Validação de token_freq.csv e keywords_stop.yml ---
+
+Lendo mensagens de j:\projct-tcc\terraform-miner\terraform-miner\reports\all_commits.csv para token_freq.csv e keywords_stop.yml...
+Total de mensagens limpas para análise de tokens: 7607
+Tokenizando mensagens e contando frequências...
+Tokenizando: 100%|██████████| 7607/7607 [00:00<00:00, 604293.08it/s]
+
+Arquivo token_freq_nlp.csv (60 tokens) salvo em: analysis_results_nlp\token_freq_nlp.csv
+Incorporando 20 bigramas de j:\projct-tcc\terraform-miner\terraform-miner\reports\top_bigrams.json nas sugestões de stopwords.
+
+Sugestões para keywords_stop.yml salvas em: analysis_results_nlp\keywords_stop_nlp_suggestions.txt
+
+--- Script Integrado (v2) Concluído ---
+Resultados salvos em: j:\projct-tcc\terraform-miner\terraform-miner\src\nlp_analysis\analysis_results_nlp
+
+
+--- Iniciando Validação de sample_messages.csv ---
+  Número de linhas em sample_messages.csv: 725
+    ALERTA: Número de linhas (725) fora do esperado (~1000).
+  Estratificação por mês na amostra (objetivo >= 50 commits/mês amostrado):
+    Meses na amostra com < 50 commits: 87 de 88 meses amostrados.
+  Representatividade Temporal (Distribuição Anual Normalizada):
+  Representatividade de Tamanho de Mensagem (palavras em msg_clean):
+    Corpus - P10: 2.00, P50: 7.00, P90: 12.00
+    Amostra- P10: 23.00, P50: 48.00, P90: 77.00
+    ALERTA: Mediana do tamanho das mensagens na amostra diverge do corpus.
+--- Fim da Validação de sample_messages.csv ---
+<ipython-input-33-231afbcacc44>:24: UserWarning: Converting to PeriodArray/Index representation will drop timezone information.
+  df_sample_for_val['year_month_val'] = df_sample_for_val['author_date'].dt.to_period('M')
+
+Processando commits para sample_messages.csv...
+Preparando dados para amostragem: 100%|██████████| 7240/7240 [00:00<00:00, 82065.67it/s]
+<ipython-input-32-b50071f1e7a8>:74: UserWarning: Converting to PeriodArray/Index representation will drop timezone information.
+  df_eligible['year_month'] = df_eligible['author_date'].dt.to_period('M')
+Total de commits elegíveis para amostragem (após limpeza e filtragem): 6749
+Commits elegíveis únicos para amostragem (por repo_name, commit_hash): 725
+Amostragem estratificada por mês/comprimento: 100%|██████████| 88/88 [00:00<00:00, 940.99it/s]
+
+Arquivo sample_messages_nlp.csv com 725 registros salvo em: analysis_results_nlp\sample_messages_nlp.csv
+
+Usando abordagem BOTTOM-UP: Filtrando commits antes do clustering
+Commits filtrados para clustering: 6749 de 7240 (93.2%)
+Remoção de duplicatas ativada: 6749 → 6749 commits únicos (-0 duplicatas)
+Bloco [8]: 6749 mensagens prontas para vetorização.
+A carregar embeddings de: analysis_results_nlp\sbert_embeddings.pkl
+HDBSCAN min_cluster_size definido DIRETAMENTE via config: 30
+HDBSCAN min_samples definido DIRETAMENTE via config: 10
+Parâmetros FINAIS para HDBSCAN: min_cluster_size=30, min_samples=10, allow_single_cluster=True, cluster_selection_epsilon=0.5
+A aplicar UMAP (n_neighbors=20, min_dist=0.1, n_components=5, metric=cosine)...
+j:\projct-tcc\terraform-miner\terraform-miner\.venv\Lib\site-packages\sklearn\utils\deprecation.py:151: FutureWarning: 'force_all_finite' was renamed to 'ensure_all_finite' in 1.6 and will be removed in 1.8.
+  warnings.warn(
+j:\projct-tcc\terraform-miner\terraform-miner\.venv\Lib\site-packages\umap\umap_.py:1952: UserWarning: n_jobs value 1 overridden to 1 by setting random_state. Use no seed for parallelism.
+  warn(
+Nova dimensão após UMAP: (6749, 5)
+A aplicar HDBSCAN (min_cluster_size=30, min_samples=10, allow_single_cluster=True, cluster_selection_epsilon=0.5)...
+Número de clusters encontrados: 17
+Número de pontos de ruído (outliers): 542
+j:\projct-tcc\terraform-miner\terraform-miner\.venv\Lib\site-packages\sklearn\utils\deprecation.py:151: FutureWarning: 'force_all_finite' was renamed to 'ensure_all_finite' in 1.6 and will be removed in 1.8.
+  warnings.warn(
+j:\projct-tcc\terraform-miner\terraform-miner\.venv\Lib\site-packages\sklearn\utils\deprecation.py:151: FutureWarning: 'force_all_finite' was renamed to 'ensure_all_finite' in 1.6 and will be removed in 1.8.
+  warnings.warn(
+DataFrame com labels de cluster salvo em JSON Lines: analysis_results_nlp\commits_com_clusters.jsonl
+--- Fim do Bloco [8] (SBERT e HDBSCAN) ---
