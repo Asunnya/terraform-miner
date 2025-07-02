@@ -1,0 +1,52 @@
+# config.yaml (atualizado)
+
+# Token de autenticação GitHub (substitua pelo seu token)
+github_token: "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"
+
+# Estrelas mínimas para filtrar repositórios
+stars: 500  # Atualizado conforme requisito (antes era 10)
+
+# Commits mínimos para filtrar repositórios
+min_commits: 500  # Adicionado novo critério de filtragem
+
+# Palavras‑chave para identificar commits de correção
+keywords:
+  - fix
+  - bug
+  - issue
+  - resolve
+  - error
+  - failure
+  - incorrect
+
+exclude_keywords:
+  - "example"
+  - "exercise"
+  - "demo"
+  - "sample"
+  - "guide"
+  - "workshop"
+  - "learn"
+  - "starter-kit"
+  - "boilerplate"
+  - "basics"
+  - "manifesto"
+  - "awesome"
+  - "homelab"
+  - "tutorial"
+
+# Limite de repositórios a processar após filtragem
+limit: 100
+workers: 8
+
+# Configurações de busca na API
+api_search:
+  sort_by: "stars"  # Campo para ordenação
+  order: "desc"     # Ordem decrescente (maior para menor)
+
+# Caminhos de Saída (relativos à raiz do projeto)
+output_paths:
+  dataset_dir: "../data/dataset" # Onde os JSONL do minerador são salvos
+  # logs_dir: "../data/logs" # Exemplo, se quiser configurar outros
+  # repos_dir: "../data/repos" # Exemplo
+
