@@ -1,0 +1,134 @@
+# Configurações para a análise NLP (phase2.py)
+
+# Caminhos e Nomes de Arquivos de Saída
+output_paths:
+  base_nlp_output_dir: "analysis_results_nlp" # Diretório base para todos os resultados desta análise
+  clusters_jsonl: "commits_com_clusters.jsonl"
+  all_commits_csv: "all_commits_nlp.csv" # CSV processado por phase2.py
+  sample_messages_csv: "sample_messages_nlp.csv"
+  token_freq_csv: "token_freq_nlp.csv"
+  keywords_stop_yml_suggestions: "keywords_stop_nlp_suggestions.txt"
+  sbert_embeddings_pkl: "sbert_embeddings.pkl"
+  corpus_overview_md: "corpus_overview.md" # Nome do arquivo de visão geral do corpus
+
+# Colunas a serem salvas no arquivo JSONL de clusters (commits_com_clusters.jsonl)
+# Certifique-se de que estas colunas existam no DataFrame df_commits_para_clustering antes de salvar
+output_columns_for_clusters_jsonl: 
+  - "repo_name"
+  - "commit_hash"
+  - "author_name" 
+  # - "author_email" # Omitido por padrão devido à sensibilidade (PII)
+  - "author_date"
+  - "msg_original"
+  - "msg_clean_for_val" # Mensagem limpa usada para SBERT/validação
+  # - "language" # Adicionar se a detecção de idioma for feita e a coluna existir
+  # - "language_probability"
+  # - "is_english"
+  - "hdbscan_cluster_label"
+  - "hdbscan_cluster_probability"
+  # - "sbert_embedding" # Omitido por padrão devido ao tamanho; pode ser útil para análises posteriores
+
+# Parâmetros para SBERT
+SBERT_MODEL_NAME: 'sentence-transformers/all-roberta-large-v1'
+
+# Parâmetros para UMAP
+UMAP_PARAMS:
+  n_neighbors: 20
+  min_dist: 0.1
+  n_components: 5
+  metric: 'cosine'
+
+# Parâmetros para HDBSCAN
+# Se min_cluster_size ou min_samples forem inteiros positivos, serão usados diretamente.
+# Caso contrário (e.g., null, ausente ou não int > 0), os FATORES abaixo serão usados.
+HDBSCAN_PARAMS:
+  min_cluster_size: 30 
+  min_samples: 10     
+  allow_single_cluster: true
+  cluster_selection_epsilon: 0.5
+
+# Fatores para cálculo de min_cluster_size e min_samples de HDBSCAN (usados se os valores diretos acima não forem inteiros positivos)
+HDBSCAN_MIN_CLUSTER_SIZE_FACTOR: 0.01 # Percentual do total_messages_for_hdbscan_param_base (e.g., 0.01 para 1%)
+HDBSCAN_MIN_SAMPLES_FACTOR: 0.5     # Percentual do hdbscan_min_cluster_size_val calculado (e.g., 0.5 para 50%)
+
+# Parâmetros de processamento de texto
+text_processing_params:
+  custom_stopwords_additions: ['git', 'github', 'gitlab', 'pull', 'request', 'branch', 'commit', 'committed']
+  excluded_dirs_patterns: 
+    - "vendor/"
+    - "test/fixtures/"
+    - "examples/"
+    - "tests/"
+    - "testdata/"
+    - '\.github/'
+    - "docs/"
+  relevant_extensions_order: ['.tf', '.go', '.py', '.yaml', '.yml', '.json', '.sh', '.hcl']
+  patch_excerpt_lines: 10
+  msg_clean_max_len: 150
+  merge_patterns_for_inference: 
+    - "^Merge pull request #\\d+ from .*"
+    - "^Merge remote-tracking branch '.*'"
+    - "^Merge branch '.*'( of .*)?( into .*)?"
+    - "^\\s*Merged in .*"
+    - "^🔀\\s*[Mm]erge pull request from.*"
+
+  # NEW: Patterns for *EXTRACTING* semantic content (e.g., branch names, PR titles) from merge messages.
+  # These are more specific than inference patterns and MUST contain capturing groups `(...)` for the content.
+  # The function expects group 1 to be the primary content (branch name) and optional group 2 to be secondary (PR title).
+  merge_patterns_for_extraction:
+    # Captures branch_name (group 1) and optional pr_description (group 2) from "Merge pull request..." and "🔀 Merge pull request..."
+    - "^(?:[Mm]erge pull request|🔀\\s*[Mm]erge pull request) #?\\d* from [^/]+/([^\\n]+)(?:\\n\\n(.+))?$"
+    # Captures branch_name from "Merge branch 'branch_name' ..."
+    - "^[Mm]erge branch '([^']+)'"
+    # Captures branch_name from "Merge remote-tracking branch 'origin/branch_name'..."
+    - "^[Mm]erge remote-tracking branch '([^']+)'"
+
+  extract_semantic_from_merge: true
+
+# Parâmetros de Amostragem
+sampling_params:
+  sample_size: 1000
+  min_commits_per_month_stratum: 50
+
+# Parâmetros de Análise de Tokens
+token_analysis_params:
+  top_n_tokens: 60
+  # Heurísticas para sugestões de stopwords (usadas no Bloco [6])
+  # Estas listas podem ser expandidas ou ajustadas conforme o domínio específico.
+  stopwords_heuristics:
+    merge_terms: ['merge', 'pull', 'branch']
+    domain_common_terms: [
+        'terraform', 'provider', 'helm', 'aws', 'gcp', 'azure', 'kubernetes', 'k8s',
+        'module', 'resource', 'variable', 'output', 'data', 'release', 'chart', 'value',
+        'config', 'plugin', 'template', 'service', 'instance', 'cluster', 'network',
+        'bump', 'update', 'version', 'upgrade', 'refactor', 'docs', 'readme',
+        'chore', 'build', 'test', 'ci', 'lint', 'format'
+      ]
+    # Palavras-chave a NÃO serem adicionadas automaticamente às sugestões de stopwords, mesmo que frequentes
+    # (se o critério de frequência for atingido). Adicione aqui termos significativos do seu domínio.
+    # Exemplo: se "error" for frequente mas você quiser que seja um tópico, adicione "error" aqui.
+    keep_frequent_terms: ['fix', 'feat', 'use', 'change', 'remove', 'default', 'error', 'bug', 'issue']
+
+# Configurações de Clusterização Adicionais
+clustering_settings:
+  use_umap_before_hdbscan: true
+  
+  # Abordagem de clustering:
+  # - true: Abordagem "Top-Down" (ATUAL) - Clusteriza todos os commits (7.240) e depois filtra
+  #   Hipótese: Cria um "mapa" completo das atividades, isolando merges e ruídos em clusters específicos
+  # - false: Abordagem "Bottom-Up" (NOVA) - Filtra commits primeiro e depois clusteriza
+  #   Hipótese: Produz clusters imediatamente focados nos tipos de commits desejados
+  use_all_commits_for_clustering: false
+  
+  # Controle de duplicatas no clustering:
+  # - true: Remove duplicatas (repo_name, commit_hash) - resultado similar à amostragem (~697 commits)
+  #   Vantagem: Dados mais limpos, evita viés de repositórios com muitos commits similares
+  # - false: Mantém duplicatas - mais dados para clustering (~6497 commits) 
+  #   Vantagem: Mais volume de dados, commits similares podem reforçar padrões temáticos
+  remove_duplicates_for_clustering: true
+
+# Configurações de Amostragem
+sampling_settings:
+  # - true: Requer que um patch de código válido seja extraído para um commit ser elegível para a amostra.
+  # - false (Padrão): Apenas a relevância da mensagem do commit é considerada, alinhando com o critério do clustering.
+  require_valid_patch_for_sampling: false

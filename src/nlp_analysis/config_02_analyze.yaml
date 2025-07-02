@@ -1,0 +1,122 @@
+# ---------------------------------------------------
+# ARQUIVO DE CONFIGURAÇÃO PARA ANÁLISE DE CLUSTER
+# ---------------------------------------------------
+
+# Configuração para Análise Detalhada de Clusters de Defeitos Terraform
+# Este arquivo controla todos os parâmetros para maximizar a descrição dos defeitos encontrados
+
+# Configurações de Caminhos e Colunas
+paths:
+  # Caminho para o arquivo de entrada com os dados clusterizados
+  input_file_path: "src/nlp_analysis/analysis_results_nlp/commits_com_clusters.jsonl"
+  
+  # Diretório onde os relatórios de análise serão salvos
+  output_dir: "."
+
+  # (Opcional) Caminho para o arquivo com sugestões de stopwords dinâmicas
+  stopwords_suggestions_file: null # "path/to/your/stopwords.yaml"
+
+data_columns:
+  # Nome da coluna para BUSCAR os termos (deve ser o texto limpo e processado).
+  search_message_column: "msg_clean_for_val"
+  
+  # Nome da coluna para EXIBIR o contexto no relatório (o texto original e legível).
+  display_message_column: "msg_clean_for_val"
+  
+  # Nome da coluna que contém o rótulo do cluster (ex: do HDBSCAN)
+  label_column: "hdbscan_cluster_label"
+
+# Configurações de Análise de Termos
+terms_analysis:
+  # Número de termos mais frequentes para analisar por cluster
+  num_top_terms: 25
+
+  # Número de termos para mostrar contextos detalhados (subset dos top_terms)
+  num_terms_with_context: 15
+
+  # Número de exemplos de contexto por termo (para análise manual detalhada)
+  examples_per_term: 10
+
+  # Tamanho máximo de cada mensagem de exemplo (caracteres)
+  max_example_length: 400
+
+  # Número máximo de mensagens coletadas por termo (para otimização de memória)
+  max_messages_per_term: 20
+
+# Configurações de Amostras de Mensagens
+message_samples:
+  # Número de mensagens de exemplo por cluster
+  num_sample_messages: 25
+
+  # Tamanho máximo de cada mensagem na amostra (caracteres)
+  max_sample_length: 250
+
+  # Número de exemplos para clusters de ruído/outliers
+  noise_cluster_samples: 10
+
+# Configurações de Relatório
+report_settings:
+  # Incluir seção de contextos detalhados
+  include_detailed_contexts: true
+
+  # Incluir contagem de stopwords no cabeçalho
+  include_stopwords_count: true
+
+  # Incluir informações de lematização no cabeçalho
+  include_lemmatization_info: true
+
+  # Mostrar porcentagem de mensagens por cluster
+  show_cluster_percentages: true
+
+  # Indicar quando há mais ocorrências além dos exemplos mostrados
+  show_additional_occurrences: true
+
+# Configurações de Processamento de Texto
+text_processing:
+  # Usar lematização do spaCy (se disponível)
+  use_spacy_lemmatization: true
+
+  # Usar stopwords dinâmicas do arquivo de sugestões
+  use_dynamic_stopwords: false
+
+  # Destacar termos nos exemplos (usando **termo**)
+  highlight_terms_in_examples: true
+
+  # Usar busca case-insensitive para destacar termos
+  case_insensitive_highlighting: true
+
+  # Truncar mensagens longas com "..."
+  truncate_long_messages: true
+  
+  # (Opcional) Stopwords adicionadas manualmente para refinar a análise
+  manual_stopwords:
+    git_commit_process_terms:
+      - "git"
+      - "github"
+      - "gitlab"
+      - "pull"
+      - "request"
+      - "branch"
+      - "commit"
+      - "committed"
+      - "merged"
+      - "merge"
+      - "fix"
+      - "fixes"
+      - "fixed"
+      - "bug"
+      - "bugfix"
+      - "error"
+      - "changelog"
+    not_useful_terms:
+      - "terraform"
+      - "google"
+      - "hashicorp"
+
+# Seções do Relatório (para controle de quais seções incluir)
+report_sections:
+  cluster_overview: true
+  top_terms_list: true
+  detailed_term_contexts: true
+  message_samples: true
+  manual_analysis_placeholders: true

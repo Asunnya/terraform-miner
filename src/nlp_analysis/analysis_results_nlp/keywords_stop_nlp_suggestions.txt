@@ -1,0 +1,64 @@
+# Sugestões de keywords_stop.yml
+# Analise esta lista e adicione/remova conforme necessário para seu topic modeling.
+# Bigramas (se presentes) são listados como frases. Verifique se seu sistema de NLP os suporta.
+custom_stopwords:
+  - add
+  - add support
+  - added
+  - allow
+  - aws
+  - azure
+  - branch
+  - branch main
+  - branch master
+  - cluster
+  - config
+  - data
+  - example
+  - feat add
+  - fix add
+  - fix remove
+  - fix spacing
+  - fix typo
+  - fix update
+  - fixed
+  - fixes
+  - fixing
+  - formatting
+  - group
+  - iam
+  - issues
+  - kube hetzner
+  - merge
+  - merge branch
+  - merge pull
+  - ministryofjustice fix
+  - missing
+  - module
+  - modules
+  - name
+  - new
+  - node
+  - output
+  - policy
+  - project
+  - provider
+  - pull
+  - pull request
+  - request aztfmod
+  - request googlecloudplatform
+  - request kube
+  - request ministryofjustice
+  - resource
+  - role
+  - service
+  - spacing formatting
+  - support
+  - terraform
+  - terraform google
+  - test
+  - tests
+  - typo
+  - update
+  - variable
+  - version
