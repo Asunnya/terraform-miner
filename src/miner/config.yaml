@@ -1,7 +1,7 @@
 # config.yaml (atualizado)
 
-# Token de autenticação GitHub (substitua pelo seu token)
-github_token: "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"
+# Token de autenticação GitHub 
+github_token: ""
 
 # Estrelas mínimas para filtrar repositórios
 stars: 500  # Atualizado conforme requisito (antes era 10)
