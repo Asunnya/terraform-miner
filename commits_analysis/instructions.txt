@@ -1,0 +1,4 @@
+1. Open the csv file with your name.
+2. For each line in your file, click on the commit URL link and inspect the commit.
+	2.1. If you think the commit is a bugfix commit, put true in the is_bugfix column. Otherwise, put false.
+	2.2. Input any other information you find relevant in the obs column.
