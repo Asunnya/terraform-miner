@@ -1,56 +1,63 @@
-commit_URL,is_bugfix,obs
-"=HYPERLINK(""https://github.com/aztfmod/terraform-azurerm-caf/commit/2b0b54290872dcc333cb1c8880fe2e68829ea723"")",,
-"=HYPERLINK(""https://github.com/hashicorp/terraform-aws-vault/commit/19b8629eccd242481db85a9d4a2848aa8fd68d6e"")",,
-"=HYPERLINK(""https://github.com/kubernetes/k8s.io/commit/c900bc3d4768a4e58e2f4923a52ba1a1e329543f"")",,
-"=HYPERLINK(""https://github.com/cloudposse/terraform-aws-components/commit/46d8afa6bde8527827910cd1f9ade0c26944a330"")",,
-"=HYPERLINK(""https://github.com/hashicorp/terraform-provider-aws/commit/cab10a1884a04e8065ac2b0ceedc92da71cffcfd"")",,
-"=HYPERLINK(""https://github.com/aws-ia/terraform-aws-eks-blueprints/commit/093574f79a50413b961376d9ec0310bda6b514b9"")",,
-"=HYPERLINK(""https://github.com/ministryofjustice/modernisation-platform/commit/d475c831d043665038c9f96a837bb215fd631e01"")",,
-"=HYPERLINK(""https://github.com/GoogleCloudPlatform/cloud-foundation-fabric/commit/eddef7e5b6ba2baae5debb10dadb3faa87daeeb5"")",,
-"=HYPERLINK(""https://github.com/terraform-google-modules/terraform-google-kubernetes-engine/commit/1b7a845714cd86cbc3fbb7bf782b868330ca5fe9"")",,
-"=HYPERLINK(""https://github.com/terraform-google-modules/terraform-google-kubernetes-engine/commit/e11a8225286f9b744f6110aaed0e4b1b3e058953"")",,
-"=HYPERLINK(""https://github.com/ministryofjustice/modernisation-platform/commit/8c411f19d65db81b8f51810f0e0e12c7dc11830a"")",,
-"=HYPERLINK(""https://github.com/ministryofjustice/modernisation-platform/commit/efc4983f0659a1d4aca41646dd514961637eb282"")",,
-"=HYPERLINK(""https://github.com/aztfmod/terraform-azurerm-caf/commit/0422b58551341b569cf17703c686bba62da15f54"")",,
-"=HYPERLINK(""https://github.com/Azure/terraform/commit/191572bc6b9cb2ba33912ff17ef18473d64f09e5"")",,
-"=HYPERLINK(""https://github.com/terraform-aws-modules/terraform-aws-eks/commit/81706207fc8bac5b8c4649e8468617127f2a83f1"")",,
-"=HYPERLINK(""https://github.com/GoogleCloudPlatform/cloud-foundation-fabric/commit/dc3778302286108e2e46ffbaf0a6b3287b3c9870"")",,
-"=HYPERLINK(""https://github.com/GoogleCloudPlatform/cloud-foundation-fabric/commit/950ad088e9052c6fb37fe367451c42b12701e3d3"")",,
-"=HYPERLINK(""https://github.com/ministryofjustice/modernisation-platform/commit/e76e9744c4e837fc451dba859d413dabc19ecae7"")",,
-"=HYPERLINK(""https://github.com/Azure/caf-terraform-landingzones/commit/03349a491691ed86a76c8fd063c11f817a349d1b"")",,
-"=HYPERLINK(""https://github.com/terraform-google-modules/terraform-google-project-factory/commit/b84b2aa68cee773de0e7532a98324100183c5156"")",,
-"=HYPERLINK(""https://github.com/GoogleCloudPlatform/cloud-foundation-fabric/commit/616c6fbc4875b410c1030bd2188e34e306d98658"")",,
-"=HYPERLINK(""https://github.com/terraform-aws-modules/terraform-aws-eks/commit/a63d690aa0214d22005d7ed984de17251bbd2e08"")",,
-"=HYPERLINK(""https://github.com/chainguard-images/images/commit/eecfdd5088281812fcdc2db712458cfdca695ebd"")",,
-"=HYPERLINK(""https://github.com/kbst/terraform-kubestack/commit/fd0edd11fe3794144f45d0a316eba0e874dcd43d"")",,
-"=HYPERLINK(""https://github.com/terraform-google-modules/terraform-google-project-factory/commit/a0cd3f9d1d7152e269b1ffc17d986f8e52d0eb27"")",,
-"=HYPERLINK(""https://github.com/aws-ia/terraform-aws-eks-blueprints/commit/8f2803b13a0b7043051954e71493b47893055160"")",,
-"=HYPERLINK(""https://github.com/kube-hetzner/terraform-hcloud-kube-hetzner/commit/12bb7cc32f1cb734853835cc966c17465b4b1ceb"")",,
-"=HYPERLINK(""https://github.com/github-aws-runners/terraform-aws-github-runner/commit/a75b4ad0d62d32800497c6dcf5354b9a4ca2bec3"")",,
-"=HYPERLINK(""https://github.com/ministryofjustice/modernisation-platform/commit/79a8ccd608e1239b3af2b030954d3674f9612c75"")",,
-"=HYPERLINK(""https://github.com/ministryofjustice/modernisation-platform/commit/1d75d4cd2748385040ae18f4f9a7b432b378c9f0"")",,
-"=HYPERLINK(""https://github.com/milliHQ/terraform-aws-next-js/commit/3a5185b0441d503073ce0baaeb71544937f3686d"")",,
-"=HYPERLINK(""https://github.com/GoogleCloudPlatform/cloud-foundation-fabric/commit/8de986e201402ae04e01c1b23c35ebd5af505421"")",,
-"=HYPERLINK(""https://github.com/aws-ia/terraform-aws-eks-blueprints/commit/8a29e2cfb7f0a28a7d98c64acafd5cf560873579"")",,
-"=HYPERLINK(""https://github.com/Azure/terraform/commit/7ec608cc1e2a9565cbfdde8241b40e3a669ba751"")",,
-"=HYPERLINK(""https://github.com/GoogleCloudPlatform/cloud-foundation-fabric/commit/de883957fea39fe22dd37b5ccc9f2f97971de209"")",,
-"=HYPERLINK(""https://github.com/hashicorp/terraform/commit/567a9b9e06dc9fc35fa5f5343f60089bdc924bd7"")",,
-"=HYPERLINK(""https://github.com/milliHQ/terraform-aws-next-js/commit/668aeb72a887cb800bdb1af9d4328a2487bf3a4b"")",,
-"=HYPERLINK(""https://github.com/poseidon/typhoon/commit/19ee57dc04d8b929800fee6a154618b4694bc120"")",,
-"=HYPERLINK(""https://github.com/ministryofjustice/modernisation-platform/commit/87c03caf23d8e275a7dd90c825c9a03171bff8cc"")",,
-"=HYPERLINK(""https://github.com/terraform-aws-modules/terraform-aws-eks/commit/ea2f6982d5ed2d370191c2c4be386299d9bb5406"")",,
-"=HYPERLINK(""https://github.com/aztfmod/terraform-azurerm-caf/commit/166299206b95ca495df2641aaa4f685d3ad42bc8"")",,
-"=HYPERLINK(""https://github.com/awslabs/data-on-eks/commit/0d9b6ca03aefd7b7491114de01d1b338a4151e1c"")",,
-"=HYPERLINK(""https://github.com/coreos/tectonic-installer/commit/3ac7f7519ee071f04e621a4ae38ca0e88b8f82c3"")",,
-"=HYPERLINK(""https://github.com/hashicorp/terraform/commit/46d3800a395b7c3911b67e34f21b9373a247a145"")",,
-"=HYPERLINK(""https://github.com/kube-hetzner/terraform-hcloud-kube-hetzner/commit/4678cecc477ab955dcf1d2e69068701af4c721ee"")",,
-"=HYPERLINK(""https://github.com/cattle-ops/terraform-aws-gitlab-runner/commit/c46b080ebc648286bce7693f2c82837a81328db0"")",,
-"=HYPERLINK(""https://github.com/aztfmod/terraform-azurerm-caf/commit/c0c5bc9bd2242cb0e85210e55cd126ffc1067227"")",,
-"=HYPERLINK(""https://github.com/aztfmod/terraform-azurerm-caf/commit/02575ccc6413cbc5d8e060ddd9bd84fc2d46c531"")",,
-"=HYPERLINK(""https://github.com/GoogleCloudPlatform/cloud-foundation-fabric/commit/dfc5023e0bb832c6a263bf896876d871fca1c83e"")",,
-"=HYPERLINK(""https://github.com/aztfmod/terraform-azurerm-caf/commit/f4a9641222189936cda095a29a0a649b959c9129"")",,
-"=HYPERLINK(""https://github.com/terraform-aws-modules/terraform-aws-eks/commit/77a7690b1c96674ef97e1c5ed8abdd92ab126a92"")",,
-"=HYPERLINK(""https://github.com/khuedoan/homelab/commit/972c7acaa241a0523983f1f3387c6644a1833b0d"")",,
-"=HYPERLINK(""https://github.com/terraform-google-modules/terraform-google-project-factory/commit/50e4ea22e485d20d882ab1b1d99314da50b12613"")",,
-"=HYPERLINK(""https://github.com/GoogleCloudPlatform/cloud-foundation-fabric/commit/62665f247541597d64367d7458a37397545faf9d"")",,
-"=HYPERLINK(""https://github.com/coreos/tectonic-installer/commit/5fbe1af8b902e6a1ca10601ce0fb8b2ee14bead3"")",,
+﻿commit_URL,is_bugfix,obs
+https://github.com/aztfmod/terraform-azurerm-caf/commit/2b0b54290872dcc333cb1c8880fe2e68829ea723,1,according to commit description (fix for…)
+https://github.com/hashicorp/terraform-aws-vault/commit/19b8629eccd242481db85a9d4a2848aa8fd68d6e,1,according to commit message and description (fix count)
+https://github.com/kubernetes/k8s.io/commit/c900bc3d4768a4e58e2f4923a52ba1a1e329543f,1,according to commit description (Fix authentication with HMAC for dl-sandbox)
+https://github.com/cloudposse/terraform-aws-components/commit/46d8afa6bde8527827910cd1f9ade0c26944a330,1,"according to commit description (Fix role_arns local variable (#105)
+This local variable was renamed in 99cf52e but this was missed and is
+causing Terraform to fail.)"
+https://github.com/hashicorp/terraform-provider-aws/commit/cab10a1884a04e8065ac2b0ceedc92da71cffcfd,0,resolving merge conflicts
+https://github.com/aws-ia/terraform-aws-eks-blueprints/commit/093574f79a50413b961376d9ec0310bda6b514b9,1,"according to commit description (Fix for namespace creation and timer for Terratest (#465)
+* helm create_namespace should always be false when irsa is enabled
+* make false if create_namespace is not defined
+* precommit format update.)"
+https://github.com/ministryofjustice/modernisation-platform/commit/d475c831d043665038c9f96a837bb215fd631e01,1,according to commit description (fix timeout)
+https://github.com/GoogleCloudPlatform/cloud-foundation-fabric/commit/eddef7e5b6ba2baae5debb10dadb3faa87daeeb5,1,made internal/external addresses optional in network_interfaces
+https://github.com/terraform-google-modules/terraform-google-kubernetes-engine/commit/1b7a845714cd86cbc3fbb7bf782b868330ca5fe9,1,according to commit description (fix: correct gcfs_config value (#2095))
+https://github.com/terraform-google-modules/terraform-google-kubernetes-engine/commit/e11a8225286f9b744f6110aaed0e4b1b3e058953,1,add ssh_auth_key parameter to override auto-generated keys
+https://github.com/ministryofjustice/modernisation-platform/commit/8c411f19d65db81b8f51810f0e0e12c7dc11830a,1,"bugfix: core-security IP range correction (was 10.230.x.x, now 10.20.x.x)"
+https://github.com/ministryofjustice/modernisation-platform/commit/efc4983f0659a1d4aca41646dd514961637eb282,1,route53: add missing ttl attribute
+https://github.com/aztfmod/terraform-azurerm-caf/commit/0422b58551341b569cf17703c686bba62da15f54,1,according to commit description (fix remote objects for flexible server to prevent evaluation issues)
+https://github.com/Azure/terraform/commit/191572bc6b9cb2ba33912ff17ef18473d64f09e5,0, ? Seems to be a refactoring
+https://github.com/terraform-aws-modules/terraform-aws-eks/commit/81706207fc8bac5b8c4649e8468617127f2a83f1,1,Simplify logic to retry application of kubernetes config if failed
+https://github.com/GoogleCloudPlatform/cloud-foundation-fabric/commit/dc3778302286108e2e46ffbaf0a6b3287b3c9870,1,according to commit description (Fix Variables)
+https://github.com/GoogleCloudPlatform/cloud-foundation-fabric/commit/950ad088e9052c6fb37fe367451c42b12701e3d3,1,fix permanent diff: auto-set egress annotation; correct trigger service account logic
+https://github.com/ministryofjustice/modernisation-platform/commit/e76e9744c4e837fc451dba859d413dabc19ecae7,1,according to commit description (Fixing permission name.)
+https://github.com/Azure/caf-terraform-landingzones/commit/03349a491691ed86a76c8fd063c11f817a349d1b,1,"according to commit description (Fixup policy path, using azurerm 2.9 for foundations and new roverdev)"
+https://github.com/terraform-google-modules/terraform-google-project-factory/commit/b84b2aa68cee773de0e7532a98324100183c5156,1,according to commit description (Fixes for issuue #47)
+https://github.com/GoogleCloudPlatform/cloud-foundation-fabric/commit/616c6fbc4875b410c1030bd2188e34e306d98658,1,according to commit description (Fix subnet iam_bindings to use arbitrary keys)
+https://github.com/terraform-aws-modules/terraform-aws-eks/commit/a63d690aa0214d22005d7ed984de17251bbd2e08,0,Typo
+https://github.com/chainguard-images/images/commit/eecfdd5088281812fcdc2db712458cfdca695ebd,0,Fix in tests
+https://github.com/kbst/terraform-kubestack/commit/fd0edd11fe3794144f45d0a316eba0e874dcd43d,1,vpc: revert dns_support to true default (fixes service discovery)
+https://github.com/terraform-google-modules/terraform-google-project-factory/commit/a0cd3f9d1d7152e269b1ffc17d986f8e52d0eb27,0,"isnt a fix, is only adding a value to a description"
+https://github.com/aws-ia/terraform-aws-eks-blueprints/commit/8f2803b13a0b7043051954e71493b47893055160,1,according to commit description (fix: IRSA module namespace and service account dependency (#1013))
+https://github.com/kube-hetzner/terraform-hcloud-kube-hetzner/commit/12bb7cc32f1cb734853835cc966c17465b4b1ceb,0,"is not a fix, only formatting document"
+https://github.com/github-aws-runners/terraform-aws-github-runner/commit/a75b4ad0d62d32800497c6dcf5354b9a4ca2bec3,1,"A lot fixes: - fix: Wrong variable name in the lambda function
+- fix: var.config.lambda_architecture instead of var.lambda_architecture
+- fix: It should have been lambda.architecture not lambda_architecture"
+https://github.com/ministryofjustice/modernisation-platform/commit/79a8ccd608e1239b3af2b030954d3674f9612c75,1,fix: resolve cyclic dependency in firewall configuration
+https://github.com/ministryofjustice/modernisation-platform/commit/1d75d4cd2748385040ae18f4f9a7b432b378c9f0,1,according to commit description (Fix assignment level logic)
+https://github.com/milliHQ/terraform-aws-next-js/commit/3a5185b0441d503073ce0baaeb71544937f3686d,1,according to commit description (Fixes S3 origin access identity)
+https://github.com/GoogleCloudPlatform/cloud-foundation-fabric/commit/8de986e201402ae04e01c1b23c35ebd5af505421,MAYBE,? only add providers
+https://github.com/aws-ia/terraform-aws-eks-blueprints/commit/8a29e2cfb7f0a28a7d98c64acafd5cf560873579,1,according to commit description (fix: k8s_taints schema correction and documentation (EKS managed node groups only))
+https://github.com/Azure/terraform/commit/7ec608cc1e2a9565cbfdde8241b40e3a669ba751,1,according to commit description (Fixing broken sample and update)
+https://github.com/GoogleCloudPlatform/cloud-foundation-fabric/commit/de883957fea39fe22dd37b5ccc9f2f97971de209,1,according to commit description ( Fix data platform minimal tests)
+https://github.com/hashicorp/terraform/commit/567a9b9e06dc9fc35fa5f5343f60089bdc924bd7,0,"FALSE: test-only refactoring; behavior moved to parser, no IaC defect"
+https://github.com/milliHQ/terraform-aws-next-js/commit/668aeb72a887cb800bdb1af9d4328a2487bf3a4b,1,according to commit description (Fix compatibility with nodejs 14.x )
+https://github.com/poseidon/typhoon/commit/19ee57dc04d8b929800fee6a154618b4694bc120,0,AMBÍGUO: provider deprecation refactor (adaptation vs compatibility bugfix)
+https://github.com/ministryofjustice/modernisation-platform/commit/87c03caf23d8e275a7dd90c825c9a03171bff8cc,0,"refactoring/housekeeping (file consolidation, loop simplification, comment cleanup)"
+https://github.com/terraform-aws-modules/terraform-aws-eks/commit/ea2f6982d5ed2d370191c2c4be386299d9bb5406,0,"according to commit description (terraform version compatibility formatting (style, not functional defect))"
+https://github.com/aztfmod/terraform-azurerm-caf/commit/166299206b95ca495df2641aaa4f685d3ad42bc8,1,implements missing firewall diagnostics configuration (referenced issue #550)
+https://github.com/awslabs/data-on-eks/commit/0d9b6ca03aefd7b7491114de01d1b338a4151e1c,0,whitespace cleanup only (trailing spaces removed)
+https://github.com/coreos/tectonic-installer/commit/3ac7f7519ee071f04e621a4ae38ca0e88b8f82c3,0,"kubernetes/bootkube version upgrade (1.5.6→1.6.1, 0.3.13→0.4.0) with feature additions (taints, tolerations, affinity, liveness probes)"
+https://github.com/hashicorp/terraform/commit/46d3800a395b7c3911b67e34f21b9373a247a145,0,remove some unused test fixtures
+https://github.com/kube-hetzner/terraform-hcloud-kube-hetzner/commit/4678cecc477ab955dcf1d2e69068701af4c721ee,1,fix output logic for klipper load balancer (issue #221; conditional incomplete)
+https://github.com/cattle-ops/terraform-aws-gitlab-runner/commit/c46b080ebc648286bce7693f2c82837a81328db0,1,according to commit description (fix: Removed extra backticks for KMS key in EBS config.)
+https://github.com/aztfmod/terraform-azurerm-caf/commit/c0c5bc9bd2242cb0e85210e55cd126ffc1067227,1,"according to commit description (Fix application gateway, ssl profile, ssl policy)"
+https://github.com/aztfmod/terraform-azurerm-caf/commit/02575ccc6413cbc5d8e060ddd9bd84fc2d46c531,1,fix regression in principal_id condition; correct variable scope_lz_key → object_id_lz_key (PR #1116 hotfix)
+https://github.com/GoogleCloudPlatform/cloud-foundation-fabric/commit/dfc5023e0bb832c6a263bf896876d871fca1c83e,0,"refactor deletion_protection to be consistent across all data storage modules (feature, not defect fix)"
+https://github.com/aztfmod/terraform-azurerm-caf/commit/f4a9641222189936cda095a29a0a649b959c9129,0,"resolve conflicts; dependency bumps (rover, pre-commit), test case additions, module→local refactor"
+https://github.com/terraform-aws-modules/terraform-aws-eks/commit/77a7690b1c96674ef97e1c5ed8abdd92ab126a92,0,CI/version maintenance (TF upgrade 0.11.8); not IaC defect
+https://github.com/khuedoan/homelab/commit/972c7acaa241a0523983f1f3387c6644a1833b0d,1,according to commit description (Fix provision script for controller)
+https://github.com/terraform-google-modules/terraform-google-project-factory/commit/50e4ea22e485d20d882ab1b1d99314da50b12613,0,"lint/style compliance (splat syntax .* → [*], missing provider source); CI version update (developer-tools 1→1.16); not IaC bugfix"
+https://github.com/GoogleCloudPlatform/cloud-foundation-fabric/commit/62665f247541597d64367d7458a37397545faf9d,1,according to commit description (Fix ipv6 and align loadbalancer address types)
+https://github.com/coreos/tectonic-installer/commit/5fbe1af8b902e6a1ca10601ce0fb8b2ee14bead3,0,provider version upgrade (tls 1.0.0→1.0.1); not IaC bugfix (dependency fix)
