@@ -20,3 +20,4 @@ bertopic
 nltk
 emoji
 langdetect
+pytest
