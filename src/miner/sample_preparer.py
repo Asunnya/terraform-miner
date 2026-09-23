@@ -81,6 +81,11 @@ def get_relevant_file_and_patch_enhanced(modifications_list, analysis_modules=No
     # analysis_modules is not used here yet.
     return get_relevant_file_and_patch_original(modifications_list)
 
+def _parse_commit_dates(series):
+    # Commit dates carry mixed UTC offsets (e.g. -07:00, +02:00); pandas >= 2 leaves such a
+    # column as strings unless it is normalized to UTC.
+    return pd.to_datetime(series, utc=True, errors='coerce').dt.tz_convert(None)
+
 # --- Core Functions ---
 
 def create_all_commits_csv(json_glob_pattern, output_csv_path):
@@ -185,7 +190,8 @@ def confirm_date_range(all_commits_csv_path):
         print(f"ERROR: {all_commits_csv_path} not found.")
         return None, None
     try:
-        df = pd.read_csv(all_commits_csv_path, usecols=['date'], parse_dates=['date'], infer_datetime_format=True)
+        df = pd.read_csv(all_commits_csv_path, usecols=['date'])
+        df['date'] = _parse_commit_dates(df['date'])
         if df['date'].isnull().all():
             print(f"WARNING: 'date' column in {all_commits_csv_path} has no valid dates.")
             return None, None
@@ -209,7 +215,8 @@ def prepare_sample(all_commits_csv_path, output_csv_path, target_n=1000):
         return False
         
     try:
-        df = pd.read_csv(all_commits_csv_path, parse_dates=['date'], infer_datetime_format=True)
+        df = pd.read_csv(all_commits_csv_path)
+        df['date'] = _parse_commit_dates(df['date'])
         df.dropna(subset=['date', 'msg_clean'], inplace=True) # Ensure date and msg_clean are present
         df = df[~df['is_merge']] # Exclude merge commits from sampling as per typical MSR practices
 
@@ -218,7 +225,7 @@ def prepare_sample(all_commits_csv_path, output_csv_path, target_n=1000):
             return False
 
         months = df['date'].dt.to_period('M').unique()
-        if not months.any(): # Check if months is empty or all NaT
+        if len(months) == 0: # NaT dates were already dropped above
              print(f"WARNING: No valid months found for stratification in {all_commits_csv_path}. Sample not created.")
              return False
 

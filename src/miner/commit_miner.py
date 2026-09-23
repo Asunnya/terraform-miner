@@ -1,6 +1,25 @@
 import os
 import subprocess
-from git import Repo, GitCommandError
+from git import Repo, GitCommandError, NULL_TREE
+
+class _FallbackDiff:
+    """Minimal stand-in for git.Diff with the attributes CommitMiner uses."""
+    def __init__(self, a_path, b_path, diff):
+        self.a_path = a_path
+        self.b_path = b_path
+        self.diff = diff
+
+
+def _strip_patch_header(patch):
+    """Drop the 'diff --git'/'index'/'---'/'+++' header, keeping the patch from the first hunk."""
+    for marker in (b"@@", b"Binary files"):
+        if patch.startswith(marker):
+            return patch
+        pos = patch.find(b"\n" + marker)
+        if pos != -1:
+            return patch[pos + 1:]
+    return b""
+
 
 class CommitMiner:
     """
@@ -25,9 +44,14 @@ class CommitMiner:
         """
         import logging
         
-        # Method 1: Try standard GitPython diff
+        # Method 1: Try standard GitPython diff.
+        # a.diff(b) describes a -> b, so the diff must start at the parent. A root commit is
+        # compared with NULL_TREE (GitPython already orients that one as empty tree -> commit);
+        # commit.diff(None) would compare against the working tree instead.
         try:
-            return commit.diff(parent, create_patch=True)
+            if parent is None:
+                return commit.diff(NULL_TREE, create_patch=True)
+            return parent.diff(commit, create_patch=True)
         except GitCommandError as e:
             error_msg = e.stderr if hasattr(e, 'stderr') and e.stderr else str(e)
             logging.warning(f"Standard diff failed for {commit.hexsha[:8]}: {error_msg}")
@@ -40,95 +64,53 @@ class CommitMiner:
                 elif "ambiguous argument" in error_msg:
                     logging.warning(f"Ambiguous argument error: Git couldn't resolve commit references")
                 
-        # Method 2: Try using git directly through subprocess with alternative syntax
+        # Method 2: git diff-tree through subprocess. Produces the same per-file patches as
+        # Method 1, limited to the .tf files the commit actually changed.
         try:
             logging.info(f"Trying fallback diff method for {commit.hexsha[:8]}")
-            parent_hash = parent.hexsha if parent else "HEAD"
-            
-            # Alternative approach - use a different revision specification format
-            if parent:
-                cmd = ["git", "-C", repo.working_dir, "diff", f"{parent.hexsha}", f"{commit.hexsha}", "--name-only"]
-            else:
-                # For commits without parents (initial commits)
-                cmd = ["git", "-C", repo.working_dir, "show", "--name-only", "--format=", f"{commit.hexsha}"]
-                
-            result = subprocess.run(cmd, capture_output=True, text=True, check=True)
-            
-            # Get changed files
-            changed_files = [f for f in result.stdout.split('\n') if f and f.endswith('.tf')]
-            
-            # If we found Terraform files, get their content
-            if changed_files:
-                logging.info(f"Fallback found {len(changed_files)} Terraform files for {commit.hexsha[:8]}")
-                
-                # Create synthetic diff objects with minimal info
-                diffs = []
-                for file_path in changed_files:
-                    # Get file content at this commit
-                    try:
-                        # Use git show to get file content
-                        content_cmd = ["git", "-C", repo.working_dir, "show", f"{commit.hexsha}:{file_path}"]
-                        content_result = subprocess.run(content_cmd, capture_output=True, text=True, check=False)
-                        
-                        # Create a minimal diff object (with limited information)
-                        class MinimalDiff:
-                            def __init__(self, path, content):
-                                self.b_path = path
-                                self._diff = content.encode('utf-8', errors='ignore')
-                                
-                            @property
-                            def diff(self):
-                                return self._diff
-                        
-                        diffs.append(MinimalDiff(file_path, content_result.stdout))
-                    except Exception as inner_e:
-                        logging.warning(f"Could not get content for {file_path}: {inner_e}")
-                
-                return diffs
-            
-            return []
+            return self._fallback_diff(repo, commit, parent)
         except Exception as e:
             logging.warning(f"Fallback diff method also failed for {commit.hexsha[:8]}: {e}")
-            
-            # Method 3: One more fallback using a different Git command approach
-            try:
-                logging.info(f"Trying second fallback method for {commit.hexsha[:8]}")
-                
-                # Try direct git command without using diff-tree
-                cmd = ["git", "-C", repo.working_dir, "ls-tree", "-r", "--name-only", commit.hexsha]
-                result = subprocess.run(cmd, capture_output=True, text=True, check=True)
-                
-                # Get Terraform files in this commit
-                tf_files = [f for f in result.stdout.split('\n') if f and f.endswith('.tf')]
-                
-                if tf_files:
-                    logging.info(f"Second fallback found {len(tf_files)} Terraform files for {commit.hexsha[:8]}")
-                    
-                    # Create minimal diff objects
-                    diffs = []
-                    for file_path in tf_files:
-                        try:
-                            content_cmd = ["git", "-C", repo.working_dir, "show", f"{commit.hexsha}:{file_path}"]
-                            content_result = subprocess.run(content_cmd, capture_output=True, text=True, check=False)
-                            
-                            class MinimalDiff:
-                                def __init__(self, path, content):
-                                    self.b_path = path
-                                    self._diff = content.encode('utf-8', errors='ignore')
-                                    
-                                @property
-                                def diff(self):
-                                    return self._diff
-                            
-                            diffs.append(MinimalDiff(file_path, content_result.stdout))
-                        except Exception as inner_e:
-                            logging.warning(f"Could not get content for {file_path}: {inner_e}")
-                    
-                    return diffs
-            except Exception as e2:
-                logging.warning(f"Second fallback method also failed for {commit.hexsha[:8]}: {e2}")
-            
             return []
+
+    @staticmethod
+    def _git(repo, *args):
+        cmd = ["git", "-C", repo.working_dir, *args]
+        return subprocess.run(cmd, capture_output=True, check=True).stdout
+
+    def _fallback_diff(self, repo, commit, parent):
+        """
+        Diff parent -> commit (or empty tree -> commit for a root commit) with git diff-tree.
+
+        Returns:
+            list: _FallbackDiff items (a_path, b_path, diff) for changed .tf files, where
+            diff is the patch body starting at the first hunk, as GitPython returns it.
+        """
+        revs = [parent.hexsha, commit.hexsha] if parent else ["--root", commit.hexsha]
+        base = ["-c", "core.quotepath=false", "diff-tree", "-r", "-M", "--no-commit-id",
+                "--no-color", "--no-ext-diff", *revs]
+
+        # -z output: status\0path\0 (renames/copies: status\0old\0new\0)
+        tokens = self._git(repo, *base, "--name-status", "-z").decode("utf-8", errors="surrogateescape").split("\0")
+        diffs = []
+        i = 0
+        while i < len(tokens) and tokens[i]:
+            status = tokens[i][0]
+            if status in "RC":
+                a_path, b_path = tokens[i + 1], tokens[i + 2]
+                i += 3
+            else:
+                path = tokens[i + 1]
+                a_path = None if status == "A" else path
+                b_path = None if status == "D" else path
+                i += 2
+
+            paths = [p for p in (a_path, b_path) if p]
+            if not any(p.endswith(".tf") for p in paths):
+                continue
+            patch = self._git(repo, *base, "-p", "--", *dict.fromkeys(paths))
+            diffs.append(_FallbackDiff(a_path, b_path, _strip_patch_header(patch)))
+        return diffs
 
     def mine(self, repo_path, seen_hashes=None, last_head=None):
         """
@@ -192,11 +174,15 @@ class CommitMiner:
                     # Use enhanced diff method with fallback handling
                     diffs = self._safe_get_diff(repo, commit, parent)
                     
-                    # Filter for Terraform files
-                    tf_diffs = [d for d in diffs if d.b_path and d.b_path.endswith('.tf')]
+                    # Filter for Terraform files. Deleted files only have a_path.
+                    tf_diffs = []
+                    for d in diffs:
+                        file_path = d.b_path or getattr(d, 'a_path', None)
+                        if file_path and file_path.endswith('.tf'):
+                            tf_diffs.append((file_path, d))
                     
                     if tf_diffs:
-                        for d in tf_diffs:
+                        for file_path, d in tf_diffs:
                             try:
                                 # Handle potential encoding issues with patch data
                                 patch_data = d.diff.decode('utf-8', errors='ignore')
@@ -207,12 +193,12 @@ class CommitMiner:
                                     'author': commit.author.name,
                                     'date': commit.committed_datetime.isoformat(),
                                     'message': commit.message.strip(),
-                                    'file': d.b_path,
+                                    'file': file_path,
                                     'patch': patch_data,
                                     'head_hash': current_head  # Store the HEAD at time of mining
                                 })
                             except Exception as inner_e:
-                                logging.warning(f"Error extracting diff data for file {d.b_path}: {inner_e}")
+                                logging.warning(f"Error extracting diff data for file {file_path}: {inner_e}")
                                 
                 except GitCommandError as e:
                     # Enhanced error handling for Git errors
