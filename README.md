@@ -60,11 +60,16 @@ terraform-miner/
 │   │   ├── repo_cloner.py  # Repository cloning
 │   │   ├── commit_miner.py # Commit analysis
 │   │   └── data_exporter.py # Data export utilities
-│   └── nlp_analysis/       # NLP pipeline for semantic analysis
-│       ├── 01_preprocess_and_embed.py  # Stage 1: Clustering
-│       ├── 02_analyze_and_report_clusters.py # Stage 2: Analysis
-│       ├── config.yaml     # NLP configuration
-│       └── analysis_results_nlp/ # Generated results
+│   ├── nlp_analysis/       # NLP pipeline for semantic analysis
+│   │   ├── 01_preprocess_and_embed.py  # Stage 1: Clustering
+│   │   ├── 02_analyze_and_report_clusters.py # Stage 2: Analysis
+│   │   ├── config.yaml     # NLP configuration
+│   │   └── analysis_results_nlp/ # Generated results
+│   └── llm_analysis/       # LLM classification of commits (BUG_FIX / NON_BUG_FIX)
+│       ├── 01_prepare_commits.py   # Stage 1: aggregate per-file records into commits
+│       ├── 02_classify_commits.py  # Stage 2: classify (message / diff / both), resumable
+│       ├── 03_summarize_results.py # Stage 3: summaries, disagreements, gold-label metrics
+│       └── config.yaml     # LLM configuration
 ├── reports/                # Generated reports and visualizations
 ├── requirements.txt        # Python dependencies
 └── README.md              # This file
@@ -142,6 +147,20 @@ clustering_settings:
 - Results in clusters focused on bug fixes
 - Produces cleaner, more targeted results (~697 commits)
 
+### Phase 3: LLM Classification of Candidate Commits
+
+The miner's keyword filter only yields *candidate* bug fixes. `src/llm_analysis/` classifies each
+commit as `BUG_FIX` or `NON_BUG_FIX` with an LLM, from the commit message, the Terraform diff, or both,
+so the three evidence sources can be compared. See [`src/llm_analysis/README.md`](src/llm_analysis/README.md)
+for the methodology, including why metrics on the keyword-filtered dataset do not generalize to arbitrary commits.
+
+```bash
+export ANTHROPIC_API_KEY=...
+python src/llm_analysis/01_prepare_commits.py
+python src/llm_analysis/02_classify_commits.py
+python src/llm_analysis/03_summarize_results.py
+```
+
 ## Advanced Features
 
 ### NLP Analysis Pipeline
@@ -195,7 +214,7 @@ Configure the semantic analysis pipeline:
 
 ## Testing
 
-The test suite covers the miner (`src/miner/`) and `src/analyze_null_patches.py`. It runs offline (GitHub is mocked, git repos are created in temporary directories):
+The test suite covers the miner (`src/miner/`), `src/analyze_null_patches.py` and `src/llm_analysis/`. It runs offline (GitHub is mocked, git repos are created in temporary directories):
 
 ```bash
 uv pip install -r requirements.txt

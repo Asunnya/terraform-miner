@@ -31,3 +31,7 @@ diagrams/
 src/nlp_analysis/OLD/
 src/notebooks/
 OLD/
+
+# LLM analysis outputs (may contain large prompts/responses); keep the directory
+src/llm_analysis/analysis_results_llm/*
+!src/llm_analysis/analysis_results_llm/.gitkeep

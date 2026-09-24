@@ -21,3 +21,8 @@ nltk
 emoji
 langdetect
 pytest
+# src/llm_analysis: config files (was only an implicit dependency of the NLP scripts)
+PyYAML
+# src/llm_analysis: LLM providers (anthropic = default; openai = OpenAI and OpenAI-compatible servers such as Ollama/vLLM)
+anthropic
+openai
