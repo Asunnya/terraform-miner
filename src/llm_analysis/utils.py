@@ -15,6 +15,7 @@ import yaml
 MODULE_DIR = Path(__file__).resolve().parent
 REPO_ROOT = MODULE_DIR.parents[1]
 DEFAULT_CONFIG_PATH = MODULE_DIR / "config.yaml"
+ENV_FILE = REPO_ROOT / ".env"
 
 logger = logging.getLogger("llm_analysis")
 
@@ -30,6 +31,19 @@ def load_config(path: str | Path | None = None) -> dict[str, Any]:
             raise FileNotFoundError(f"Config file not found: {path}")
     with open(config_path, encoding="utf-8") as f:
         return yaml.safe_load(f) or {}
+
+
+def load_env_file(path: Path = ENV_FILE) -> bool:
+    """
+    Load API keys from the gitignored .env at the repo root (template: .env.example).
+    Variables already set in the environment take precedence. Returns True if the file exists.
+    """
+    if not path.is_file():
+        return False
+    from dotenv import load_dotenv
+
+    load_dotenv(path, override=False)
+    return True
 
 
 def resolve_path(path: str | Path, base: Path = REPO_ROOT) -> Path:

@@ -32,7 +32,8 @@ preparation:
   seed: 42
 
 llm:
-  # anthropic | openai (also any OpenAI-compatible server via base_url, e.g. Ollama/vLLM) | mock (offline, fake labels)
+  # anthropic | openai (also any OpenAI-compatible server via base_url, e.g. Ollama/vLLM)
+  # | litellm (any LiteLLM vendor; model as "<vendor>/<model>", e.g. "gemini/gemini-2.5-pro") | mock (offline, fake labels)
   provider: "anthropic"
   model: "claude-sonnet-5"
   temperature: 0            # null = do not send (for models that reject the parameter)
@@ -45,8 +46,8 @@ llm:
   # Never put the key itself in this file.
   api_key_env: null
   base_url: null            # e.g. "http://localhost:11434/v1" for Ollama (provider: openai)
-  seed: null                # sent only by the openai provider (honored by OpenAI and most local servers)
-  json_mode: false          # openai provider: response_format={"type": "json_object"}
+  seed: null                # sent by the openai/litellm providers (honored by OpenAI and most local servers)
+  json_mode: false          # openai/litellm providers: response_format={"type": "json_object"}
   max_tokens_param: "max_tokens"  # openai provider: use "max_completion_tokens" for OpenAI reasoning models
   extra_params: {}          # additional request parameters, passed through verbatim
 

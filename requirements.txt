@@ -26,3 +26,7 @@ PyYAML
 # src/llm_analysis: LLM providers (anthropic = default; openai = OpenAI and OpenAI-compatible servers such as Ollama/vLLM)
 anthropic
 openai
+# src/llm_analysis: optional provider "litellm" (one client for Gemini, Bedrock, Azure, Mistral, ... )
+litellm
+# src/llm_analysis: loads API keys from a gitignored .env file at the repo root
+python-dotenv

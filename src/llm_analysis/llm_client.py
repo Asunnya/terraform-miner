@@ -203,6 +203,58 @@ class OpenAICompatibleClient(LLMClient):
         )
 
 
+class LiteLLMClient(LLMClient):
+    """
+    Any vendor supported by LiteLLM (Gemini, Bedrock, Azure, Mistral, Groq, ...), with the model given as
+    "<vendor>/<model>", e.g. "gemini/gemini-2.5-pro". LiteLLM reads each vendor's usual environment
+    variable (GEMINI_API_KEY, ...) itself; set llm.api_key_env to pass a specific one explicitly.
+
+    Unsupported parameters raise an error instead of being silently dropped (LiteLLM's drop_params
+    stays off), so the stored settings are the ones actually sent.
+    """
+
+    def __init__(self, settings: LLMSettings, sleep: Callable[[float], None] = time.sleep):
+        super().__init__(settings, sleep)
+        try:
+            import litellm
+        except ImportError as e:
+            raise LLMConfigError("The 'litellm' package is required: uv pip install -r requirements.txt") from e
+        litellm.telemetry = False
+        litellm.suppress_debug_info = True
+        self._litellm = litellm
+        self._api_key_value = self._api_key("", required=True) if settings.api_key_env else None
+
+    def _complete(self, system: str, user: str) -> LLMResponse:
+        kwargs: dict[str, Any] = {
+            "model": self.settings.model,
+            "messages": [{"role": "system", "content": system}, {"role": "user", "content": user}],
+            "max_tokens": self.settings.max_output_tokens,
+            "timeout": self.settings.timeout_seconds,
+            "num_retries": 0,
+            **self.settings.extra_params,
+        }
+        if self.settings.temperature is not None:
+            kwargs["temperature"] = self.settings.temperature
+        if self.settings.seed is not None:
+            kwargs["seed"] = self.settings.seed
+        if self.settings.json_mode:
+            kwargs["response_format"] = {"type": "json_object"}
+        if self.settings.base_url:
+            kwargs["base_url"] = self.settings.base_url
+        if self._api_key_value:
+            kwargs["api_key"] = self._api_key_value
+        response = self._litellm.completion(**kwargs)
+        choice = response.choices[0]
+        usage = getattr(response, "usage", None)
+        return LLMResponse(
+            text=choice.message.content or "",
+            model=response.model,
+            input_tokens=getattr(usage, "prompt_tokens", None),
+            output_tokens=getattr(usage, "completion_tokens", None),
+            stop_reason=choice.finish_reason,
+        )
+
+
 class MockLLMClient(LLMClient):
     """
     Offline stand-in for pipeline dry runs and tests. Its labels are a hash of the prompt, NOT a
@@ -226,6 +278,7 @@ class MockLLMClient(LLMClient):
 PROVIDERS: dict[str, type[LLMClient]] = {
     "anthropic": AnthropicClient,
     "openai": OpenAICompatibleClient,
+    "litellm": LiteLLMClient,
     "mock": MockLLMClient,
 }
 

@@ -202,3 +202,43 @@ def test_settings_reject_unknown_keys():
     settings = LLMSettings.from_config({"provider": "anthropic", "model": "m", "workers": 4,
                                         "extra_params": {"top_p": 1}})
     assert settings.extra_params == {"top_p": 1}
+
+
+def test_env_file_loads_keys_without_overriding_shell(tmp_path, monkeypatch):
+    from src.llm_analysis.utils import load_env_file
+    env = tmp_path / ".env"
+    env.write_text("LLM_TEST_KEY_A=from_file\nLLM_TEST_KEY_B=from_file\n")
+    monkeypatch.delenv("LLM_TEST_KEY_A", raising=False)
+    monkeypatch.setenv("LLM_TEST_KEY_B", "from_shell")
+
+    assert load_env_file(env)
+    import os
+    assert os.environ["LLM_TEST_KEY_A"] == "from_file"
+    assert os.environ["LLM_TEST_KEY_B"] == "from_shell"
+    monkeypatch.delenv("LLM_TEST_KEY_A")
+    assert not load_env_file(tmp_path / "missing.env")
+
+
+
+def test_litellm_provider_offline():
+    """Exercita o caminho real do LiteLLM com mock_response (sem rede)."""
+    pytest.importorskip("litellm")
+    from src.llm_analysis.llm_client import LiteLLMClient, create_client
+    settings = LLMSettings(provider="litellm", model="gemini/gemini-test", extra_params={"mock_response": VALID})
+    client = create_client(settings)
+    assert isinstance(client, LiteLLMClient)
+
+    rec = classify_commit(client, make_commit(), "message_and_diff", experiment(), PROMPT_V1)
+    assert rec["parse_success"] and rec["label"] == BUG_FIX and rec["error"] is None
+    assert rec["stop_reason"] == "stop" and rec["input_tokens"] is not None
+
+
+def test_litellm_rejects_unsupported_params_without_retrying():
+    """Gemini não aceita seed: o LiteLLM deve falhar em vez de descartar o parâmetro em silêncio."""
+    pytest.importorskip("litellm")
+    from src.llm_analysis.llm_client import create_client
+    settings = LLMSettings(provider="litellm", model="gemini/gemini-test", seed=1, retry_backoff_seconds=0,
+                           extra_params={"mock_response": VALID})
+    rec = classify_commit(create_client(settings), make_commit(), "message_only", experiment(), PROMPT_V1)
+    assert rec["error"] and "seed" in rec["error"]
+    assert rec["attempts"] == 1

@@ -155,7 +155,7 @@ so the three evidence sources can be compared. See [`src/llm_analysis/README.md`
 for the methodology, including why metrics on the keyword-filtered dataset do not generalize to arbitrary commits.
 
 ```bash
-export ANTHROPIC_API_KEY=...
+cp .env.example .env   # then set ANTHROPIC_API_KEY in .env (gitignored)
 python src/llm_analysis/01_prepare_commits.py
 python src/llm_analysis/02_classify_commits.py
 python src/llm_analysis/03_summarize_results.py

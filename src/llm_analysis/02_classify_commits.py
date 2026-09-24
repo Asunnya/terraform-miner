@@ -31,6 +31,7 @@ from src.llm_analysis.schemas import INPUT_MODES, PreparedCommit  # noqa: E402
 from src.llm_analysis.utils import (  # noqa: E402
     cli_or_config_path,
     load_config,
+    load_env_file,
     read_jsonl,
     setup_logging,
     utc_now_iso,
@@ -126,6 +127,7 @@ def main(argv: list[str] | None = None) -> int:
     if settings.provider == "mock":
         logger.warning("Provider 'mock' returns FAKE labels: use it only to test the pipeline.")
 
+    load_env_file()
     try:
         client = create_client(settings)
     except LLMConfigError as e:

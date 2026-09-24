@@ -159,14 +159,21 @@ resolved against the current directory. Main sections:
 
 **Credentials** come only from environment variables: `ANTHROPIC_API_KEY` (default provider),
 `OPENAI_API_KEY`, or the variable named in `llm.api_key_env`. Never put keys in `config.yaml`.
+The easiest way is a `.env` file at the repository root, which is gitignored and loaded by stage 02:
+
+```bash
+cp .env.example .env     # then fill in ANTHROPIC_API_KEY=...
+```
+
+Variables already exported in the shell take precedence over `.env`.
 
 ## Running
 
 From the repository root (the scripts also work from `src/llm_analysis`):
 
 ```bash
-uv pip install -r requirements.txt          # adds anthropic, openai, PyYAML
-export ANTHROPIC_API_KEY=...                 # fish: set -x ANTHROPIC_API_KEY ...
+uv pip install -r requirements.txt          # adds anthropic, openai, PyYAML, python-dotenv
+cp .env.example .env                         # put ANTHROPIC_API_KEY=... in .env (or export it)
 
 python src/llm_analysis/01_prepare_commits.py                      # all commits
 python src/llm_analysis/01_prepare_commits.py --sample-size 500    # or a seeded sample
@@ -261,6 +268,19 @@ into one file first, and report inter-annotator agreement separately. Use
    `self._api_key(...)`. Override `is_retryable` if the SDK's exceptions do not expose `status_code`.
 2. Register it: add it to `PROVIDERS`, or call `register_provider("name", MyClient)`.
 3. Set `llm.provider: name` in `config.yaml`. Add the SDK to `requirements.txt` with a comment saying why.
+
+### Built-in providers
+
+| `llm.provider` | Calls | Use for |
+|---|---|---|
+| `anthropic` (default) | official `anthropic` SDK | Claude models |
+| `openai` | official `openai` SDK | OpenAI models, and local OpenAI-compatible servers (vLLM, Ollama, LM Studio) via `base_url` |
+| `litellm` | [LiteLLM](https://docs.litellm.ai/docs/providers) | any other vendor (Gemini, Bedrock, Azure, Mistral, Groq, ...); `model: "<vendor>/<model>"` |
+| `mock` | nothing | offline plumbing tests (fake labels) |
+
+Prefer the direct SDKs for the vendors they cover: exactly the stored settings go over the wire.
+With `litellm`, credentials come from each vendor's standard variable (e.g. `GEMINI_API_KEY` in `.env`),
+and a parameter the vendor does not support raises an error instead of being silently dropped.
 
 For local models, an OpenAI-compatible server usually needs no new code: set `provider: openai` and
 `base_url: http://localhost:11434/v1` (Ollama), plus `seed`, and optionally `json_mode: true`.
