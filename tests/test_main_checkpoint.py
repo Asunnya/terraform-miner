@@ -94,7 +94,7 @@ def test_process_repository_passes_clone_options_and_checkpoint(env):
 
     env["cloner"].clone.assert_called_once_with("owner/repo", depth=5, partial_clone=False)
     _, kwargs = env["miner"].mine.call_args
-    assert kwargs == {"seen_hashes": {"old"}, "last_head": "H0"}
+    assert kwargs == {"seen_hashes": {"old"}, "last_head": "H0", "until_rev": None}
 
 
 def test_process_repository_no_new_commits(env):

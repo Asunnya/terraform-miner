@@ -21,6 +21,10 @@ def _strip_patch_header(patch):
     return b""
 
 
+class DiffUnavailableError(RuntimeError):
+    """Both diff methods failed for a commit (e.g. a partial clone can't fetch blobs while offline)."""
+
+
 class CommitMiner:
     """
     Mine commits containing keywords and Terraform file changes.
@@ -40,7 +44,11 @@ class CommitMiner:
             parent: Parent commit or None for initial commit
             
         Returns:
-            list: Diff items or empty list on failure
+            list: Diff items
+
+        Raises:
+            DiffUnavailableError: if both methods fail. Skipping the commit instead would silently
+            drop it from the dataset, and the repo's checkpoint would keep it from being mined again.
         """
         import logging
         
@@ -71,7 +79,7 @@ class CommitMiner:
             return self._fallback_diff(repo, commit, parent)
         except Exception as e:
             logging.warning(f"Fallback diff method also failed for {commit.hexsha[:8]}: {e}")
-            return []
+            raise DiffUnavailableError(f"No diff for commit {commit.hexsha[:8]}: {e}") from e
 
     @staticmethod
     def _git(repo, *args):
@@ -112,17 +120,20 @@ class CommitMiner:
             diffs.append(_FallbackDiff(a_path, b_path, _strip_patch_header(patch)))
         return diffs
 
-    def mine(self, repo_path, seen_hashes=None, last_head=None):
+    def mine(self, repo_path, seen_hashes=None, last_head=None, until_rev=None):
         """
         Iterate commits, filter by message and .tf changes.
         Supports incremental mining by skipping already processed commits.
         Enhanced with improved error handling and detailed logging.
-        
+
         Args:
             repo_path (str): Path to the cloned repository
             seen_hashes (set): Set of commit hashes that have already been processed
             last_head (str): Hash of the last HEAD commit processed
-            
+            until_rev (str): Mine only the history reachable from this revision instead of HEAD
+                (used by --replay-from to freeze the history at the original mining point).
+                It becomes the head_hash of the entries. Raises ValueError if it can't be resolved.
+
         Returns:
             list: Entries with commit information
         """
@@ -140,24 +151,32 @@ class CommitMiner:
         
         # Get the current HEAD hash for future reference
         current_head = None
-        try:
-            current_head = repo.head.commit.hexsha
-        except Exception as e:
-            logging.warning(f"Failed to get current HEAD: {e}")
-        
+        if until_rev:
+            try:
+                # repo.commit() doesn't validate a full-length hash, rev-parse --verify does
+                current_head = repo.git.rev_parse('--verify', f'{until_rev}^{{commit}}')
+            except Exception as e:
+                raise ValueError(f"Revision {until_rev} not found in {repo_path}: {e}") from e
+        else:
+            try:
+                current_head = repo.head.commit.hexsha
+            except Exception as e:
+                logging.warning(f"Failed to get current HEAD: {e}")
+        tip = current_head if until_rev else "HEAD"
+
         # Determine which commits to iterate through
         if last_head:
             try:
                 # Get only commits since the last processed HEAD
-                commit_range = f"{last_head}..HEAD"
+                commit_range = f"{last_head}..{tip}"
                 commits_to_process = list(repo.iter_commits(commit_range))
                 logging.info(f"Mining {len(commits_to_process)} new commits since {last_head[:8]}")
             except Exception as e:
                 logging.warning(f"Failed to use commit range, falling back to all commits: {e}")
-                commits_to_process = repo.iter_commits()
+                commits_to_process = repo.iter_commits(tip)
         else:
             # No last_head, process all commits but skip those in seen_hashes
-            commits_to_process = repo.iter_commits()
+            commits_to_process = repo.iter_commits(tip)
         
         # Process commits with improved error handling
         for commit in commits_to_process:
@@ -200,6 +219,8 @@ class CommitMiner:
                             except Exception as inner_e:
                                 logging.warning(f"Error extracting diff data for file {file_path}: {inner_e}")
                                 
+                except DiffUnavailableError:
+                    raise
                 except GitCommandError as e:
                     # Enhanced error handling for Git errors
                     error_msg = e.stderr.strip() if hasattr(e, 'stderr') and e.stderr else str(e)

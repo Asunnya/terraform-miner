@@ -4,7 +4,7 @@ import os
 import pytest
 from git import Commit, GitCommandError, Repo
 
-from src.miner.commit_miner import CommitMiner, _strip_patch_header
+from src.miner.commit_miner import CommitMiner, DiffUnavailableError, _strip_patch_header
 
 EXPECTED_KEYS = {"repo", "commit_hash", "author", "date", "message", "file", "patch", "head_hash"}
 
@@ -161,12 +161,13 @@ def test_fallback_is_used_and_logged(git_repo, monkeypatch, caplog):
     assert '+  cidr_block = "10.0.0.0/16"' in entry["patch"]
 
 
-def test_fallback_failure_returns_no_entries(git_repo, monkeypatch, caplog):
+def test_fallback_failure_raises(git_repo, monkeypatch, caplog):
+    # Ex.: clone parcial sem internet. O repo inteiro deve falhar (sem checkpoint) em vez de perder o commit.
     path, _ = git_repo
     _force_fallback(monkeypatch)
     monkeypatch.setattr(CommitMiner, "_git", staticmethod(lambda *a: (_ for _ in ()).throw(OSError("no git"))))
-    with caplog.at_level(logging.WARNING):
-        assert CommitMiner(["fix"]).mine(path) == []
+    with caplog.at_level(logging.WARNING), pytest.raises(DiffUnavailableError, match="no git"):
+        CommitMiner(["fix"]).mine(path)
     assert "Fallback diff method also failed" in caplog.text
 
 
@@ -178,3 +179,23 @@ def test_fallback_failure_returns_no_entries(git_repo, monkeypatch, caplog):
 ])
 def test_strip_patch_header(patch, expected):
     assert _strip_patch_header(patch) == expected
+
+
+def test_until_rev_freezes_history(git_repo):
+    path, h = git_repo
+    entries = CommitMiner(["fix"]).mine(path, until_rev=h["c3"])
+    # c4 vem depois de c3 e fica de fora; head_hash passa a ser o commit de corte
+    assert {e["commit_hash"] for e in entries} == {h["c2"]}
+    assert {e["head_hash"] for e in entries} == {h["c3"]}
+
+
+def test_until_rev_with_last_head(git_repo):
+    path, h = git_repo
+    entries = CommitMiner(["fix"]).mine(path, last_head=h["c1"], until_rev=h["c3"])
+    assert {e["commit_hash"] for e in entries} == {h["c2"]}
+
+
+def test_unknown_until_rev_raises(git_repo):
+    path, _ = git_repo
+    with pytest.raises(ValueError, match="not found"):
+        CommitMiner(["fix"]).mine(path, until_rev="0" * 40)

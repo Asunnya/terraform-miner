@@ -20,6 +20,8 @@ data/
 terraform_analysis.log
 *.csv
 *.html
+CLAUDE.md
+docs/
 
 # IDE and editor files
 .vscode/

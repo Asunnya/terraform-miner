@@ -87,7 +87,14 @@ def parse_args():
     # Add new clone options
     parser.add_argument('--full-clone', action='store_true', help='Use full clone instead of partial clone')
     parser.add_argument('--clone-depth', type=int, help='Depth for shallow clones (use 0 for full history)')
-    
+
+    parser.add_argument('--replay-from', help='Diretório de uma mineração anterior (estrutura de ../data): '
+                        'minera de novo os mesmos repositórios, até o mesmo head_hash, sem buscar no GitHub')
+    parser.add_argument('--replay-cutoff', help='Data ISO de corte para repos sem head_hash no replay '
+                        '(padrão: data de modificação do logs/summary.json antigo)')
+    parser.add_argument('--resume', action='store_true', help='Continua um --replay-from interrompido: aceita '
+                        '../data/dataset e checkpoints com dados; repos com checkpoint não são minerados de novo')
+
     return parser.parse_args()
 
 def load_checkpoint(repo_name, checkpoints_dir_abs):
@@ -134,7 +141,121 @@ def save_checkpoint(repo_name, checkpoint_data, checkpoints_dir_abs):
     with open(checkpoint_path, 'w', encoding='utf-8') as f:
         json.dump(checkpoint_data, f, indent=2, ensure_ascii=False)
 
-def process_repository(repo_info, miner, cloner, exporter, keywords, full_clone=False, clone_depth=None, checkpoints_dir_abs=None):
+REPO_INFO_KEYS = ('repo_full_name', 'stars', 'forks', 'commits')
+
+
+def _read_head_hash(jsonl_path):
+    """Retorna o primeiro head_hash de um data.jsonl, ou None."""
+    if not os.path.exists(jsonl_path):
+        return None
+    with open(jsonl_path, 'r', encoding='utf-8') as f:
+        for line in f:
+            head = json.loads(line).get('head_hash')
+            if head:
+                return head
+    return None
+
+
+def load_replay_plan(replay_dir, cutoff=None):
+    """
+    Monta a lista de repositórios de uma mineração anterior para minerá-los de novo sobre o mesmo histórico.
+
+    Lê de replay_dir (um diretório com a estrutura de ../data):
+      - logs/summary.json: lista de repositórios processados (processed_repositories_summary);
+      - dataset/<owner>_<repo>/data.jsonl: head_hash usado na mineração original;
+      - checkpoints/<owner>_<repo>.json: last_head, se o dataset não tiver head_hash.
+
+    Args:
+        replay_dir (str): Diretório da mineração antiga
+        cutoff (str): Data ISO usada para repos sem head_hash. Padrão: mtime do summary.json antigo.
+
+    Returns:
+        tuple: (repos, cutoff), onde cada repo tem os campos de REPO_INFO_KEYS mais 'replay_head' (ou None)
+    """
+    summary_path = os.path.join(replay_dir, 'logs', 'summary.json')
+    with open(summary_path, 'r', encoding='utf-8') as f:
+        old_summary = json.load(f)
+
+    if cutoff is None:
+        from datetime import datetime
+        cutoff = datetime.fromtimestamp(os.path.getmtime(summary_path)).astimezone().isoformat(timespec='seconds')
+
+    repos = []
+    for old in old_summary.get('processed_repositories_summary', []):
+        info = {k: old[k] for k in REPO_INFO_KEYS if k in old}
+        key = info['repo_full_name'].replace('/', '_')
+        head = _read_head_hash(os.path.join(replay_dir, 'dataset', key, 'data.jsonl'))
+        if not head:
+            head = load_checkpoint(info['repo_full_name'], os.path.join(replay_dir, 'checkpoints')).get('last_head')
+        info['replay_head'] = head
+        repos.append(info)
+    return repos, cutoff
+
+
+def resolve_replay_rev(repo_path, head_hash, cutoff):
+    """
+    Escolhe o commit final da mineração de replay.
+
+    Usa head_hash se ele existir no clone; senão, o último commit de HEAD antes de cutoff.
+
+    Returns:
+        tuple: (hash, origem), origem é 'head_hash' ou 'cutoff_date'
+
+    Raises:
+        ValueError: se nenhum dos dois puder ser resolvido
+    """
+    import subprocess
+
+    def git(*args):
+        return subprocess.run(['git', '-C', repo_path, *args], capture_output=True, text=True)
+
+    if head_hash:
+        if git('cat-file', '-e', f'{head_hash}^{{commit}}').returncode == 0:
+            return head_hash, 'head_hash'
+        logging.warning(f"[replay] {head_hash[:8]} não existe em {repo_path}; usando a data de corte {cutoff}")
+
+    result = git('rev-list', '-1', f'--before={cutoff}', 'HEAD')
+    rev = result.stdout.strip()
+    if result.returncode != 0 or not rev:
+        raise ValueError(f"Nenhum commit antes de {cutoff} em {repo_path}")
+    return rev, 'cutoff_date'
+
+
+def _dataset_keys(dataset_dir):
+    """{repo_dir: {(commit_hash, file), ...}} de todos os data.jsonl de dataset_dir."""
+    keys = {}
+    if not os.path.isdir(dataset_dir):
+        return keys
+    for repo_dir in os.listdir(dataset_dir):
+        path = os.path.join(dataset_dir, repo_dir, 'data.jsonl')
+        if os.path.exists(path):
+            with open(path, 'r', encoding='utf-8') as f:
+                keys[repo_dir] = {(r['commit_hash'], r['file']) for r in map(json.loads, f)}
+    return keys
+
+
+def compare_datasets(old_dataset_dir, new_dataset_dir):
+    """
+    Compara os pares (commit_hash, file) da mineração antiga com os da nova.
+
+    Returns:
+        dict: totais e, por repositório, quantos pares se mantiveram, são novos ou sumiram,
+        com até 20 exemplos dos que sumiram.
+    """
+    old, new = _dataset_keys(old_dataset_dir), _dataset_keys(new_dataset_dir)
+    per_repo = {}
+    for repo in sorted(old.keys() | new.keys()):
+        o, n = old.get(repo, set()), new.get(repo, set())
+        per_repo[repo] = {
+            'old': len(o), 'new': len(n), 'kept': len(o & n),
+            'only_new': len(n - o), 'only_old': len(o - n),
+            'only_old_examples': sorted(o - n)[:20],
+        }
+    totals = {k: sum(r[k] for r in per_repo.values()) for k in ('old', 'new', 'kept', 'only_new', 'only_old')}
+    return {'totals': totals, 'per_repo': per_repo}
+
+
+def process_repository(repo_info, miner, cloner, exporter, keywords, full_clone=False, clone_depth=None, checkpoints_dir_abs=None, replay_cutoff=None):
     """
     Process a single repository: clone, mine commits, and export data.
     This function is designed to be run in parallel.
@@ -148,7 +269,9 @@ def process_repository(repo_info, miner, cloner, exporter, keywords, full_clone=
         full_clone (bool): Whether to use full clone instead of partial clone
         clone_depth (int): Depth for shallow clones (None for default)
         checkpoints_dir_abs (str): Absolute path to the checkpoints directory
-        
+        replay_cutoff (str): Se definido (modo --replay-from), minera só até repo_info['replay_head']
+            ou, sem ele, até o último commit antes dessa data
+
     Returns:
         dict: Entry with processing results and status
     """
@@ -180,8 +303,15 @@ def process_repository(repo_info, miner, cloner, exporter, keywords, full_clone=
 
     # Tenta minerar os commits
     try:
+        until_rev = None
+        if replay_cutoff:
+            until_rev, source = resolve_replay_rev(path, repo_info.get('replay_head'), replay_cutoff)
+            entry.update({'replay_rev': until_rev, 'replay_source': source})
+            logging.info(f"[{thread_name}] {full_name}: replay até {until_rev[:8]} ({source})")
+
         logging.info(f"[{thread_name}] Iniciando mineração de commits em {full_name}...")
-        commits = miner.mine(path, seen_hashes=processed_commits, last_head=checkpoint["last_head"])
+        commits = miner.mine(path, seen_hashes=processed_commits, last_head=checkpoint["last_head"],
+                             until_rev=until_rev)
         
         # Filter commits for Terraform infrastructure files
         commits = [c for c in commits if is_real_infra_file(c['file'])]
@@ -321,14 +451,31 @@ def main():
     if effective_exclude_keywords:
         logging.info(f"Excluding repositories with keywords: {effective_exclude_keywords}")
 
-    # Fetch repositories to process
-    logging.info("[MainThread] Searching for repositories...")
-    repos_to_process = api.search_repositories(
-        stars_filter=effective_stars, # Pass the determined stars value
-        min_commits_filter=effective_min_commits, # Pass the determined min_commits value
-        limit=args.limit or cfg.get('limit', 50), # Default limit to 50 if not in args or cfg
-        exclude_keywords=effective_exclude_keywords
-    )
+    replay_dir = os.path.abspath(args.replay_from) if args.replay_from else None
+    replay_cutoff = None
+    if replay_dir:
+        # O replay precisa começar do zero: checkpoints pulariam commits e o DataExporter
+        # manteria registros antigos com o mesmo (commit_hash, file).
+        if replay_dir == os.path.abspath(DATA_DIR):
+            raise SystemExit(f"--replay-from não pode ser o próprio {DATA_DIR}; mova a mineração antiga antes.")
+        for d in (base_dataset_dir_for_export, CHECKPOINTS_DIR):
+            if os.listdir(d) and not args.resume:
+                raise SystemExit(f"--replay-from exige {d} vazio; mova ou apague o conteúdo antes "
+                                 "(ou use --resume para continuar um replay interrompido).")
+
+        repos_to_process, replay_cutoff = load_replay_plan(replay_dir, args.replay_cutoff)
+        without_head = [r['repo_full_name'] for r in repos_to_process if not r['replay_head']]
+        logging.info(f"[MainThread] Replay de {replay_dir}: {len(repos_to_process)} repositórios, "
+                     f"{len(without_head)} sem head_hash (usarão a data de corte {replay_cutoff}).")
+    else:
+        # Fetch repositories to process
+        logging.info("[MainThread] Searching for repositories...")
+        repos_to_process = api.search_repositories(
+            stars_filter=effective_stars, # Pass the determined stars value
+            min_commits_filter=effective_min_commits, # Pass the determined min_commits value
+            limit=args.limit or cfg.get('limit', 50), # Default limit to 50 if not in args or cfg
+            exclude_keywords=effective_exclude_keywords
+        )
     logging.info(f"[MainThread] Found {len(repos_to_process)} repositories to process.")
 
     # Optional: Filter repositories by min_commits here if desired
@@ -377,7 +524,9 @@ def main():
             'clone_depth': args.clone_depth if args.clone_depth is not None else cfg.get('clone_options', {}).get('depth'),
             'limit': args.limit or cfg.get('limit'),
             'stats_only': args.stats_only,
-            'workers': args.workers or os.cpu_count()
+            'workers': args.workers or os.cpu_count(),
+            'replay_from': replay_dir,
+            'replay_cutoff': replay_cutoff
         }
     }
     # Adicionar estatísticas iniciais dos repositórios encontrados ao sumário
@@ -405,7 +554,8 @@ def main():
                 keywords_cfg, 
                 args.full_clone or cfg.get('clone_options', {}).get('full_clone', False),
                 args.clone_depth if args.clone_depth is not None else cfg.get('clone_options', {}).get('depth'),
-                checkpoints_dir_abs=CHECKPOINTS_DIR
+                checkpoints_dir_abs=CHECKPOINTS_DIR,
+                replay_cutoff=replay_cutoff
             )
             futures[future] = full_name
         
@@ -435,6 +585,14 @@ def main():
 
     with open(SUMMARY_PATH, 'w', encoding='utf-8') as f_sum:
         json.dump(mining_summary, f_sum, indent=2, ensure_ascii=False)
+
+    if replay_dir:
+        comparison = compare_datasets(os.path.join(replay_dir, 'dataset'), base_dataset_dir_for_export)
+        comparison_path = os.path.join(LOGS_DIR, 'replay_comparison.json')
+        with open(comparison_path, 'w', encoding='utf-8') as f_cmp:
+            json.dump(comparison, f_cmp, indent=2, ensure_ascii=False)
+        logging.info(f"[MainThread] Replay vs. mineração antiga (commit, arquivo): {comparison['totals']}")
+        logging.info(f"[MainThread] Comparação por repositório salva em {comparison_path}")
 
     logging.info("Mining process completed.")
     logging.info(f"Summary saved to {SUMMARY_PATH}")
