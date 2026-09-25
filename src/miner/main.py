@@ -11,7 +11,6 @@ from src.miner.github_api import GitHubAPI
 from src.miner.repo_cloner import RepoCloner
 from src.miner.commit_miner import CommitMiner
 from src.miner.data_exporter import DataExporter
-from src.miner.utils import is_real_infra_file
 import logging
 
 # --- Path setup ---
@@ -160,8 +159,9 @@ def load_replay_plan(replay_dir, cutoff=None):
     """
     Monta a lista de repositórios de uma mineração anterior para minerá-los de novo sobre o mesmo histórico.
 
-    Lê de replay_dir (um diretório com a estrutura de ../data):
-      - logs/summary.json: lista de repositórios processados (processed_repositories_summary);
+    Lê de replay_dir (um diretório com a estrutura de ../data), nesta ordem de prioridade:
+      - logs/summary.json: lista de repositórios processados e, se a mineração antiga já foi um
+        replay, o replay_rev exato de cada um (vale mesmo para repos que não exportaram registros);
       - dataset/<owner>_<repo>/data.jsonl: head_hash usado na mineração original;
       - checkpoints/<owner>_<repo>.json: last_head, se o dataset não tiver head_hash.
 
@@ -184,7 +184,7 @@ def load_replay_plan(replay_dir, cutoff=None):
     for old in old_summary.get('processed_repositories_summary', []):
         info = {k: old[k] for k in REPO_INFO_KEYS if k in old}
         key = info['repo_full_name'].replace('/', '_')
-        head = _read_head_hash(os.path.join(replay_dir, 'dataset', key, 'data.jsonl'))
+        head = old.get('replay_rev') or _read_head_hash(os.path.join(replay_dir, 'dataset', key, 'data.jsonl'))
         if not head:
             head = load_checkpoint(info['repo_full_name'], os.path.join(replay_dir, 'checkpoints')).get('last_head')
         info['replay_head'] = head
@@ -313,9 +313,6 @@ def process_repository(repo_info, miner, cloner, exporter, keywords, full_clone=
         commits = miner.mine(path, seen_hashes=processed_commits, last_head=checkpoint["last_head"],
                              until_rev=until_rev)
         
-        # Filter commits for Terraform infrastructure files
-        commits = [c for c in commits if is_real_infra_file(c['file'])]
-        
         if commits:
             # Export new commits
             exporter.export(full_name, commits, append=True)
@@ -352,6 +349,32 @@ def process_repository(repo_info, miner, cloner, exporter, keywords, full_clone=
         logging.error(f"[{thread_name}] Falha ao minerar commits em {full_name}: {e}")
     
     return entry
+
+FAILED_STATUSES = ('clone_failed', 'mine_failed', 'failed_exceptionally_in_future')
+
+
+def miner_git_version(project_root=PROJECT_ROOT):
+    """SHA do commit do minerador e se há mudanças não commitadas (None fora de um repo git)."""
+    import subprocess
+
+    def git(*args):
+        return subprocess.run(['git', '-C', project_root, *args], capture_output=True, text=True)
+
+    head = git('rev-parse', 'HEAD')
+    if head.returncode != 0:
+        return {'commit': None, 'dirty': None}
+    return {'commit': head.stdout.strip(), 'dirty': bool(git('status', '--porcelain', '--', 'src/miner').stdout.strip())}
+
+
+def dataset_counts(dataset_dir):
+    """Registros (commit, arquivo) e commits únicos exportados em dataset_dir."""
+    keys = _dataset_keys(dataset_dir)
+    return {
+        'raw_record_count': sum(len(v) for v in keys.values()),
+        'unique_commit_count': sum(len({h for h, _ in v}) for v in keys.values()),
+        'repositories_with_records': sum(1 for v in keys.values() if v),
+    }
+
 
 def main():
     """
@@ -515,7 +538,12 @@ def main():
         logging.info(f"[MainThread] Stats-only summary saved to {SUMMARY_PATH}. Exiting.")
         return # Exit if stats_only is true
 
+    from datetime import datetime, timezone
+    run_started = datetime.now(timezone.utc)
     mining_summary = {
+        'run_id': f"mine-{run_started.strftime('%Y%m%dT%H%M%SZ')}",
+        'started_at': run_started.isoformat(timespec='seconds'),
+        'miner_version': miner_git_version(),
         'parameters': {
             'stars': effective_stars, # Use effective value
             'min_commits': effective_min_commits, # Use effective value
@@ -581,6 +609,9 @@ def main():
     mining_summary['total_repositories_attempted'] = len(repos_to_process)
     mining_summary['total_repositories_successful_clone'] = len([r for r in processed_repo_results if r.get('status') not in ['clone_failed']])
     mining_summary['total_repositories_commits_mined_at_least_one'] = len([r for r in processed_repo_results if r.get('mined_commits', 0) > 0])
+    mining_summary['total_repositories_failed'] = len([r for r in processed_repo_results if r.get('status') in FAILED_STATUSES])
+    mining_summary['dataset_counts'] = dataset_counts(base_dataset_dir_for_export)
+    mining_summary['finished_at'] = datetime.now(timezone.utc).isoformat(timespec='seconds')
     # Adicionar mais estatísticas agregadas se necessário
 
     with open(SUMMARY_PATH, 'w', encoding='utf-8') as f_sum:

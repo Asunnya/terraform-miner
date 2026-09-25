@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import logging
 import os
 import time
 from abc import ABC, abstractmethod
@@ -11,6 +12,7 @@ from typing import Any, Callable
 
 from src.llm_analysis.schemas import LABELS
 
+LITELLM_LOGGERS = ("LiteLLM", "LiteLLM Router", "LiteLLM Proxy")
 RETRYABLE_STATUS_CODES = frozenset({408, 409, 429})
 SERVER_ERROR_STATUS = 500
 
@@ -133,6 +135,8 @@ class LiteLLMClient(LLMClient):
             raise LLMConfigError("The 'litellm' package is required: uv pip install -r requirements.txt") from e
         litellm.telemetry = False
         litellm.suppress_debug_info = True
+        for name in LITELLM_LOGGERS:  # one INFO line per call otherwise
+            logging.getLogger(name).setLevel(logging.WARNING)
         self._litellm = litellm
         try:
             self.model_name, self.vendor, _, _ = litellm.get_llm_provider(settings.model)

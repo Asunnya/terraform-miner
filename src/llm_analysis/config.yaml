@@ -33,6 +33,7 @@ eligibility:                    # scope filter (not a bug-fix decision), before 
     documentation: ["docs", "doc"]
     vendor: ["vendor"]
     generated: [".terraform"]
+    repository_metadata: [".github"]
   require_in_scope_patch: true  # in-scope files without any patch -> INSUFFICIENT_DATA
 
 preparation:

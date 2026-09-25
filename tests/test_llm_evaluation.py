@@ -101,7 +101,8 @@ def test_summarize_mode_counts_failures_and_truncation():
     assert (summary["bug_fix"], summary["non_bug_fix"]) == (1, 1)
     assert (summary["api_failures"], summary["parse_failures"]) == (1, 1)
     assert summary["truncated_commits"] == 1
-    assert summary["bug_fix_share_of_parsed"] == 0.5
+    assert summary["eligible_candidate_bugfix_rate"]["estimate"] == 0.5
+    assert summary["eligible_candidate_bugfix_rate"]["n"] == 2  # só as respostas válidas
     assert summary["confidence"]["n"] == 2 and summary["confidence"]["histogram"]["[0.9, 1.0]"] == 1
 
 
@@ -152,4 +153,4 @@ def test_gold_evaluation_uses_paired_commits():
     assert ev["unpaired"]["message_only"]["n"] == 2
     assert ev["unpaired"]["message_and_diff"]["gold_commits_without_parsed_label"] == 1
     assert "NOT representative" in ev["scope_note"]
-    assert ev["keyword_heuristic_precision_gold"] == 0.5
+    assert ev["gold_eligible_candidate_bugfix_rate"]["estimate"] == 0.5

@@ -67,7 +67,8 @@ def test_process_repository_clone_failed(env):
     env["miner"].mine.assert_not_called()
 
 
-def test_process_repository_success_filters_non_infra(env):
+def test_process_repository_exports_every_tf_record(env):
+    # Sem filtro de escopo no minerador: examples/ também é exportado (o escopo é decidido no llm_analysis).
     env["miner"].mine.return_value = [
         make_record(commit_hash="a", file="main.tf", head_hash="HEAD1"),
         make_record(commit_hash="b", file="examples/demo.tf", head_hash="HEAD1"),
@@ -75,14 +76,14 @@ def test_process_repository_success_filters_non_infra(env):
     result = env["run"]()
 
     assert result["status"] == "success"
-    assert result["mined_commits"] == 1
+    assert result["mined_commits"] == 2
     assert result["stars"] == 1  # mantém os campos de repo_info
 
     with open(env["tmp"] / "dataset" / "owner_repo" / "data.jsonl") as f:
-        assert [json.loads(line)["file"] for line in f] == ["main.tf"]
+        assert [json.loads(line)["file"] for line in f] == ["main.tf", "examples/demo.tf"]
 
     checkpoint = json.loads((env["checkpoints"] / "owner_repo.json").read_text())
-    assert checkpoint["processed_commits"] == ["a"]
+    assert sorted(checkpoint["processed_commits"]) == ["a", "b"]
     assert checkpoint["last_head"] == "HEAD1"
 
 
@@ -98,7 +99,7 @@ def test_process_repository_passes_clone_options_and_checkpoint(env):
 
 
 def test_process_repository_no_new_commits(env):
-    env["miner"].mine.return_value = [make_record(file="examples/only.tf")]
+    env["miner"].mine.return_value = []
     result = env["run"]()
     assert result["status"] == "no_new_commits"
     assert result["mined_commits"] == 0

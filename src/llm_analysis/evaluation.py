@@ -24,6 +24,9 @@ from src.llm_analysis.schemas import (
 from src.llm_analysis.stats import cohen_kappa, holm_adjust, mcnemar_exact, proportion
 from src.llm_analysis.utils import read_jsonl
 
+BUGFIX_RATE = "eligible_candidate_bugfix_rate"
+BUGFIX_RATE_DEFINITION = ("eligible commits classified BUG_FIX / eligible commits successfully classified, "
+                          "per input mode (LLM labels; not precision, which needs gold labels)")
 PARSE_FAILURE = "PARSE_FAILURE"
 API_FAILURE = "API_FAILURE"
 CONFIDENCE_BIN_WIDTH = 0.1
@@ -116,8 +119,7 @@ def summarize_mode(records: dict[tuple[str, str], dict]) -> dict[str, Any]:
         "non_bug_fix": outcomes[NON_BUG_FIX],
         "parse_failures": outcomes[PARSE_FAILURE],
         "api_failures": outcomes[API_FAILURE],
-        "bug_fix_share_of_parsed": round(outcomes[BUG_FIX] / n_parsed, 4) if n_parsed else None,
-        "bug_fix_share_of_parsed_ci95": proportion(outcomes[BUG_FIX], n_parsed),
+        BUGFIX_RATE: proportion(outcomes[BUG_FIX], n_parsed),
         "distribution": {k: outcomes[k] for k in (*LABELS, PARSE_FAILURE, API_FAILURE)},
         "truncated_commits": sum(1 for r in records.values() if r.get("diff_truncated")),
         "confidence": confidence_distribution([r["confidence"] for r in parsed]),
@@ -376,9 +378,7 @@ def evaluate_against_gold(results: dict[str, dict[tuple[str, str], dict]], gold:
         }
     evaluation["mcnemar"] = compare_modes_mcnemar(modes, paired, matched, per_mode_labels)
     if experiment_mode == CANDIDATE_VALIDATION and matched:
-        evaluation["keyword_heuristic_precision_gold"] = round(
-            sum(1 for label in matched.values() if label == BUG_FIX) / len(matched), 4)
-        evaluation["keyword_heuristic_precision_gold_ci95"] = proportion(
+        evaluation[f"gold_{BUGFIX_RATE}"] = proportion(
             sum(1 for label in matched.values() if label == BUG_FIX), len(matched))
     return evaluation
 
@@ -412,9 +412,9 @@ def summary_csv_rows(summary: dict[str, Any]) -> list[dict[str, Any]]:
             "non_bug_fix": data["non_bug_fix"],
             "parse_failures": data["parse_failures"],
             "api_failures": data["api_failures"],
-            "bug_fix_share_of_parsed": data["bug_fix_share_of_parsed"],
-            "bug_fix_share_ci95_low": data["bug_fix_share_of_parsed_ci95"]["ci95_low"],
-            "bug_fix_share_ci95_high": data["bug_fix_share_of_parsed_ci95"]["ci95_high"],
+            BUGFIX_RATE: data[BUGFIX_RATE]["estimate"],
+            f"{BUGFIX_RATE}_ci95_low": data[BUGFIX_RATE]["ci95_low"],
+            f"{BUGFIX_RATE}_ci95_high": data[BUGFIX_RATE]["ci95_high"],
             "truncated_commits": data["truncated_commits"],
             "confidence_mean": conf.get("mean"),
             "confidence_median": conf.get("median"),
@@ -428,6 +428,6 @@ def summary_csv_rows(summary: dict[str, Any]) -> list[dict[str, Any]]:
 
 SUMMARY_CSV_FIELDS = [
     "input_mode", "unique_commits", "bug_fix", "non_bug_fix", "parse_failures", "api_failures",
-    "bug_fix_share_of_parsed", "bug_fix_share_ci95_low", "bug_fix_share_ci95_high", "truncated_commits", "confidence_mean", "confidence_median",
+    BUGFIX_RATE, f"{BUGFIX_RATE}_ci95_low", f"{BUGFIX_RATE}_ci95_high", "truncated_commits", "confidence_mean", "confidence_median",
     "gold_n", "gold_precision", "gold_recall", "gold_f1", "gold_mcc",
 ]

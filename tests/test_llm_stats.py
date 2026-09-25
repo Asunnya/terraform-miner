@@ -79,4 +79,4 @@ def test_kappa_and_mcnemar_in_the_reports():
     assert tests["message_only_vs_diff_only"]["p_value"] == pytest.approx(0.125)
     assert tests["message_only_vs_diff_only"]["p_value_holm"] >= tests["message_only_vs_diff_only"]["p_value"]
     assert ev["paired"]["diff_only"]["precision_ci95"]["n"] == 4
-    assert ev["keyword_heuristic_precision_gold_ci95"]["estimate"] == 0.5
+    assert ev["gold_eligible_candidate_bugfix_rate"]["estimate"] == 0.5

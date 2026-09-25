@@ -17,9 +17,10 @@ EXAMPLE = "EXAMPLE"
 DOCUMENTATION = "DOCUMENTATION"
 VENDOR = "VENDOR"
 GENERATED = "GENERATED"
+REPOSITORY_METADATA = "REPOSITORY_METADATA"
 # config.yaml key -> scope
 SCOPE_KEYS = {"test": TEST, "example": EXAMPLE, "documentation": DOCUMENTATION, "vendor": VENDOR,
-              "generated": GENERATED}
+              "generated": GENERATED, "repository_metadata": REPOSITORY_METADATA}
 
 # Commit states.
 IN_SCOPE = "IN_SCOPE"
@@ -35,7 +36,7 @@ NO_IN_SCOPE_TERRAFORM_FILES = "no_in_scope_terraform_files"
 NO_IN_SCOPE_PATCH = "no_in_scope_patch"
 ONLY_SCOPE_REASON = {TEST: "only_test_files", EXAMPLE: "only_example_files",
                      DOCUMENTATION: "only_documentation_files", VENDOR: "only_vendor_files",
-                     GENERATED: "only_generated_files"}
+                     GENERATED: "only_generated_files", REPOSITORY_METADATA: "only_repository_metadata_files"}
 REASONS = (ELIGIBLE, GENERIC_MERGE, *ONLY_SCOPE_REASON.values(), ONLY_EXCLUDED_FILES,
            NO_IN_SCOPE_TERRAFORM_FILES, NO_IN_SCOPE_PATCH)
 

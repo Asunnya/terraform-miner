@@ -82,7 +82,9 @@ def test_end_to_end_with_mock_provider(tmp_path):
     assert summary["experiment_mode"] == "candidate_validation"
     assert set(summary["by_input_mode"]) == set(INPUT_MODES)
     assert summary["gold_evaluation"]["gold_commits_matched"] == 1  # o commit 2 ficou fora (sem patch)
-    assert "llm_estimated_keyword_heuristic_precision" in summary
+    assert "llm_estimated_keyword_heuristic_precision" not in summary
+    rate = summary["eligible_candidate_bugfix_rate"]
+    assert "not precision" in rate["definition"] and set(rate["by_input_mode"]) == set(INPUT_MODES)
     for name in ("summary.csv", "classification_counts.csv", "disagreements.csv"):
         with open(report_dir / name) as f:
             assert next(csv.reader(f))  # cabeçalho presente

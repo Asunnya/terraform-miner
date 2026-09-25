@@ -12,6 +12,8 @@ if __package__ in (None, ""):
 
 from src.llm_analysis.classification import experiment_from_config  # noqa: E402
 from src.llm_analysis.evaluation import (  # noqa: E402
+    BUGFIX_RATE,
+    BUGFIX_RATE_DEFINITION,
     DISAGREEMENT_FIELDS,
     SCOPE_NOTES,
     SUMMARY_CSV_FIELDS,
@@ -98,8 +100,9 @@ def main(argv: list[str] | None = None) -> int:
         "confidence_note": "confidence is self-reported by the model; it is not a calibrated probability.",
     }
     if experiment_mode == CANDIDATE_VALIDATION:
-        summary["llm_estimated_keyword_heuristic_precision"] = {
-            mode: data["bug_fix_share_of_parsed_ci95"] for mode, data in by_mode.items()
+        summary[BUGFIX_RATE] = {
+            "definition": BUGFIX_RATE_DEFINITION,
+            "by_input_mode": {mode: data[BUGFIX_RATE] for mode, data in by_mode.items()},
         }
 
     gold_setting = args.gold_labels or cfg.get("evaluation", {}).get("gold_labels")

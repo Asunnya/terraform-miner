@@ -11,6 +11,7 @@ from src.llm_analysis.eligibility import (
     INFRASTRUCTURE,
     INSUFFICIENT_DATA,
     OUT_OF_SCOPE,
+    REPOSITORY_METADATA,
     TEST,
     VENDOR,
     EligibilityConfig,
@@ -54,6 +55,7 @@ def assess(files, **kwargs):
     ("docs/example/main.tf", DOCUMENTATION),           # o segmento mais externo decide
     ("vendor/module/main.tf", VENDOR),
     (".terraform/modules/x/main.tf", GENERATED),
+    (".github/workflows/terraform/main.tf", REPOSITORY_METADATA),
     ("Examples/basic/main.tf", EXAMPLE),               # sem diferenciar maiúsculas
     ("my-tests/main.tf", INFRASTRUCTURE),              # segmento inteiro, não substring
     ("latest/main.tf", INFRASTRUCTURE),
@@ -79,6 +81,7 @@ def test_infrastructure_commits_are_in_scope(files):                     # casos
     (["docs/example/main.tf"], "only_documentation_files"),               # 9
     (["vendor/module/main.tf"], "only_vendor_files"),                     # 10
     ([".terraform/modules/x/main.tf"], "only_generated_files"),           # 11
+    ([".github/actions/x/main.tf"], "only_repository_metadata_files"),
     (["tests/main.tf", "examples/main.tf"], "only_excluded_files"),
 ])
 def test_excluded_only_commits_are_out_of_scope(files, reason):
