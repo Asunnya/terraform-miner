@@ -1,19 +1,4 @@
-"""
-Deterministic rendering of a commit's diffs under a context budget.
-
-Rules (all deterministic, so the same prepared commit + limits always yields the same text):
-1. Files are taken in path order; at most `max_files_per_commit` patches are shown. The names of
-   the remaining files are still listed.
-2. The `max_diff_chars` budget is split across the shown files by water-filling: small patches get
-   their full size, the rest share what is left equally, and no file gets more than
-   `max_chars_per_file`. One large file therefore cannot consume the whole budget.
-3. A patch that exceeds its share is cut at hunk boundaries (whole `@@` hunks while they fit); the
-   first hunk that does not fit is cut at a line boundary. A single line is only cut mid-line when
-   not even one full line fits.
-4. Every cut is announced in the prompt and recorded (diff_truncated, original/submitted chars).
-
-The `+`/`-`/` ` line prefixes and `@@` headers are never altered.
-"""
+"""Deterministic rendering of a commit's diffs within the context budget."""
 from __future__ import annotations
 
 from dataclasses import dataclass, field
@@ -21,7 +6,7 @@ from typing import Any
 
 from src.llm_analysis.schemas import FileDiff
 
-# Bump when the rendering below changes: it is part of the experiment id.
+# Part of the experiment id: bump when the rendering changes.
 DIFF_FORMAT_VERSION = "1"
 
 HUNK_PREFIX = "@@"
@@ -60,7 +45,7 @@ class RenderedDiff:
 
 
 def allocate_budget(sizes: list[int], total: int, per_file: int) -> list[int]:
-    """Water-filling split of `total` chars across files of the given sizes, each capped at `per_file`."""
+    """Water-filling split of `total` chars, each file capped at `per_file`."""
     caps = [min(size, per_file) for size in sizes]
     allocation = [0] * len(sizes)
     remaining = total
@@ -73,7 +58,7 @@ def allocate_budget(sizes: list[int], total: int, per_file: int) -> list[int]:
 
 
 def split_hunks(patch: str) -> list[str]:
-    """Split a patch into chunks starting at each `@@` line (text before the first one is its own chunk)."""
+    """Split a patch at each `@@` line."""
     chunks: list[str] = []
     current: list[str] = []
     for line in patch.splitlines(keepends=True):
@@ -87,10 +72,7 @@ def split_hunks(patch: str) -> list[str]:
 
 
 def truncate_patch(patch: str, limit: int) -> tuple[str, int, int]:
-    """
-    Cut `patch` to at most `limit` chars following rule 3 of the module docstring.
-    Returns (kept_text, hunks_fully_kept, total_hunks).
-    """
+    """Cut at hunk, then line boundaries. Returns (text, whole hunks kept, total hunks)."""
     hunks = split_hunks(patch)
     if len(patch) <= limit:
         return patch, len(hunks), len(hunks)

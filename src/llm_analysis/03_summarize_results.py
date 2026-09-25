@@ -1,12 +1,5 @@
 #!/usr/bin/env python3
-"""
-Stage 03: summarize one experiment's classifications.
-
-Writes to <output.directory>/reports/<experiment_id>/:
-  summary.json, summary.csv, classification_counts.csv, errors.jsonl, disagreements.csv
-and, only when a gold-label file is given, gold-label metrics inside summary.json / summary.csv.
-By default the experiment is the one described by config.yaml; use --experiment-id for another one.
-"""
+"""Stage 03: summarize one experiment."""
 from __future__ import annotations
 
 import argparse
@@ -106,7 +99,7 @@ def main(argv: list[str] | None = None) -> int:
     }
     if experiment_mode == CANDIDATE_VALIDATION:
         summary["llm_estimated_keyword_heuristic_precision"] = {
-            mode: data["bug_fix_share_of_parsed"] for mode, data in by_mode.items()
+            mode: data["bug_fix_share_of_parsed_ci95"] for mode, data in by_mode.items()
         }
 
     gold_setting = args.gold_labels or cfg.get("evaluation", {}).get("gold_labels")

@@ -1,11 +1,4 @@
-"""
-Stage 01 logic: aggregate per-(commit, file) miner records into one PreparedCommit per commit.
-
-The miner writes one JSONL record per changed .tf file, so a commit touching N files appears N
-times. The LLM classifies commits, never individual files, so records are grouped by
-(repo, commit_hash) here. The output is lossless: patches are not truncated at this stage
-(context limits are applied when prompts are built, in diff_context.py).
-"""
+"""Stage 01: group the per-file miner records by commit."""
 from __future__ import annotations
 
 import glob
@@ -22,7 +15,7 @@ from src.llm_analysis.utils import read_jsonl, stable_hash
 logger = logging.getLogger(__name__)
 
 TERRAFORM_EXTENSION = ".tf"
-# Fields that must agree across the records of one commit; disagreements are counted in the stats.
+# Must match across a commit's records (mismatches are counted).
 COMMIT_LEVEL_FIELDS = ("author", "date", "message", "head_hash")
 
 
@@ -46,7 +39,7 @@ class PreparationStats:
 
 
 def find_input_files(pattern: str | Path) -> list[Path]:
-    """Sorted list of files matching the (recursive) glob, so the aggregation order is deterministic."""
+    """Files matching the glob, sorted (deterministic order)."""
     return sorted(Path(p) for p in glob.glob(str(pattern), recursive=True) if Path(p).is_file())
 
 
@@ -61,7 +54,7 @@ def is_terraform_file(path: str | None) -> bool:
 
 
 def commit_content_hash(commit: PreparedCommit) -> str:
-    """Hash of everything that can reach a prompt. Used to detect stale classifications."""
+    """Hash of the prompt-relevant content (detects stale results)."""
     return stable_hash({
         "repo": commit.repo,
         "commit_hash": commit.commit_hash,
@@ -85,18 +78,7 @@ def aggregate_commits(
     records: Iterable[tuple[Path, dict[str, Any]]],
     stats: PreparationStats | None = None,
 ) -> list[PreparedCommit]:
-    """
-    Group miner records by (repo, commit_hash) into PreparedCommits sorted by (repo, commit_hash).
-
-    Per commit:
-    - commit-level fields come from the first record (in input order); conflicts are counted;
-    - `files` holds every changed .tf path, including files whose patch is empty;
-    - empty patches are dropped from `diffs` and their files listed in `files_without_patch`;
-    - repeated (file, patch) records are collapsed;
-    - identical patch text applied to several files is kept once, on the first file in path order,
-      with the other paths in `also_in`, so the prompt does not repeat it;
-    - `diffs` is sorted by file path.
-    """
+    """Group by (repo, commit_hash), dropping empty and duplicate patches."""
     stats = stats if stats is not None else PreparationStats()
     groups: dict[tuple[str, str], _CommitGroup] = {}
 
@@ -180,7 +162,7 @@ def _build_commit(repo: str, commit_hash: str, group: _CommitGroup, stats: Prepa
 
 
 def sample_commits(commits: list[PreparedCommit], sample_size: int | None, seed: int) -> list[PreparedCommit]:
-    """Deterministic simple random sample (same input + seed -> same sample), kept in sorted order."""
+    """Seeded simple random sample, kept in sorted order."""
     if sample_size is None or sample_size >= len(commits):
         return commits
     chosen = random.Random(seed).sample(range(len(commits)), sample_size)
@@ -188,7 +170,7 @@ def sample_commits(commits: list[PreparedCommit], sample_size: int | None, seed:
 
 
 def keyword_match_fraction(commits: list[PreparedCommit], keywords: Iterable[str]) -> float | None:
-    """Fraction of commits whose message contains a miner keyword (substring, like CommitMiner)."""
+    """Share of messages containing a miner keyword."""
     keywords = [k.lower() for k in keywords if k]
     if not commits or not keywords:
         return None

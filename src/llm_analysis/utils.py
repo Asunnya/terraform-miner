@@ -34,10 +34,7 @@ def load_config(path: str | Path | None = None) -> dict[str, Any]:
 
 
 def load_env_file(path: Path = ENV_FILE) -> bool:
-    """
-    Load API keys from the gitignored .env at the repo root (template: .env.example).
-    Variables already set in the environment take precedence. Returns True if the file exists.
-    """
+    """Load the gitignored .env (shell variables win). True if the file exists."""
     if not path.is_file():
         return False
     from dotenv import load_dotenv
@@ -85,10 +82,7 @@ def utc_now_iso() -> str:
 
 
 def read_jsonl(path: Path) -> Iterator[tuple[int, dict[str, Any]]]:
-    """
-    Yield (line_number, record) for each JSON object in the file. Blank lines are skipped;
-    malformed lines (e.g. a line cut short by an interrupted run) are logged and skipped.
-    """
+    """Yield (line number, record); blank and malformed lines are skipped."""
     with open(path, encoding="utf-8") as f:
         for lineno, line in enumerate(f, start=1):
             if not line.strip():

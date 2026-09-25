@@ -1,10 +1,5 @@
 #!/usr/bin/env python3
-"""
-Stage 02: classify each prepared commit as BUG_FIX / NON_BUG_FIX, once per input mode.
-
-Results are appended to <output.directory>/classifications_<input_mode>.jsonl as soon as each request
-finishes. Rerunning resumes: requests already completed for the same experiment are skipped.
-"""
+"""Stage 02: classify the prepared commits (synchronous or --batch)."""
 from __future__ import annotations
 
 import argparse
@@ -17,6 +12,7 @@ from pathlib import Path
 if __package__ in (None, ""):
     sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
+from src.llm_analysis import batch  # noqa: E402
 from src.llm_analysis.classification import (  # noqa: E402
     Experiment,
     ResultConflictError,
@@ -25,7 +21,7 @@ from src.llm_analysis.classification import (  # noqa: E402
     run_classification,
 )
 from src.llm_analysis.evaluation import extract_commit_hash  # noqa: E402
-from src.llm_analysis.llm_client import LLMConfigError, create_client  # noqa: E402
+from src.llm_analysis.llm_client import LLMConfigError, LiteLLMClient, create_client  # noqa: E402
 from src.llm_analysis.prompts import PromptTemplate  # noqa: E402
 from src.llm_analysis.schemas import INPUT_MODES, PreparedCommit  # noqa: E402
 from src.llm_analysis.utils import (  # noqa: E402
@@ -56,6 +52,10 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser.add_argument("--force", action="store_true", help="Reclassify commits that already have results")
     parser.add_argument("--retry-parse-failures", action="store_true",
                         help="Also redo requests whose response could not be parsed")
+    parser.add_argument("--batch", choices=("submit", "status", "collect", "cancel"),
+                        help="Use the OpenAI Batch API (provider openai); see the description above")
+    parser.add_argument("--wait", action="store_true",
+                        help="With --batch collect: poll until every batch of the experiment has finished")
     parser.add_argument("--dry-run", action="store_true",
                         help="Build the prompts and print truncation statistics, without calling the LLM")
     return parser.parse_args(argv)
@@ -98,6 +98,46 @@ def dry_run(commits: list[PreparedCommit], input_modes: list[str], experiment: E
         print(sample.user_prompt)
 
 
+def log_run(output_dir: Path, entry: dict) -> None:
+    entry = {**entry, "finished_at": utc_now_iso(), "python": platform.python_version()}
+    with open(output_dir / "runs.jsonl", "a", encoding="utf-8") as f:
+        f.write(json.dumps(entry) + "\n")
+
+
+def run_batch_action(args: argparse.Namespace, cfg: dict, client: LiteLLMClient, api: batch.BatchAPI,
+                     all_commits: list[PreparedCommit], commits: list[PreparedCommit], input_modes: list[str],
+                     experiment: Experiment, template: PromptTemplate, output_dir: Path,
+                     store_prompts: bool) -> int:
+    limits = batch.BatchLimits.from_config(cfg.get("batch", {}))
+    started = utc_now_iso()
+    entry = {"started_at": started, "experiment_id": experiment.experiment_id,
+             "args": vars(args), "batch_action": args.batch}
+
+    if args.batch == "submit":
+        stats, states = batch.submit(client, api, commits, input_modes, experiment, template, output_dir, limits,
+                                     force=args.force, retry_parse_failures=args.retry_parse_failures)
+        log_run(output_dir, {**entry, **stats.to_dict(), "batch_ids": [s["batch_id"] for s in states]})
+        if states:
+            logger.info("Submitted %d batch(es). Check with --batch status; fetch results with --batch collect.",
+                        len(states))
+        else:
+            logger.info("Nothing to submit.")
+    elif args.batch == "status":
+        states = batch.status(api, output_dir, experiment.experiment_id)
+        print("\n".join(batch.describe(s) for s in states) or "No batches for this experiment.")
+    elif args.batch == "collect":
+        totals = batch.collect(api, all_commits, experiment, template, output_dir, store_prompts,
+                               wait=args.wait, poll_interval_seconds=limits.poll_interval_seconds)
+        log_run(output_dir, {**entry, **totals})
+        logger.info("Collect: %s", totals)
+        if totals["still_running"]:
+            logger.info("Some batches are still running; run --batch collect again later (or add --wait).")
+    elif args.batch == "cancel":
+        cancelled = batch.cancel(api, output_dir, experiment.experiment_id)
+        logger.info("Cancelled: %s", cancelled or "nothing")
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     args = parse_args(argv)
     cfg = load_config(args.config)
@@ -111,12 +151,18 @@ def main(argv: list[str] | None = None) -> int:
     except (LLMConfigError, ValueError, KeyError) as e:
         logger.error("Invalid configuration: %s", e)
         return 2
+    unsupported = [m for m in input_modes if m not in template.input_modes]
+    if unsupported:
+        logger.error("Prompt %s has no user template for %s: add it to prompt_templates/%s/user.yaml or "
+                     "choose other --input-modes", template.version, unsupported, template.version)
+        return 2
 
     prepared_path = output_dir / cfg["output"]["prepared_commits_file"]
     if not prepared_path.exists():
         logger.error("%s not found: run 01_prepare_commits.py first", prepared_path)
         return 1
-    commits = select_commits([PreparedCommit.from_dict(r) for _, r in read_jsonl(prepared_path)], args)
+    all_commits = [PreparedCommit.from_dict(r) for _, r in read_jsonl(prepared_path)]
+    commits = select_commits(all_commits, args)
     logger.info("Experiment %s (%s, %s/%s, prompt %s): %d commits x %s", experiment.experiment_id,
                 experiment.experiment_mode, settings.provider, settings.model, template.version,
                 len(commits), input_modes)
@@ -141,29 +187,35 @@ def main(argv: list[str] | None = None) -> int:
         "prompt_template": {k: v for k, v in template.__dict__.items() if k != "system"},
         "prepared_commits_file": str(prepared_path),
     })
+    store_prompts = bool(cfg["output"].get("store_prompts", True))
+    if args.batch:
+        try:
+            return run_batch_action(args, cfg, client, batch.batch_api_for(client), all_commits, commits,
+                                    input_modes, experiment, template, output_dir, store_prompts)
+        except (batch.BatchError, LLMConfigError, ResultConflictError) as e:
+            logger.error("%s", e)
+            return 1
+
     started = utc_now_iso()
     try:
         stats = run_classification(
             client, commits, input_modes, experiment, template, output_dir,
             force=args.force, retry_parse_failures=args.retry_parse_failures, workers=workers,
-            store_prompts=bool(cfg["output"].get("store_prompts", True)),
+            store_prompts=store_prompts,
+            exclude_record_ids=batch.pending_record_ids(output_dir, experiment.experiment_id),
         )
     except ResultConflictError as e:
         logger.error("%s", e)
         return 1
 
-    run_log = {
+    log_run(output_dir, {
         "started_at": started,
-        "finished_at": utc_now_iso(),
         "experiment_id": experiment.experiment_id,
         "argv": sys.argv[1:] if argv is None else argv,
         "input_modes": input_modes,
         "commits_selected": len(commits),
-        "python": platform.python_version(),
         **stats.to_dict(),
-    }
-    with open(output_dir / "runs.jsonl", "a", encoding="utf-8") as f:
-        f.write(json.dumps(run_log) + "\n")
+    })
     logger.info("Done: %s", stats.to_dict())
     if stats.api_failures:
         logger.warning("%d requests failed; rerun the same command to retry them.", stats.api_failures)

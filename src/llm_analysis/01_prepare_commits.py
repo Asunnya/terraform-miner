@@ -1,9 +1,5 @@
 #!/usr/bin/env python3
-"""
-Stage 01: aggregate the miner's per-file JSONL records into one record per commit.
-
-Writes <output.directory>/commits_prepared.jsonl and prepare_stats.json. The miner files are only read.
-"""
+"""Stage 01: group the miner records by commit."""
 from __future__ import annotations
 
 import argparse
@@ -14,6 +10,7 @@ from pathlib import Path
 if __package__ in (None, ""):
     sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
+from src.llm_analysis.eligibility import EligibilityConfig, filter_commits_by_eligibility  # noqa: E402
 from src.llm_analysis.preparation import (  # noqa: E402
     PreparationStats,
     aggregate_commits,
@@ -68,10 +65,23 @@ def main(argv: list[str] | None = None) -> int:
     stats = PreparationStats(input_files=len(input_files))
     commits = aggregate_commits(iter_miner_records(input_files), stats)
 
+    try:
+        eligibility_config = EligibilityConfig.from_config(cfg.get("eligibility") or {})
+    except ValueError as e:
+        logger.error("Invalid configuration: %s", e)
+        return 2
+    eligibility = filter_commits_by_eligibility(commits, eligibility_config)
+    eligible = eligibility.eligible
+    eligibility_stats = eligibility.stats()
+    write_jsonl(output_dir / "eligibility_exclusions.jsonl", eligibility.audit_records())
+    logger.info("Eligibility: %d of %d commits in scope (%d out of scope, %d insufficient data)",
+                eligibility_stats["commits_in_scope"], eligibility_stats["commits_before_eligibility"],
+                eligibility_stats["commits_out_of_scope"], eligibility_stats["commits_insufficient_data"])
+
     prep_cfg = cfg.get("preparation", {})
     sample_size = args.sample_size if args.sample_size is not None else prep_cfg.get("sample_size")
     seed = args.seed if args.seed is not None else prep_cfg.get("seed", 0)
-    selected = sample_commits(commits, sample_size, seed)
+    selected = sample_commits(eligible, sample_size, seed)
 
     miner_keywords: list[str] = []
     miner_config = cfg["input"].get("miner_config")
@@ -97,8 +107,12 @@ def main(argv: list[str] | None = None) -> int:
         "input_glob": str(pattern),
         "input_files": [{"path": str(p), "sha256": sha256_file(p)} for p in input_files],
         "aggregation": stats.to_dict(),
+        "eligibility": {**eligibility_stats, "config": eligibility_config.snapshot(),
+                        "exclusions_file": str(output_dir / "eligibility_exclusions.jsonl")},
+        "sampling_population": len(eligible),
         "sample_size": sample_size,
         "seed": seed,
+        "commits_sampled": len(selected),
         "commits_written": len(selected),
         "commits_without_any_patch": sum(1 for c in selected if not c.diffs),
         "multi_file_commits": sum(1 for c in selected if len(c.files) > 1),

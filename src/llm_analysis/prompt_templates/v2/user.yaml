@@ -1,0 +1,70 @@
+# Prompt v2 user templates. Placeholders and rules: docs/pipeline-llm.md. Never edit a used version.
+
+empty_message: "(empty commit message)"
+
+templates:
+  message_and_diff: |
+    Classify the following Terraform commit according to the provided
+    BUG_FIX / NON_BUG_FIX definition.
+
+    Repository:
+    {{ repo }}
+
+    Commit SHA:
+    {{ commit_hash }}
+
+    Commit message:
+    <<<COMMIT_MESSAGE
+    {{ message }}
+    COMMIT_MESSAGE
+
+    Modified Terraform files:
+    {{ file_list }}
+
+    Terraform diff:
+    <<<TERRAFORM_DIFF
+    {{ combined_diff }}
+    TERRAFORM_DIFF
+
+    Base your classification only on the evidence above.
+
+  message_only: |
+    Classify the following Terraform commit according to the provided
+    BUG_FIX / NON_BUG_FIX definition.
+
+    Repository:
+    {{ repo }}
+
+    Commit SHA:
+    {{ commit_hash }}
+
+    Commit message:
+    <<<COMMIT_MESSAGE
+    {{ message }}
+    COMMIT_MESSAGE
+
+    No source-code diff is available in this experimental condition.
+
+    Base your classification only on the evidence above.
+
+  diff_only: |
+    Classify the following Terraform commit according to the provided
+    BUG_FIX / NON_BUG_FIX definition.
+
+    Repository:
+    {{ repo }}
+
+    Commit SHA:
+    {{ commit_hash }}
+
+    No commit message is available in this experimental condition.
+
+    Modified Terraform files:
+    {{ file_list }}
+
+    Terraform diff:
+    <<<TERRAFORM_DIFF
+    {{ combined_diff }}
+    TERRAFORM_DIFF
+
+    Base your classification only on the evidence above.

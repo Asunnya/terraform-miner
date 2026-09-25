@@ -1,1 +1,1 @@
-"""LLM-based classification of Terraform commits as BUG_FIX / NON_BUG_FIX (see README.md)."""
+"""LLM classification of Terraform commits (BUG_FIX / NON_BUG_FIX)."""

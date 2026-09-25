@@ -1,10 +1,4 @@
-"""
-Stage 03 logic: descriptive summaries, cross-mode disagreements and (optional) gold-label evaluation.
-
-Supervised metrics are only computed when a gold-label file is supplied. The keyword-based miner
-selection is never used as ground truth. In candidate_validation experiments every metric is
-conditional on the keyword-prefiltered population and is labeled as such in the output.
-"""
+"""Stage 03 core: summaries, disagreements and gold-label evaluation."""
 from __future__ import annotations
 
 import csv
@@ -27,20 +21,25 @@ from src.llm_analysis.schemas import (
     NON_BUG_FIX,
     normalize_label,
 )
+from src.llm_analysis.stats import cohen_kappa, holm_adjust, mcnemar_exact, proportion
 from src.llm_analysis.utils import read_jsonl
 
 PARSE_FAILURE = "PARSE_FAILURE"
 API_FAILURE = "API_FAILURE"
 CONFIDENCE_BIN_WIDTH = 0.1
-# Pairs compared in disagreements.csv (spec: message_only vs. joint, diff_only vs. joint).
+# Pairs listed in disagreements.csv.
 DISAGREEMENT_PAIRS = ((MESSAGE_ONLY, MESSAGE_AND_DIFF), (DIFF_ONLY, MESSAGE_AND_DIFF))
+# Pairs for kappa and McNemar.
+MODE_PAIRS = ((MESSAGE_ONLY, DIFF_ONLY), (MESSAGE_ONLY, MESSAGE_AND_DIFF), (DIFF_ONLY, MESSAGE_AND_DIFF))
 
 SCOPE_NOTES = {
     CANDIDATE_VALIDATION: (
-        "candidate_validation: the input corpus was pre-filtered by the miner's bug-fix keywords. "
-        "Label distributions estimate the precision of that keyword heuristic (share of candidates "
-        "that are real bug fixes). Any recall, accuracy, F1, specificity or MCC reported here is "
-        "conditional on keyword-selected commits and is NOT representative of arbitrary Terraform commits."
+        "candidate_validation: the corpus is keyword-selected commits that also contain eligible Terraform "
+        "infrastructure changes (test/example/docs/vendor/generated-only and generic merge commits removed). "
+        "Label distributions estimate the share of real bug fixes in that population, not the keyword "
+        "heuristic's precision over all raw keyword-selected commits. Any recall, accuracy, F1, specificity "
+        "or MCC reported here is conditional on that population and is NOT representative of arbitrary "
+        "Terraform commits."
     ),
     "full_classification": (
         "full_classification: metrics describe the supplied corpus. They generalize to arbitrary "
@@ -118,6 +117,7 @@ def summarize_mode(records: dict[tuple[str, str], dict]) -> dict[str, Any]:
         "parse_failures": outcomes[PARSE_FAILURE],
         "api_failures": outcomes[API_FAILURE],
         "bug_fix_share_of_parsed": round(outcomes[BUG_FIX] / n_parsed, 4) if n_parsed else None,
+        "bug_fix_share_of_parsed_ci95": proportion(outcomes[BUG_FIX], n_parsed),
         "distribution": {k: outcomes[k] for k in (*LABELS, PARSE_FAILURE, API_FAILURE)},
         "truncated_commits": sum(1 for r in records.values() if r.get("diff_truncated")),
         "confidence": confidence_distribution([r["confidence"] for r in parsed]),
@@ -141,12 +141,18 @@ def cross_mode_comparison(results: dict[str, dict[tuple[str, str], dict]]) -> di
         if a in modes and b in modes:
             pairwise[f"{a}_vs_{b}"] = sum(1 for k in labeled_in_all
                                           if results[a][k]["label"] != results[b][k]["label"])
+    ordered = sorted(labeled_in_all)
+    kappa = {f"{a}_vs_{b}": cohen_kappa([results[a][k]["label"] for k in ordered],
+                                        [results[b][k]["label"] for k in ordered])
+             for a, b in MODE_PAIRS if a in modes and b in modes}
     return {
         "modes_compared": modes,
         "unique_commits_any_mode": len(all_keys),
         "commits_labeled_in_all_modes": len(labeled_in_all),
         "commits_classified_differently_across_modes": len(differing),
         "pairwise_disagreements": pairwise,
+        "cohen_kappa": kappa,
+        "note": "Computed on the commits labeled in every mode (paired).",
     }
 
 
@@ -262,10 +268,7 @@ def _pick_column(columns: Iterable[str], preferred: str | None, candidates: tupl
 
 
 def load_gold_labels(path: Path, label_column: str | None = None, commit_column: str | None = None) -> GoldLabels:
-    """
-    Load a single, adjudicated gold-label file (.csv or .jsonl). Rows are matched to classifications by
-    commit SHA. Commits with contradictory labels in the file are excluded and reported.
-    """
+    """Load an adjudicated gold file (.csv/.jsonl); commits with contradictory labels are excluded."""
     if path.suffix.lower() == ".jsonl":
         rows = [r for _, r in read_jsonl(path)]
     else:
@@ -335,7 +338,9 @@ def binary_metrics(gold: list[str], predicted: list[str], positive: str = BUG_FI
         "n": len(gold),
         "confusion_matrix": {"tp": tp, "fp": fp, "fn": fn, "tn": tn},
         "precision": precision,
+        "precision_ci95": proportion(tp, tp + fp),
         "recall": recall,
+        "recall_ci95": proportion(tp, tp + fn),
         "f1": f1,
         "mcc": mcc,
     }
@@ -343,11 +348,7 @@ def binary_metrics(gold: list[str], predicted: list[str], positive: str = BUG_FI
 
 def evaluate_against_gold(results: dict[str, dict[tuple[str, str], dict]], gold: GoldLabels,
                           experiment_mode: str) -> dict[str, Any]:
-    """
-    Per-mode metrics on the PAIRED set (commits with a gold label and a parsed label in every mode), so
-    the three input modes are compared on exactly the same commits. Per-mode metrics on every gold commit
-    each mode could label are reported too ("unpaired"), with coverage counts.
-    """
+    """Metrics per mode on the paired set (gold + valid label in every mode) and per mode alone."""
     modes = [m for m in INPUT_MODES if results.get(m)]
     all_hashes = {k[1] for m in modes for k in results[m]}
     matched = match_gold(gold.labels, all_hashes)
@@ -373,10 +374,31 @@ def evaluate_against_gold(results: dict[str, dict[tuple[str, str], dict]], gold:
             **binary_metrics([matched[h] for h in hashes], [per_mode_labels[mode][h] for h in hashes]),
             "gold_commits_without_parsed_label": len(matched) - len(hashes),
         }
+    evaluation["mcnemar"] = compare_modes_mcnemar(modes, paired, matched, per_mode_labels)
     if experiment_mode == CANDIDATE_VALIDATION and matched:
         evaluation["keyword_heuristic_precision_gold"] = round(
             sum(1 for label in matched.values() if label == BUG_FIX) / len(matched), 4)
+        evaluation["keyword_heuristic_precision_gold_ci95"] = proportion(
+            sum(1 for label in matched.values() if label == BUG_FIX), len(matched))
     return evaluation
+
+
+def compare_modes_mcnemar(modes: list[str], paired: list[str], gold: dict[str, str],
+                          labels: dict[str, dict[str, str]]) -> dict[str, Any]:
+    """Exact McNemar test for every pair of modes on the paired gold commits, Holm-adjusted."""
+    tests = {}
+    for a, b in MODE_PAIRS:
+        if a not in modes or b not in modes:
+            continue
+        a_ok = [labels[a][h] == gold[h] for h in paired]
+        b_ok = [labels[b][h] == gold[h] for h in paired]
+        tests[f"{a}_vs_{b}"] = mcnemar_exact(sum(1 for x, y in zip(a_ok, b_ok) if x and not y),
+                                             sum(1 for x, y in zip(a_ok, b_ok) if y and not x))
+    adjusted = holm_adjust([t["p_value"] for t in tests.values()])
+    for test, p_holm in zip(tests.values(), adjusted):
+        test["p_value_holm"] = p_holm
+    return {"tests": tests, "n_paired": len(paired),
+            "note": "Exact two-sided McNemar on correctness vs. gold; p_value_holm corrects for the pairwise comparisons."}
 
 
 def summary_csv_rows(summary: dict[str, Any]) -> list[dict[str, Any]]:
@@ -391,6 +413,8 @@ def summary_csv_rows(summary: dict[str, Any]) -> list[dict[str, Any]]:
             "parse_failures": data["parse_failures"],
             "api_failures": data["api_failures"],
             "bug_fix_share_of_parsed": data["bug_fix_share_of_parsed"],
+            "bug_fix_share_ci95_low": data["bug_fix_share_of_parsed_ci95"]["ci95_low"],
+            "bug_fix_share_ci95_high": data["bug_fix_share_of_parsed_ci95"]["ci95_high"],
             "truncated_commits": data["truncated_commits"],
             "confidence_mean": conf.get("mean"),
             "confidence_median": conf.get("median"),
@@ -404,6 +428,6 @@ def summary_csv_rows(summary: dict[str, Any]) -> list[dict[str, Any]]:
 
 SUMMARY_CSV_FIELDS = [
     "input_mode", "unique_commits", "bug_fix", "non_bug_fix", "parse_failures", "api_failures",
-    "bug_fix_share_of_parsed", "truncated_commits", "confidence_mean", "confidence_median",
+    "bug_fix_share_of_parsed", "bug_fix_share_ci95_low", "bug_fix_share_ci95_high", "truncated_commits", "confidence_mean", "confidence_median",
     "gold_n", "gold_precision", "gold_recall", "gold_f1", "gold_mcc",
 ]

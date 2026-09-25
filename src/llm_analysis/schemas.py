@@ -20,13 +20,15 @@ CANDIDATE_VALIDATION = "candidate_validation"
 FULL_CLASSIFICATION = "full_classification"
 EXPERIMENT_MODES = (CANDIDATE_VALIDATION, FULL_CLASSIFICATION)
 
-# Value the model must put in an evidence field whose input was withheld (e.g. diff_evidence in message_only).
+# Evidence value for withheld input (prompt v1).
 NOT_PROVIDED = "NOT_PROVIDED"
 
 RESPONSE_TEXT_FIELDS = ("message_evidence", "diff_evidence", "reason", "uncertainty")
-RESPONSE_FIELDS = ("label", "confidence", *RESPONSE_TEXT_FIELDS)
+# Asked only by some prompt versions (v2+); no warning when absent.
+OPTIONAL_RESPONSE_TEXT_FIELDS = ("primary_intent",)
+RESPONSE_FIELDS = ("label", "confidence", *OPTIONAL_RESPONSE_TEXT_FIELDS, *RESPONSE_TEXT_FIELDS)
 
-# Field order of each line in classifications_<input_mode>.jsonl.
+# Field order of classifications_<mode>.jsonl.
 RESULT_FIELDS = (
     "record_id",
     "experiment_id",
@@ -44,6 +46,7 @@ RESULT_FIELDS = (
     "timestamp",
     "label",
     "confidence",
+    "primary_intent",
     "reason",
     "message_evidence",
     "diff_evidence",
@@ -63,6 +66,7 @@ RESULT_FIELDS = (
     "error",
     "error_type",
     "attempts",
+    "batch_id",
     "input_tokens",
     "output_tokens",
     "stop_reason",
@@ -72,7 +76,7 @@ RESULT_FIELDS = (
 
 @dataclass
 class FileDiff:
-    """One distinct patch of a commit. `also_in` lists other files that received the identical patch."""
+    """A distinct patch; `also_in` lists files with the same patch."""
     file: str
     patch: str
     also_in: list[str] = field(default_factory=list)
@@ -94,6 +98,8 @@ class PreparedCommit:
     duplicate_patches_removed: int
     source_files: list[str]
     content_sha256: str = ""
+    # Out-of-scope files dropped by the eligibility filter ({"file", "scope"}); never sent to the LLM.
+    excluded_files: list[dict[str, str]] = field(default_factory=list)
 
     def to_dict(self) -> dict[str, Any]:
         return asdict(self)
@@ -109,6 +115,7 @@ class PreparedCommit:
 class ParsedResponse:
     label: str | None = None
     confidence: float | None = None
+    primary_intent: str | None = None
     message_evidence: str = ""
     diff_evidence: str = ""
     reason: str = ""
@@ -153,12 +160,7 @@ def normalize_label(value: Any) -> str | None:
 
 
 def parse_llm_response(text: str | None) -> ParsedResponse:
-    """
-    Parse and validate a model response against the required schema.
-
-    `label` (one of LABELS) and `confidence` (a number in [0, 1]) are mandatory: without them
-    parse_success is False. Missing or non-string text fields are tolerated but reported in warnings.
-    """
+    """Validate a response: label and confidence are required, the other fields only warn."""
     result = ParsedResponse()
     if not text or not text.strip():
         result.parse_error = "empty response"
@@ -199,6 +201,13 @@ def parse_llm_response(text: str | None) -> ParsedResponse:
             result.warnings.append(f"missing field {name!r}")
             value = ""
         elif not isinstance(value, str):
+            result.warnings.append(f"field {name!r} is not a string")
+            value = json.dumps(value, ensure_ascii=False)
+        setattr(result, name, value)
+
+    for name in OPTIONAL_RESPONSE_TEXT_FIELDS:
+        value = obj.get(name)
+        if value is not None and not isinstance(value, str):
             result.warnings.append(f"field {name!r} is not a string")
             value = json.dumps(value, ensure_ascii=False)
         setattr(result, name, value)

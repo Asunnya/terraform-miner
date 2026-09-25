@@ -1,14 +1,4 @@
-"""
-Provider-independent LLM access.
-
-`LLMClient.classify(system, user)` sends one classification request and returns the raw text plus
-usage metadata; parsing/validation happens in schemas.parse_llm_response so the raw output is always
-preserved. Retries (with exponential backoff) are done here, not by the vendor SDKs, so the attempt
-count is recorded and the behavior does not depend on SDK defaults.
-
-To add a provider: subclass LLMClient, implement `_complete`, and register it with
-`register_provider("name", MyClient)` (or add it to PROVIDERS). See README.md.
-"""
+"""LLM access through LiteLLM (plus an offline mock). Retries are done here."""
 from __future__ import annotations
 
 import hashlib
@@ -26,7 +16,7 @@ SERVER_ERROR_STATUS = 500
 
 
 class LLMConfigError(RuntimeError):
-    """Invalid provider configuration (unknown provider, missing credentials, missing SDK)."""
+    """Bad provider setup: unknown provider, missing key or SDK."""
 
 
 class LLMError(RuntimeError):
@@ -40,8 +30,8 @@ class LLMError(RuntimeError):
 
 @dataclass(frozen=True)
 class LLMSettings:
-    provider: str
     model: str
+    provider: str = "litellm"
     temperature: float | None = 0.0
     max_output_tokens: int = 1024
     timeout_seconds: float = 120.0
@@ -52,10 +42,10 @@ class LLMSettings:
     seed: int | None = None
     json_mode: bool = False
     max_tokens_param: str = "max_tokens"
-    # Additional provider request parameters (e.g. top_p), passed through verbatim.
+    # Extra request parameters, sent as-is.
     extra_params: dict[str, Any] = field(default_factory=dict)
 
-    # Keys of the `llm` config section that are not request settings.
+    # `llm` config keys that are not request settings.
     NON_REQUEST_KEYS = frozenset({"workers"})
 
     @classmethod
@@ -65,8 +55,8 @@ class LLMSettings:
             raise LLMConfigError(f"Unknown llm settings: {sorted(unknown)} (use llm.extra_params for request parameters)")
         values = {k: v for k, v in cfg.items() if k not in cls.NON_REQUEST_KEYS}
         values["extra_params"] = dict(values.get("extra_params") or {})
-        if not values.get("provider") or not values.get("model"):
-            raise LLMConfigError("llm.provider and llm.model are required")
+        if not values.get("model"):
+            raise LLMConfigError("llm.model is required")
         return cls(**values)
 
 
@@ -91,7 +81,7 @@ class LLMClient(ABC):
         """Send one request, without retrying."""
 
     def is_retryable(self, error: BaseException) -> bool:
-        """Retry timeouts/connection errors (no HTTP status), 408/409/429 and 5xx; not 4xx client errors."""
+        """Retry timeouts, connection errors, 408/409/429 and 5xx."""
         status = getattr(error, "status_code", None)
         return status is None or status in RETRYABLE_STATUS_CODES or status >= SERVER_ERROR_STATUS
 
@@ -101,7 +91,7 @@ class LLMClient(ABC):
             started = time.monotonic()
             try:
                 response = self._complete(system, user)
-            except Exception as e:  # noqa: BLE001 - vendor SDKs raise many exception types
+            except Exception as e:  # noqa: BLE001 - SDK errors vary
                 if attempt == max_attempts or not self.is_retryable(e):
                     raise LLMError(f"{type(e).__name__}: {e}", attempts=attempt, cause=e) from e
                 self._sleep(self.settings.retry_backoff_seconds * 2 ** (attempt - 1))
@@ -119,99 +109,21 @@ class LLMClient(ABC):
         return key
 
 
-class AnthropicClient(LLMClient):
-    DEFAULT_API_KEY_ENV = "ANTHROPIC_API_KEY"
-
-    def __init__(self, settings: LLMSettings, sleep: Callable[[float], None] = time.sleep):
-        super().__init__(settings, sleep)
-        try:
-            import anthropic
-        except ImportError as e:
-            raise LLMConfigError("The 'anthropic' package is required: uv pip install -r requirements.txt") from e
-        kwargs: dict[str, Any] = {
-            "api_key": self._api_key(self.DEFAULT_API_KEY_ENV),
-            "timeout": settings.timeout_seconds,
-            "max_retries": 0,
-        }
-        if settings.base_url:
-            kwargs["base_url"] = settings.base_url
-        self._client = anthropic.Anthropic(**kwargs)
-
-    def _complete(self, system: str, user: str) -> LLMResponse:
-        kwargs: dict[str, Any] = {
-            "model": self.settings.model,
-            "max_tokens": self.settings.max_output_tokens,
-            "system": system,
-            "messages": [{"role": "user", "content": user}],
-            **self.settings.extra_params,
-        }
-        if self.settings.temperature is not None:
-            kwargs["temperature"] = self.settings.temperature
-        response = self._client.messages.create(**kwargs)
-        text = "".join(block.text for block in response.content if getattr(block, "type", None) == "text")
-        return LLMResponse(
-            text=text,
-            model=response.model,
-            input_tokens=response.usage.input_tokens,
-            output_tokens=response.usage.output_tokens,
-            stop_reason=response.stop_reason,
-        )
-
-
-class OpenAICompatibleClient(LLMClient):
-    """OpenAI Chat Completions API; also covers compatible servers (Ollama, vLLM, LM Studio) via base_url."""
-    DEFAULT_API_KEY_ENV = "OPENAI_API_KEY"
-    # Local OpenAI-compatible servers usually ignore the key, but the SDK requires a non-empty one.
-    PLACEHOLDER_API_KEY = "not-needed"
-
-    def __init__(self, settings: LLMSettings, sleep: Callable[[float], None] = time.sleep):
-        super().__init__(settings, sleep)
-        try:
-            import openai
-        except ImportError as e:
-            raise LLMConfigError("The 'openai' package is required: uv pip install -r requirements.txt") from e
-        key = self._api_key(self.DEFAULT_API_KEY_ENV, required=not settings.base_url)
-        self._client = openai.OpenAI(
-            api_key=key or self.PLACEHOLDER_API_KEY,
-            base_url=settings.base_url or None,
-            timeout=settings.timeout_seconds,
-            max_retries=0,
-        )
-
-    def _complete(self, system: str, user: str) -> LLMResponse:
-        kwargs: dict[str, Any] = {
-            "model": self.settings.model,
-            "messages": [{"role": "system", "content": system}, {"role": "user", "content": user}],
-            self.settings.max_tokens_param: self.settings.max_output_tokens,
-            **self.settings.extra_params,
-        }
-        if self.settings.temperature is not None:
-            kwargs["temperature"] = self.settings.temperature
-        if self.settings.seed is not None:
-            kwargs["seed"] = self.settings.seed
-        if self.settings.json_mode:
-            kwargs["response_format"] = {"type": "json_object"}
-        response = self._client.chat.completions.create(**kwargs)
-        choice = response.choices[0]
-        usage = response.usage
-        return LLMResponse(
-            text=choice.message.content or "",
-            model=response.model,
-            input_tokens=getattr(usage, "prompt_tokens", None),
-            output_tokens=getattr(usage, "completion_tokens", None),
-            stop_reason=choice.finish_reason,
-        )
+def chat_completion_to_response(body: dict[str, Any]) -> LLMResponse:
+    """Chat Completions response dict -> LLMResponse."""
+    choice = (body.get("choices") or [{}])[0]
+    usage = body.get("usage") or {}
+    return LLMResponse(
+        text=(choice.get("message") or {}).get("content") or "",
+        model=body.get("model"),
+        input_tokens=usage.get("prompt_tokens"),
+        output_tokens=usage.get("completion_tokens"),
+        stop_reason=choice.get("finish_reason"),
+    )
 
 
 class LiteLLMClient(LLMClient):
-    """
-    Any vendor supported by LiteLLM (Gemini, Bedrock, Azure, Mistral, Groq, ...), with the model given as
-    "<vendor>/<model>", e.g. "gemini/gemini-2.5-pro". LiteLLM reads each vendor's usual environment
-    variable (GEMINI_API_KEY, ...) itself; set llm.api_key_env to pass a specific one explicitly.
-
-    Unsupported parameters raise an error instead of being silently dropped (LiteLLM's drop_params
-    stays off), so the stored settings are the ones actually sent.
-    """
+    """Any LiteLLM model, named "<vendor>/<model>" (e.g. openai/gpt-4.1-nano)."""
 
     def __init__(self, settings: LLMSettings, sleep: Callable[[float], None] = time.sleep):
         super().__init__(settings, sleep)
@@ -222,23 +134,49 @@ class LiteLLMClient(LLMClient):
         litellm.telemetry = False
         litellm.suppress_debug_info = True
         self._litellm = litellm
+        try:
+            self.model_name, self.vendor, _, _ = litellm.get_llm_provider(settings.model)
+        except Exception as e:  # noqa: BLE001 - LiteLLM raises several types
+            raise LLMConfigError(f"LiteLLM does not recognize llm.model {settings.model!r}: {e}") from e
         self._api_key_value = self._api_key("", required=True) if settings.api_key_env else None
+
+    def request_params(self) -> dict[str, Any]:
+        """Sampling and format parameters, shared by the sync and batch paths."""
+        params: dict[str, Any] = {self.settings.max_tokens_param: self.settings.max_output_tokens}
+        if self.settings.temperature is not None:
+            params["temperature"] = self.settings.temperature
+        if self.settings.seed is not None:
+            params["seed"] = self.settings.seed
+        if self.settings.json_mode:
+            params["response_format"] = {"type": "json_object"}
+        return {**params, **self.settings.extra_params}
+
+    def check_supported_params(self) -> None:
+        """Fail if the vendor does not accept a configured parameter."""
+        supported = self._litellm.get_supported_openai_params(model=self.model_name, custom_llm_provider=self.vendor)
+        if supported is None:
+            return
+        configured = {self.settings.max_tokens_param, "temperature", "seed", "response_format"}
+        rejected = sorted(k for k in configured & set(self.request_params()) if k not in supported)
+        if rejected:
+            raise LLMConfigError(f"{self.settings.model} does not accept {rejected}; set them to null/false in config.yaml")
+
+    def request_body(self, system: str, user: str) -> dict[str, Any]:
+        """Raw Chat Completions body for a batch input line."""
+        return {
+            "model": self.model_name,
+            "messages": [{"role": "system", "content": system}, {"role": "user", "content": user}],
+            **self.request_params(),
+        }
 
     def _complete(self, system: str, user: str) -> LLMResponse:
         kwargs: dict[str, Any] = {
             "model": self.settings.model,
             "messages": [{"role": "system", "content": system}, {"role": "user", "content": user}],
-            "max_tokens": self.settings.max_output_tokens,
             "timeout": self.settings.timeout_seconds,
             "num_retries": 0,
-            **self.settings.extra_params,
+            **self.request_params(),
         }
-        if self.settings.temperature is not None:
-            kwargs["temperature"] = self.settings.temperature
-        if self.settings.seed is not None:
-            kwargs["seed"] = self.settings.seed
-        if self.settings.json_mode:
-            kwargs["response_format"] = {"type": "json_object"}
         if self.settings.base_url:
             kwargs["base_url"] = self.settings.base_url
         if self._api_key_value:
@@ -256,10 +194,7 @@ class LiteLLMClient(LLMClient):
 
 
 class MockLLMClient(LLMClient):
-    """
-    Offline stand-in for pipeline dry runs and tests. Its labels are a hash of the prompt, NOT a
-    classification: results produced with provider "mock" must never be analyzed.
-    """
+    """Offline client with fake, hash-based labels. Tests only."""
 
     def _complete(self, system: str, user: str) -> LLMResponse:
         digest = hashlib.sha256((system + user).encode("utf-8")).digest()
@@ -276,8 +211,6 @@ class MockLLMClient(LLMClient):
 
 
 PROVIDERS: dict[str, type[LLMClient]] = {
-    "anthropic": AnthropicClient,
-    "openai": OpenAICompatibleClient,
     "litellm": LiteLLMClient,
     "mock": MockLLMClient,
 }

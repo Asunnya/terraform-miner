@@ -37,7 +37,7 @@ classifies *commits* (message and/or diff). The two can be run independently.
 
 | Mode | Input | Question | What the numbers mean |
 |---|---|---|---|
-| `candidate_validation` | the keyword-filtered miner dataset | Among commits selected by keywords, which are bug fixes? | The `BUG_FIX` share estimates the heuristic's **precision** (false-positive rate = 1 − precision). |
+| `candidate_validation` | the keyword-filtered miner dataset, after eligibility filtering | Among keyword-selected commits with eligible infrastructure changes, which are bug fixes? | The `BUG_FIX` share in that population (not the heuristic's precision over all raw keyword-selected commits). |
 | `full_classification` | an **unfiltered** collection of Terraform commits | Among arbitrary Terraform commits, which are bug fixes? | Rates and metrics describe Terraform commits in general, provided the corpus really was unfiltered. |
 
 ### ⚠ Methodological warning: keyword-prefiltered data
@@ -60,7 +60,7 @@ miner does not produce one. This module accepts one if it has the same record fo
 
 ## Classification definition
 
-The definition lives in `prompts.py` (`SYSTEM_PROMPT_V1`) and is identical for all input modes.
+The definition lives in `prompt_templates/v1/system.txt` and is identical for all input modes.
 
 - **BUG_FIX**: the primary purpose is to correct existing erroneous, defective, unintended, unsafe or
   invalid behavior or configuration. Examples: wrong attribute values, missing required configuration,
@@ -119,9 +119,40 @@ of the same commit are never classified separately. For each commit, stage 01:
   (common for copied modules);
 - sorts `diffs` by path and computes `content_sha256` over everything that can reach a prompt.
 
-Output: `commits_prepared.jsonl` (lossless, not truncated) and `prepare_stats.json` (counts, the
-SHA-256 of every input file, the sample settings, and the keyword-match share).
-`preparation.sample_size` / `--sample-size` draw a seeded random sample of commits.
+### Eligibility filtering (scope)
+
+Stage 01 runs **aggregation → eligibility filtering → sampling**, so a sample is always drawn from the
+eligible population. The target population is **Terraform commits that modify infrastructure-defining
+`.tf` code**: the next research step catalogs defects in infrastructure code, so commits whose changes are
+only tests, examples, documentation, vendored or generated content, and generic merge commits, are left
+out before any LLM call. This is a **scope** decision only: it never looks at bug-related words and never
+decides whether a commit fixes a bug.
+
+- **File scope** comes from whole directory segments (`eligibility.excluded_scope_segments`, case-insensitive;
+  the outermost excluded segment decides): `tests`/`testdata`/`fixtures` → TEST, `examples`/`example` →
+  EXAMPLE, `docs`/`doc` → DOCUMENTATION, `vendor` → VENDOR, `.terraform` → GENERATED, anything else →
+  INFRASTRUCTURE. A directory named `test` is **not** excluded: `environments/test/main.tf` can be real,
+  deployed infrastructure. (Note: the miner itself already drops `test/`, `tests/`, `examples/`, `docs/`,
+  `fixtures/`, `sample/` and `mock/` paths, see `src/miner/utils.py`, so such files never reach this stage.)
+- **Mixed commits are kept, minus the out-of-scope files**: implementation + tests → keep the commit, send
+  only the implementation diff. `files`, `diffs` (including shared patches in `also_in`) and
+  `files_without_patch` keep only in-scope paths; the removed ones are listed in `excluded_files`, which
+  never reaches the prompt. `content_sha256` is recomputed from the filtered commit.
+- **Generic merges** are detected by message patterns (`eligibility.merge_patterns`, e.g.
+  `^Merge pull request #\d+ from .*`), a heuristic, since the miner records carry no parent count.
+  A message that merely contains the word "merge" is not a merge.
+- **States**: `IN_SCOPE` (`eligible`), `OUT_OF_SCOPE` (`generic_merge`, `only_test_files`,
+  `only_example_files`, `only_documentation_files`, `only_vendor_files`, `only_generated_files`,
+  `only_excluded_files`, `no_in_scope_terraform_files`) and `INSUFFICIENT_DATA` (`no_in_scope_patch`:
+  in-scope files exist but none has a patch). An empty commit message is not a reason.
+
+Excluded and insufficient commits go to `eligibility_exclusions.jsonl` (state, reason, original,
+in-scope and excluded files with their scope); only `IN_SCOPE` commits reach `commits_prepared.jsonl`.
+
+Output: `commits_prepared.jsonl` (lossless, not truncated), `eligibility_exclusions.jsonl` and
+`prepare_stats.json` (counts, eligibility counts by state and reason, the SHA-256 of every input file,
+the sample settings, and the keyword-match share).
+`preparation.sample_size` / `--sample-size` draw a seeded random sample of the eligible commits.
 
 ## Diff representation and large diffs
 
@@ -141,6 +172,19 @@ and space prefixes are preserved exactly. Large commits are cut deterministicall
 With the default limits (24,000 / 8,000 / 20), 443 of 8,355 commits in the replayed dataset of 2026-09-24
 (5.3%) have truncated diffs. Use `--dry-run` to measure this for other limits.
 
+## Prompt files
+
+The prompt text is kept out of the Python code, one folder per version:
+
+```
+prompt_templates/v1/system.txt   system prompt: the classification definition and output schema
+prompt_templates/v1/user.yaml    message/diff headers, empty-message text, one note per input mode
+```
+
+`prompts.py` only loads and assembles them. To change the wording, copy `v1/` to `v2/`, edit the copy,
+and set `classification.prompt_version: "v2"`. Each record stores the version and the SHA-256 of the
+loaded files, so a version can never be edited silently after producing results.
+
 ## Configuration (`config.yaml`)
 
 Relative paths are resolved against the **repository root**. Paths passed on the command line are
@@ -154,15 +198,17 @@ resolved against the current directory. Main sections:
   `timeout_seconds`, `retries`, `retry_backoff_seconds`, `workers`, `api_key_env`, `base_url`, `seed`,
   `json_mode`, `max_tokens_param` and `extra_params`. Unknown keys are rejected.
 - `context`: `max_diff_chars`, `max_chars_per_file`, `max_files_per_commit`, `max_listed_file_names`.
-- `classification`: `prompt_version`.
+- `classification`: `prompt_version` (a folder in `prompt_templates/`).
+- `batch`: `max_requests_per_batch`, `max_file_mb`, `poll_interval_seconds`.
 - `evaluation`: `gold_labels`, `gold_commit_column`, `gold_label_column`.
 
-**Credentials** come only from environment variables: `ANTHROPIC_API_KEY` (default provider),
-`OPENAI_API_KEY`, or the variable named in `llm.api_key_env`. Never put keys in `config.yaml`.
+**Credentials** come only from environment variables: each vendor's standard one, read by LiteLLM
+(`OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, `GEMINI_API_KEY`, ...), or the one named in `llm.api_key_env`.
+Never put keys in `config.yaml`.
 The easiest way is a `.env` file at the repository root, which is gitignored and loaded by stage 02:
 
 ```bash
-cp .env.example .env     # then fill in ANTHROPIC_API_KEY=...
+cp .env.example .env     # then fill in OPENAI_API_KEY=...
 ```
 
 Variables already exported in the shell take precedence over `.env`.
@@ -172,8 +218,8 @@ Variables already exported in the shell take precedence over `.env`.
 From the repository root (the scripts also work from `src/llm_analysis`):
 
 ```bash
-uv pip install -r requirements.txt          # adds anthropic, openai, PyYAML, python-dotenv
-cp .env.example .env                         # put ANTHROPIC_API_KEY=... in .env (or export it)
+uv pip install -r requirements.txt          # adds litellm, PyYAML, python-dotenv
+cp .env.example .env                         # put OPENAI_API_KEY=... in .env (or export it)
 
 python src/llm_analysis/01_prepare_commits.py                      # all commits
 python src/llm_analysis/01_prepare_commits.py --sample-size 500    # or a seeded sample
@@ -186,6 +232,36 @@ python src/llm_analysis/02_classify_commits.py --commits-file commits_analysis/g
 python src/llm_analysis/03_summarize_results.py [--gold-labels gold.csv]
 ```
 
+### Cheaper runs: batch
+
+`--batch` sends the same requests through LiteLLM's batch API (half the price on OpenAI, results within
+24 hours). Supported vendors: `openai`, `azure`, `vertex_ai`, `bedrock`, `hosted_vllm`; not `anthropic`
+(LiteLLM cannot create Anthropic batches yet) or `gemini` (use `vertex_ai`). Before submitting, the
+configured parameters are checked against what the vendor accepts.
+
+```bash
+python src/llm_analysis/02_classify_commits.py --batch submit          # upload the pending requests
+python src/llm_analysis/02_classify_commits.py --batch status          # progress
+python src/llm_analysis/02_classify_commits.py --batch collect         # write finished results
+python src/llm_analysis/02_classify_commits.py --batch collect --wait  # or poll until everything is done
+python src/llm_analysis/02_classify_commits.py --batch cancel
+```
+
+- `submit` accepts the same selection flags as a normal run (`--limit`, `--commits-file`,
+  `--input-modes`, `--force`, `--retry-parse-failures`). Submissions over 50,000 requests or 200 MB
+  are split into several batches automatically.
+- Batch results are ordinary records with the same `experiment_id`, plus `batch_id`. Stage 03 treats
+  them exactly like synchronous results, and a batch run can be finished synchronously or the other
+  way round.
+- A request in a batch that has not been collected is never sent again, by either path. Requests
+  that failed, or that got no answer (an expired or cancelled batch), go back into the plan: run
+  `--batch submit` again to resend them.
+- Everything is kept in `batches/`: the state file of each batch, the exact uploaded JSONL, and the
+  raw output and error files.
+- If OpenAI rejects a batch with `token_limit_exceeded` (the tokens your account tier may queue per
+  model), submit in parts: `--batch submit --limit 2000`, `--batch collect --wait`, and repeat.
+- For the full dataset, 25,065 requests, 177 MB and about 41M input tokens fit in one batch.
+
 Other stage 02 options: `--input-modes`, `--model`, `--workers`, `--limit`, `--force` and
 `--retry-parse-failures`. All stages accept `--config` and `--output-dir`.
 
@@ -196,12 +272,13 @@ pipeline, and stage 03 warns when it summarizes mock results.
 
 | File | Content |
 |---|---|
-| `commits_prepared.jsonl`, `prepare_stats.json` | stage 01 (see above) |
+| `commits_prepared.jsonl`, `eligibility_exclusions.jsonl`, `prepare_stats.json` | stage 01 (see above) |
 | `classifications_<input_mode>.jsonl` | one line per request, append-only (fields below) |
 | `experiments/<experiment_id>.json` | full experiment settings, system prompt text and template |
 | `runs.jsonl` | one line per stage 02 invocation (arguments, counts, timestamps) |
+| `batches/` | Batch API state, uploaded input and raw output of each batch |
 | `pipeline.log` | log of all stages |
-| `reports/<experiment_id>/summary.json` | per-mode counts, label distribution, parse/API failures, truncated commits, confidence distribution, cross-mode disagreement counts, the LLM-estimated heuristic precision (candidate_validation), gold metrics (if any) and the scope note |
+| `reports/<experiment_id>/summary.json` | per-mode counts, label distribution, parse/API failures, truncated commits, confidence distribution, cross-mode disagreement counts and Cohen's kappa, the LLM-estimated heuristic precision with its 95% Wilson interval (candidate_validation), gold metrics (if any: precision/recall with Wilson intervals, F1, MCC, exact McNemar tests between modes with Holm-adjusted p-values) and the scope note |
 | `reports/<experiment_id>/summary.csv` | one row per input mode |
 | `reports/<experiment_id>/classification_counts.csv` | `input_mode, label, count, fraction` (labels include `PARSE_FAILURE`, `API_FAILURE`) |
 | `reports/<experiment_id>/errors.jsonl` | every failed request with its error / raw response |
@@ -212,8 +289,8 @@ commit_hash, input_mode, provider, model, response_model, temperature, max_outpu
 prompt_version, prompt_sha256, timestamp, label, confidence, reason, message_evidence, diff_evidence,
 uncertainty, diff_truncated, original_diff_chars, submitted_diff_chars, files_submitted,
 files_omitted, prepared_commit_sha256, user_prompt_sha256, user_prompt, raw_response, parse_success,
-parse_error, parse_warnings, error, error_type, attempts, input_tokens, output_tokens, stop_reason,
-latency_seconds`.
+parse_error, parse_warnings, error, error_type, attempts, batch_id, input_tokens, output_tokens,
+stop_reason, latency_seconds`.
 
 **Audit trail:** each record links the repository and SHA to the commit's content hash, the exact
 user prompt (or its hash), the system prompt (via `prompt_version`, `prompt_sha256` and
@@ -233,7 +310,7 @@ user prompt (or its hash), the system prompt (via `prompt_version`, `prompt_sha2
   Stage 03 summarizes one experiment at a time (the configured one by default, or `--experiment-id`).
 - Stage 02 refuses to resume when stored results were built from a different `commits_prepared.jsonl`
   (content hash mismatch, for example after re-mining). It also refuses when the text of a prompt
-  version was edited after use. **Never edit a used prompt: add a new version to `prompts.PROMPTS`.**
+  version was edited after use. **Never edit a used prompt: add a new version folder (see below).**
 - Retries are handled by this module (SDK retries are disabled): timeouts, connection errors, 408,
   409, 429 and 5xx responses, with exponential backoff.
 
@@ -261,29 +338,16 @@ are. Annotators disagree on some commits, and some use `MAYBE` or leave cells bl
 into one file first, and report inter-annotator agreement separately. Use
 `02_classify_commits.py --commits-file <gold file>` to classify just those commits.
 
-## Adding an LLM provider
+## Models and providers
 
-1. Subclass `LLMClient` in `llm_client.py` and implement `_complete(system, user) -> LLMResponse`,
-   making a single request with no retries. Read credentials from an environment variable via
-   `self._api_key(...)`. Override `is_retryable` if the SDK's exceptions do not expose `status_code`.
-2. Register it: add it to `PROVIDERS`, or call `register_provider("name", MyClient)`.
-3. Set `llm.provider: name` in `config.yaml`. Add the SDK to `requirements.txt` with a comment saying why.
+Every real model is reached through [LiteLLM](https://docs.litellm.ai/docs/providers) (`provider: litellm`),
+named `"<vendor>/<model>"`: `openai/gpt-4.1-nano`, `anthropic/claude-sonnet-5`, `vertex_ai/gemini-2.5-pro`,
+`hosted_vllm/<model>` or `ollama/<model>` with `base_url`. The only other provider is `mock` (fake labels,
+tests only). A parameter the vendor does not accept raises an error instead of being silently dropped
+(e.g. set `seed: null` for vendors without seeds).
 
-### Built-in providers
-
-| `llm.provider` | Calls | Use for |
-|---|---|---|
-| `anthropic` (default) | official `anthropic` SDK | Claude models |
-| `openai` | official `openai` SDK | OpenAI models, and local OpenAI-compatible servers (vLLM, Ollama, LM Studio) via `base_url` |
-| `litellm` | [LiteLLM](https://docs.litellm.ai/docs/providers) | any other vendor (Gemini, Bedrock, Azure, Mistral, Groq, ...); `model: "<vendor>/<model>"` |
-| `mock` | nothing | offline plumbing tests (fake labels) |
-
-Prefer the direct SDKs for the vendors they cover: exactly the stored settings go over the wire.
-With `litellm`, credentials come from each vendor's standard variable (e.g. `GEMINI_API_KEY` in `.env`),
-and a parameter the vendor does not support raises an error instead of being silently dropped.
-
-For local models, an OpenAI-compatible server usually needs no new code: set `provider: openai` and
-`base_url: http://localhost:11434/v1` (Ollama), plus `seed`, and optionally `json_mode: true`.
+To add a different access path, subclass `LLMClient`, implement `_complete(system, user)` (one request, no
+retries) and register it with `register_provider("name", MyClient)`.
 
 ## Tests
 

@@ -1,0 +1,22 @@
+# Prompt v1 user-prompt parts. Never edit a used version.
+
+message_header: |-
+  COMMIT MESSAGE
+  --------------
+
+diff_header: |-
+  TERRAFORM CHANGES
+  -----------------
+
+empty_message: "(empty commit message)"
+
+# First line of the user message, one per input mode.
+mode_notes:
+  message_only: >-
+    AVAILABLE EVIDENCE: commit message only. The code diff is withheld on purpose;
+    set "diff_evidence" to "NOT_PROVIDED".
+  diff_only: >-
+    AVAILABLE EVIDENCE: Terraform code changes only. The commit message is withheld on purpose;
+    set "message_evidence" to "NOT_PROVIDED".
+  message_and_diff: >-
+    AVAILABLE EVIDENCE: commit message and Terraform code changes.

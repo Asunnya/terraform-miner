@@ -1,17 +1,4 @@
-"""
-Stage 02 logic: classify prepared commits, persisting each result immediately and resuming safely.
-
-Identity
-- experiment_id: hash of everything that can change a model output other than the commit itself
-  (experiment mode, provider, model, sampling settings, prompt version + template hash, context
-  limits, diff format version). The three input modes share one experiment_id.
-- record_id: hash of (experiment_id, repo, commit_hash, input_mode). A record_id is classified once;
-  reruns skip it unless --force.
-
-Files are append-only: a retry or --force appends a new line and the LAST line of a record_id wins.
-Records whose API call failed (`error` set) are retried on the next run; parse failures are kept
-(the model did answer, its raw output is stored) unless --retry-parse-failures.
-"""
+"""Stage 02: prompts, model calls, result records and resume."""
 from __future__ import annotations
 
 import json
@@ -23,7 +10,7 @@ from pathlib import Path
 from typing import Any, Iterable
 
 from src.llm_analysis.diff_context import DIFF_FORMAT_VERSION, ContextLimits, RenderedDiff, render_diffs
-from src.llm_analysis.llm_client import LLMClient, LLMError, LLMSettings
+from src.llm_analysis.llm_client import LLMClient, LLMError, LLMResponse, LLMSettings
 from src.llm_analysis.prompts import PromptTemplate, build_user_prompt, get_prompt
 from src.llm_analysis.schemas import (
     EXPERIMENT_MODES,
@@ -85,7 +72,7 @@ class Experiment:
 
 def experiment_from_config(cfg: dict[str, Any], provider: str | None = None,
                            model: str | None = None) -> tuple[Experiment, LLMSettings, PromptTemplate]:
-    """Build the experiment described by config.yaml (optionally overriding provider/model)."""
+    """Experiment from config.yaml, with optional provider/model override."""
     llm_cfg = dict(cfg["llm"])
     if provider:
         llm_cfg["provider"] = provider
@@ -117,15 +104,17 @@ def build_prompt_input(commit: PreparedCommit, input_mode: str, template: Prompt
     rendered = render_diffs(commit.diffs, commit.files_without_patch, limits)
     submitted = None if input_mode == MESSAGE_ONLY else rendered
     return PromptInput(
-        user_prompt=build_user_prompt(template, input_mode, commit.message, submitted),
+        user_prompt=build_user_prompt(template, input_mode, commit.message, submitted, repo=commit.repo,
+                                      commit_hash=commit.commit_hash, files=commit.files,
+                                      max_listed_file_names=limits.max_listed_file_names),
         rendered=submitted,
         original_diff_chars=rendered.original_diff_chars,
     )
 
 
-def classify_commit(client: LLMClient, commit: PreparedCommit, input_mode: str, experiment: Experiment,
-                    template: PromptTemplate, store_prompt: bool = True) -> dict[str, Any]:
-    """Classify one (commit, input_mode). Never raises for API/parse problems: they go in the record."""
+def new_record(commit: PreparedCommit, input_mode: str, experiment: Experiment, template: PromptTemplate,
+               store_prompt: bool = True) -> tuple[dict[str, Any], str]:
+    """Pre-filled result record and the user prompt to send."""
     prompt = build_prompt_input(commit, input_mode, template, experiment.limits)
     rendered = prompt.rendered
     record: dict[str, Any] = dict.fromkeys(RESULT_FIELDS)
@@ -152,13 +141,10 @@ def classify_commit(client: LLMClient, commit: PreparedCommit, input_mode: str, 
         user_prompt=prompt.user_prompt if store_prompt else None,
         parse_success=False,
     )
+    return record, prompt.user_prompt
 
-    try:
-        response = client.classify(template.system, prompt.user_prompt)
-    except LLMError as e:
-        record.update(timestamp=utc_now_iso(), error=str(e), error_type=e.error_type, attempts=e.attempts)
-        return record
 
+def record_with_response(record: dict[str, Any], response: LLMResponse) -> dict[str, Any]:
     parsed = parse_llm_response(response.text)
     record.update(
         timestamp=utc_now_iso(),
@@ -177,12 +163,29 @@ def classify_commit(client: LLMClient, commit: PreparedCommit, input_mode: str, 
         record.update(
             label=parsed.label,
             confidence=parsed.confidence,
+            primary_intent=parsed.primary_intent,
             reason=parsed.reason,
             message_evidence=parsed.message_evidence,
             diff_evidence=parsed.diff_evidence,
             uncertainty=parsed.uncertainty,
         )
     return record
+
+
+def record_with_error(record: dict[str, Any], error: str, error_type: str, attempts: int | None) -> dict[str, Any]:
+    record.update(timestamp=utc_now_iso(), error=error, error_type=error_type, attempts=attempts)
+    return record
+
+
+def classify_commit(client: LLMClient, commit: PreparedCommit, input_mode: str, experiment: Experiment,
+                    template: PromptTemplate, store_prompt: bool = True) -> dict[str, Any]:
+    """Classify one (commit, mode); API and parse errors go in the record."""
+    record, user_prompt = new_record(commit, input_mode, experiment, template, store_prompt)
+    try:
+        response = client.classify(template.system, user_prompt)
+    except LLMError as e:
+        return record_with_error(record, str(e), e.error_type, e.attempts)
+    return record_with_response(record, response)
 
 
 def load_results(path: Path) -> dict[str, dict[str, Any]]:
@@ -199,7 +202,7 @@ def is_complete(record: dict[str, Any], retry_parse_failures: bool) -> bool:
 
 
 class ResultConflictError(RuntimeError):
-    """Existing results of this experiment were produced from different inputs or prompt text."""
+    """Stored results came from other inputs or prompt text."""
 
 
 def check_prompt_unchanged(existing: dict[str, dict[str, Any]], experiment: Experiment) -> None:
@@ -209,7 +212,7 @@ def check_prompt_unchanged(existing: dict[str, dict[str, Any]], experiment: Expe
         raise ResultConflictError(
             f"Prompt {experiment.prompt_version!r} was edited after results were produced with it "
             f"(stored hash {sorted(edited)[0][:12]} != current {experiment.prompt_sha256[:12]}). "
-            "Restore it and add the new text as a new prompt version in prompts.py."
+            "Restore it and put the new text in a new version folder under prompt_templates/."
         )
 
 
@@ -237,9 +240,59 @@ class RunStats:
     classified: int = 0
     parse_failures: int = 0
     api_failures: int = 0
+    skipped_pending_batch: int = 0
 
     def to_dict(self) -> dict[str, int]:
         return asdict(self)
+
+
+def plan_tasks(
+    commits: list[PreparedCommit],
+    input_modes: list[str],
+    experiment: Experiment,
+    output_dir: Path,
+    stats: RunStats,
+    force: bool = False,
+    retry_parse_failures: bool = False,
+    exclude_record_ids: set[str] | frozenset[str] = frozenset(),
+) -> list[tuple[PreparedCommit, str]]:
+    """(commit, mode) pairs still to do, skipping done and pending-batch ones."""
+    for mode in input_modes:
+        if mode not in INPUT_MODES:
+            raise ValueError(f"Unknown input mode {mode!r}; valid: {INPUT_MODES}")
+    output_dir.mkdir(parents=True, exist_ok=True)
+
+    by_key = {(c.repo, c.commit_hash): c for c in commits}
+    existing = {mode: load_results(result_path(output_dir, mode)) for mode in input_modes}
+    for mode in input_modes:
+        check_prompt_unchanged(existing[mode], experiment)
+        if not force:
+            check_not_stale(existing[mode], by_key, experiment)
+
+    tasks: list[tuple[PreparedCommit, str]] = []
+    for commit in commits:
+        for mode in input_modes:
+            rid = record_id(experiment.experiment_id, commit.repo, commit.commit_hash, mode)
+            if rid in exclude_record_ids:
+                stats.skipped_pending_batch += 1
+                continue
+            previous = existing[mode].get(rid)
+            if previous is not None and not force and is_complete(previous, retry_parse_failures):
+                stats.skipped_existing += 1
+                continue
+            tasks.append((commit, mode))
+    stats.planned = len(tasks)
+    return tasks
+
+
+def append_records(output_dir: Path, records: Iterable[dict[str, Any]]) -> int:
+    """Append finished records to their classifications_<input_mode>.jsonl."""
+    count = 0
+    for record in records:
+        with open(result_path(output_dir, record["input_mode"]), "a", encoding="utf-8") as f:
+            f.write(json.dumps(record, ensure_ascii=False) + "\n")
+        count += 1
+    return count
 
 
 def run_classification(
@@ -253,37 +306,15 @@ def run_classification(
     retry_parse_failures: bool = False,
     workers: int = 1,
     store_prompts: bool = True,
+    exclude_record_ids: set[str] | frozenset[str] = frozenset(),
 ) -> RunStats:
-    """
-    Classify every (commit, input_mode) not yet completed. Tasks are ordered commit by commit (all modes
-    of a commit before the next commit), so a partial run still covers the same commits in every mode.
-    """
+    """Classify pending pairs, saving each record as it finishes."""
     input_modes = list(input_modes)
-    for mode in input_modes:
-        if mode not in INPUT_MODES:
-            raise ValueError(f"Unknown input mode {mode!r}; valid: {INPUT_MODES}")
-    output_dir.mkdir(parents=True, exist_ok=True)
-
-    by_key = {(c.repo, c.commit_hash): c for c in commits}
-    existing = {mode: load_results(result_path(output_dir, mode)) for mode in input_modes}
-    for mode in input_modes:
-        check_prompt_unchanged(existing[mode], experiment)
-        if not force:
-            check_not_stale(existing[mode], by_key, experiment)
-
     stats = RunStats()
-    tasks: list[tuple[PreparedCommit, str]] = []
-    for commit in commits:
-        for mode in input_modes:
-            rid = record_id(experiment.experiment_id, commit.repo, commit.commit_hash, mode)
-            previous = existing[mode].get(rid)
-            if previous is not None and not force and is_complete(previous, retry_parse_failures):
-                stats.skipped_existing += 1
-                continue
-            tasks.append((commit, mode))
-    stats.planned = len(tasks)
-    logger.info("Experiment %s: %d requests to make, %d already done", experiment.experiment_id,
-                stats.planned, stats.skipped_existing)
+    tasks = plan_tasks(commits, input_modes, experiment, output_dir, stats, force, retry_parse_failures,
+                       exclude_record_ids)
+    logger.info("Experiment %s: %d requests to make, %d already done, %d pending in batches",
+                experiment.experiment_id, stats.planned, stats.skipped_existing, stats.skipped_pending_batch)
 
     handles = {mode: open(result_path(output_dir, mode), "a", encoding="utf-8") for mode in input_modes}
     lock = threading.Lock()

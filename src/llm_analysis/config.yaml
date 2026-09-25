@@ -1,70 +1,75 @@
-# Configuration of the LLM classification pipeline (src/llm_analysis).
-# Relative paths are resolved against the REPOSITORY ROOT (same convention as src/miner/config.yaml),
-# so the scripts can be run from any directory.
+# LLM classification config. Relative paths: from the repo root. Details: docs/pipeline-llm.md.
 
 input:
-  # Miner output: one record per (commit, .tf file). Read-only; never modified.
-  dataset_glob: "../data/dataset/**/*.jsonl"
-  # Only used to report how many commit messages match the miner keywords (prefilter sanity check).
-  miner_config: "src/miner/config.yaml"
+  dataset_glob: "../data/dataset/**/*.jsonl"   # miner output (read-only)
+  miner_config: "src/miner/config.yaml"        # keywords, for the prefilter check
 
 output:
   directory: "src/llm_analysis/analysis_results_llm"
   prepared_commits_file: "commits_prepared.jsonl"
-  # Store the full user prompt of every request in the result record (auditability).
-  # The same prompt can be rebuilt from commits_prepared.jsonl; user_prompt_sha256 is always stored.
-  store_prompts: true
+  store_prompts: true           # save the full user prompt in each record
 
 experiment:
-  # candidate_validation: input is the keyword-filtered miner dataset (estimates the heuristic's precision).
-  # full_classification: input is an UNFILTERED collection of Terraform commits.
+  # candidate_validation: keyword-selected commits with eligible infrastructure changes (not all raw
+  # keyword-selected commits). full_classification: unfiltered corpus only.
   mode: "candidate_validation"
   input_modes:
     - message_only
     - diff_only
     - message_and_diff
-  # Stage 01 warns when mode is full_classification but at least this share of messages match miner keywords.
   keyword_prefilter_warning_threshold: 0.95
 
+eligibility:                    # scope filter (not a bug-fix decision), before sampling
+  enabled: true
+  exclude_generic_merges: true  # heuristic: the miner records have no parent count
+  merge_patterns:               # matched at the start of the message, case-insensitive
+    - "^Merge pull request #\\d+ from .*"
+    - "^Merge remote-tracking branch '.*'"
+    - "^Merge branch '.*'"
+    - "^\\s*Merged in .*"
+  excluded_scope_segments:      # whole directory names; the outermost one decides. No generic "test".
+    test: ["tests", "testdata", "fixtures"]
+    example: ["examples", "example"]
+    documentation: ["docs", "doc"]
+    vendor: ["vendor"]
+    generated: [".terraform"]
+  require_in_scope_patch: true  # in-scope files without any patch -> INSUFFICIENT_DATA
+
 preparation:
-  # null = keep every commit. An integer draws a simple random sample of commits (deterministic for a seed).
-  sample_size: null
+  sample_size: null             # null = all commits
   seed: 42
 
 llm:
-  # anthropic | openai (also any OpenAI-compatible server via base_url, e.g. Ollama/vLLM)
-  # | litellm (any LiteLLM vendor; model as "<vendor>/<model>", e.g. "gemini/gemini-2.5-pro") | mock (offline, fake labels)
-  provider: "anthropic"
-  model: "claude-sonnet-5"
-  temperature: 0            # null = do not send (for models that reject the parameter)
+  provider: "litellm"           # litellm | mock (fake labels, tests only)
+  model: "openai/gpt-4.1-nano"  # "<vendor>/<model>", e.g. anthropic/claude-sonnet-5, vertex_ai/gemini-2.5-pro
+  temperature: 0                # null = not sent
   max_output_tokens: 1024
   timeout_seconds: 120
-  retries: 3                # extra attempts after the first one, for timeouts / 408 / 409 / 429 / 5xx
-  retry_backoff_seconds: 2  # doubled after each failed attempt
-  workers: 1                # concurrent requests
-  # Name of the environment variable holding the API key (default: ANTHROPIC_API_KEY / OPENAI_API_KEY).
-  # Never put the key itself in this file.
-  api_key_env: null
-  base_url: null            # e.g. "http://localhost:11434/v1" for Ollama (provider: openai)
-  seed: null                # sent by the openai/litellm providers (honored by OpenAI and most local servers)
-  json_mode: false          # openai/litellm providers: response_format={"type": "json_object"}
-  max_tokens_param: "max_tokens"  # openai provider: use "max_completion_tokens" for OpenAI reasoning models
-  extra_params: {}          # additional request parameters, passed through verbatim
+  retries: 3
+  retry_backoff_seconds: 2      # doubles on each retry
+  workers: 1                    # concurrent requests
+  api_key_env: null             # null = the vendor's usual variable (OPENAI_API_KEY, ...), from .env
+  base_url: null                # local server, e.g. http://localhost:8000/v1 (hosted_vllm/<model>)
+  seed: 42
+  json_mode: true
+  max_tokens_param: "max_tokens"  # "max_completion_tokens" for OpenAI reasoning models
+  extra_params: {}
 
-context:
-  # Character budgets for the diff shown to the model (see diff_context.py for the exact algorithm).
-  max_diff_chars: 24000       # total patch characters per commit
-  max_chars_per_file: 8000    # cap for any single file
-  max_files_per_commit: 20    # further files are listed by name only
-  max_listed_file_names: 100  # cap on the length of file-name lists in the prompt
+context:                        # diff budget per commit, in characters
+  max_diff_chars: 24000
+  max_chars_per_file: 8000
+  max_files_per_commit: 20
+  max_listed_file_names: 100
 
 classification:
-  prompt_version: "v1"        # key of prompts.PROMPTS
+  prompt_version: "v2"          # folder in prompt_templates/
 
 evaluation:
-  # Optional adjudicated gold labels (.csv or .jsonl). null = no supervised metrics.
-  # Needs a commit column (commit_hash / commit_url / sha) and a label column
-  # (gold_label / label / is_bugfix: BUG_FIX|NON_BUG_FIX, true|false, 1|0; other values are ignored).
-  gold_labels: null
-  gold_commit_column: null    # null = auto-detect
-  gold_label_column: null     # null = auto-detect
+  gold_labels: null             # adjudicated .csv/.jsonl; null = no supervised metrics
+  gold_commit_column: null      # null = auto-detect
+  gold_label_column: null
+
+batch:                          # LiteLLM batch: openai, azure, vertex_ai, bedrock, hosted_vllm
+  max_requests_per_batch: 50000
+  max_file_mb: 190
+  poll_interval_seconds: 60

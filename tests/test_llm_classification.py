@@ -13,7 +13,9 @@ from src.llm_analysis.classification import (
 )
 from src.llm_analysis.diff_context import ContextLimits
 from src.llm_analysis.llm_client import LLMClient, LLMError, LLMResponse, LLMSettings
-from src.llm_analysis.prompts import PROMPT_V1
+from src.llm_analysis.prompts import get_prompt
+
+PROMPT_V1 = get_prompt("v1")
 from src.llm_analysis.schemas import BUG_FIX, INPUT_MODES, NOT_PROVIDED, RESULT_FIELDS, FileDiff, PreparedCommit
 
 SETTINGS = LLMSettings(provider="fake", model="fake-model", retries=2, retry_backoff_seconds=0)
@@ -198,8 +200,8 @@ def test_unknown_input_mode(tmp_path):
 def test_settings_reject_unknown_keys():
     from src.llm_analysis.llm_client import LLMConfigError
     with pytest.raises(LLMConfigError):
-        LLMSettings.from_config({"provider": "anthropic", "model": "m", "temprature": 0})
-    settings = LLMSettings.from_config({"provider": "anthropic", "model": "m", "workers": 4,
+        LLMSettings.from_config({"model": "openai/m", "temprature": 0})
+    settings = LLMSettings.from_config({"model": "openai/m", "workers": 4,
                                         "extra_params": {"top_p": 1}})
     assert settings.extra_params == {"top_p": 1}
 
@@ -242,3 +244,11 @@ def test_litellm_rejects_unsupported_params_without_retrying():
     rec = classify_commit(create_client(settings), make_commit(), "message_only", experiment(), PROMPT_V1)
     assert rec["error"] and "seed" in rec["error"]
     assert rec["attempts"] == 1
+
+
+def test_only_litellm_and_mock_providers():
+    from src.llm_analysis.llm_client import LLMConfigError, PROVIDERS, create_client
+    assert set(PROVIDERS) == {"litellm", "mock"}
+    assert LLMSettings.from_config({"model": "openai/gpt-4.1-nano"}).provider == "litellm"
+    with pytest.raises(LLMConfigError, match="Unknown llm.provider"):
+        create_client(LLMSettings(provider="openai", model="gpt-4.1-nano"))
