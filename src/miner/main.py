@@ -433,7 +433,6 @@ def main():
 
     # Inicialização dos componentes principais
     token = args.token or cfg.get('github_token')
-    api = GitHubAPI(token)
     cloner = RepoCloner(REPOS_DIR) 
     
     # CommitMiner é instanciado sem caminhos, pois não lida diretamente com exportação.
@@ -491,8 +490,9 @@ def main():
         logging.info(f"[MainThread] Replay de {replay_dir}: {len(repos_to_process)} repositórios, "
                      f"{len(without_head)} sem head_hash (usarão a data de corte {replay_cutoff}).")
     else:
-        # Fetch repositories to process
+        # Fetch repositories to process (the only GitHub API use; --replay-from needs no token)
         logging.info("[MainThread] Searching for repositories...")
+        api = GitHubAPI(token)
         repos_to_process = api.search_repositories(
             stars_filter=effective_stars, # Pass the determined stars value
             min_commits_filter=effective_min_commits, # Pass the determined min_commits value
