@@ -46,25 +46,35 @@ class EligibilityConfig:
     enabled: bool
     exclude_generic_merges: bool
     merge_patterns: tuple[re.Pattern, ...]
-    scope_segments: dict[str, str]  # lowercase directory segment -> scope
+    scope_segments: dict[str, str]  # lowercase directory segment (any depth) -> scope
     require_in_scope_patch: bool
+    root_scope_segments: dict[str, str] = field(default_factory=dict)  # only as the first directory
 
     @classmethod
     def from_config(cls, cfg: dict[str, Any]) -> EligibilityConfig:
-        segments: dict[str, str] = {}
-        for key, names in (cfg.get("excluded_scope_segments") or {}).items():
-            if key not in SCOPE_KEYS:
-                raise ValueError(f"eligibility.excluded_scope_segments: unknown scope {key!r}; use {sorted(SCOPE_KEYS)}")
-            for name in names:
-                if name.lower() in segments:
-                    raise ValueError(f"eligibility: segment {name!r} is listed under two scopes")
-                segments[name.lower()] = SCOPE_KEYS[key]
+        seen: set[str] = set()
+
+        def segment_map(section: str) -> dict[str, str]:
+            segments: dict[str, str] = {}
+            for key, names in (cfg.get(section) or {}).items():
+                if key not in SCOPE_KEYS:
+                    raise ValueError(f"eligibility.{section}: unknown scope {key!r}; use {sorted(SCOPE_KEYS)}")
+                for name in names:
+                    if name.lower() in seen:
+                        raise ValueError(f"eligibility: segment {name!r} is listed twice")
+                    seen.add(name.lower())
+                    segments[name.lower()] = SCOPE_KEYS[key]
+            return segments
+
+        segments = segment_map("excluded_scope_segments")
+        root_segments = segment_map("root_only_scope_segments")
         return cls(
             enabled=bool(cfg.get("enabled", True)),
             exclude_generic_merges=bool(cfg.get("exclude_generic_merges", True)),
             merge_patterns=tuple(re.compile(p, re.IGNORECASE) for p in cfg.get("merge_patterns") or ()),
             scope_segments=segments,
             require_in_scope_patch=bool(cfg.get("require_in_scope_patch", True)),
+            root_scope_segments=root_segments,
         )
 
     def snapshot(self) -> dict[str, Any]:
@@ -74,14 +84,17 @@ class EligibilityConfig:
             "exclude_generic_merges": self.exclude_generic_merges,
             "merge_patterns": [p.pattern for p in self.merge_patterns],
             "scope_segments": dict(sorted(self.scope_segments.items())),
+            "root_scope_segments": dict(sorted(self.root_scope_segments.items())),
             "require_in_scope_patch": self.require_in_scope_patch,
         }
 
 
 def file_scope(path: str, config: EligibilityConfig) -> str:
     """Scope of a file: its outermost excluded directory segment, else INFRASTRUCTURE."""
-    for segment in PurePosixPath(path).parts[:-1]:
+    for depth, segment in enumerate(PurePosixPath(path).parts[:-1]):
         scope = config.scope_segments.get(segment.lower())
+        if scope is None and depth == 0:
+            scope = config.root_scope_segments.get(segment.lower())
         if scope:
             return scope
     return INFRASTRUCTURE

@@ -10,9 +10,15 @@ contains `fix`, `bug`, `issue`, `resolve`, `error`, `failure` or `incorrect`. Th
 positives such as "fix typo in README", "resolve merge conflicts" and "add error_message variable".
 This module answers two questions:
 
-1. **Which candidates are actually bug fixes?** Answering this lets the study estimate the
-   heuristic's precision. It also produces a cleaner defect dataset for deriving Terraform mutation
-   operators.
+1. **Which candidates are actually bug fixes?** Among keyword-selected commits that change
+   infrastructure code (after the eligibility filter), the share the LLM classifies as `BUG_FIX` is reported
+   as `eligible_candidate_bugfix_rate`. It also produces a cleaner defect dataset for deriving Terraform
+   mutation operators.
+
+The three steps have separate roles: **candidate retrieval** (miner: article-derived keyword heuristic +
+changed `.tf` files), **eligibility** (stage 01: scope-based selection of infrastructure changes) and
+**classification** (stage 02: LLM `BUG_FIX` / `NON_BUG_FIX`). The keyword heuristic identifies candidates;
+it is not ground truth.
 2. **Does the code change add information beyond the commit message?** The same commits are
    classified from the message alone, from the diff alone, and from both, and the results are compared.
 
@@ -130,10 +136,12 @@ decides whether a commit fixes a bug.
 
 - **File scope** comes from whole directory segments (`eligibility.excluded_scope_segments`, case-insensitive;
   the outermost excluded segment decides): `tests`/`testdata`/`fixtures` → TEST, `examples`/`example` →
-  EXAMPLE, `docs`/`doc` → DOCUMENTATION, `vendor` → VENDOR, `.terraform` → GENERATED, anything else →
-  INFRASTRUCTURE. A directory named `test` is **not** excluded: `environments/test/main.tf` can be real,
-  deployed infrastructure. (Note: the miner itself already drops `test/`, `tests/`, `examples/`, `docs/`,
-  `fixtures/`, `sample/` and `mock/` paths, see `src/miner/utils.py`, so such files never reach this stage.)
+  EXAMPLE, `docs`/`doc` → DOCUMENTATION, `vendor` → VENDOR, `.terraform` → GENERATED, `.github` →
+  REPOSITORY_METADATA, anything else → INFRASTRUCTURE. A directory named `test` is excluded **only as the
+  first directory** (`eligibility.root_only_scope_segments`): `test/` at the repository root is a test suite
+  (Terratest/Kitchen convention), while `environments/test/main.tf` can be real, deployed infrastructure and
+  is kept. The miner applies no scope filter
+  (it exports every `.tf` file of a candidate commit), so this stage sees the complete evidence.
 - **Mixed commits are kept, minus the out-of-scope files**: implementation + tests → keep the commit, send
   only the implementation diff. `files`, `diffs` (including shared patches in `also_in`) and
   `files_without_patch` keep only in-scope paths; the removed ones are listed in `excluded_files`, which
@@ -278,7 +286,7 @@ pipeline, and stage 03 warns when it summarizes mock results.
 | `runs.jsonl` | one line per stage 02 invocation (arguments, counts, timestamps) |
 | `batches/` | Batch API state, uploaded input and raw output of each batch |
 | `pipeline.log` | log of all stages |
-| `reports/<experiment_id>/summary.json` | per-mode counts, label distribution, parse/API failures, truncated commits, confidence distribution, cross-mode disagreement counts and Cohen's kappa, the LLM-estimated heuristic precision with its 95% Wilson interval (candidate_validation), gold metrics (if any: precision/recall with Wilson intervals, F1, MCC, exact McNemar tests between modes with Holm-adjusted p-values) and the scope note |
+| `reports/<experiment_id>/summary.json` | per-mode counts, label distribution, parse/API failures, truncated commits, confidence distribution, cross-mode disagreement counts and Cohen's kappa, `eligible_candidate_bugfix_rate` (eligible commits classified BUG_FIX / eligible commits successfully classified, with its 95% Wilson interval; not precision), gold metrics (if any: precision/recall with Wilson intervals, F1, MCC, exact McNemar tests between modes with Holm-adjusted p-values) and the scope note |
 | `reports/<experiment_id>/summary.csv` | one row per input mode |
 | `reports/<experiment_id>/classification_counts.csv` | `input_mode, label, count, fraction` (labels include `PARSE_FAILURE`, `API_FAILURE`) |
 | `reports/<experiment_id>/errors.jsonl` | every failed request with its error / raw response |
@@ -370,3 +378,11 @@ stages.
 - **Model drift**: hosted models can change behind the same name. `response_model` records the name
   the provider reports; prefer dated model snapshots when a provider offers them.
 - **Self-reported confidence** is not calibrated. Use it for ranking and triage, not as a probability.
+
+### Report schema change (2026-09-25)
+
+`summary.json` no longer has `llm_estimated_keyword_heuristic_precision`, the per-mode
+`bug_fix_share_of_parsed(_ci95)` or `keyword_heuristic_precision_gold(_ci95)`. They are replaced by
+`eligible_candidate_bugfix_rate` (top level, with its definition, and per mode) and
+`gold_eligible_candidate_bugfix_rate`; `summary.csv` has `eligible_candidate_bugfix_rate(_ci95_low|_ci95_high)`.
+The old names called an LLM-label rate "precision", which it is not without gold labels.

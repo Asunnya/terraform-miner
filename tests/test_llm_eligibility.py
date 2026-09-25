@@ -45,7 +45,12 @@ def assess(files, **kwargs):
     ("main.tf", INFRASTRUCTURE),
     ("modules/vpc/main.tf", INFRASTRUCTURE),
     ("environments/dev/main.tf", INFRASTRUCTURE),
-    ("environments/test/main.tf", INFRASTRUCTURE),     # "test" genérico não é excluído
+    ("environments/test/main.tf", INFRASTRUCTURE),     # "test" aninhado não é excluído
+    ("projects/test/main.tf", INFRASTRUCTURE),
+    ("test/fixture-stack/main.tf", TEST),              # "test" como 1º diretório é suíte de testes
+    ("test/setup/main.tf", TEST),
+    ("Test/x/main.tf", TEST),
+    ("test.tf", INFRASTRUCTURE),                       # nome de arquivo não conta
     ("tests/vpc/main.tf", TEST),
     ("tests/fixtures/vpc/main.tf", TEST),
     ("testdata/vpc/main.tf", TEST),
@@ -83,6 +88,7 @@ def test_infrastructure_commits_are_in_scope(files):                     # casos
     ([".terraform/modules/x/main.tf"], "only_generated_files"),           # 11
     ([".github/actions/x/main.tf"], "only_repository_metadata_files"),
     (["tests/main.tf", "examples/main.tf"], "only_excluded_files"),
+    (["test/fixture/main.tf", "test/setup/iam.tf"], "only_test_files"),
 ])
 def test_excluded_only_commits_are_out_of_scope(files, reason):
     decision = assess(files)
@@ -206,8 +212,27 @@ def test_disabled_filter_keeps_every_commit_unchanged():
     assert filter_commits_by_eligibility([commit], config).eligible == [commit]
 
 
+def test_root_test_directory_in_a_mixed_commit_is_removed():
+    decision = assess(["environments/test/main.tf", "test/setup/main.tf"])
+    assert decision.state == IN_SCOPE and decision.mixed
+    assert decision.prepared.files == ["environments/test/main.tf"]
+    assert decision.prepared.excluded_files == [{"file": "test/setup/main.tf", "scope": TEST}]
+
+
+def test_root_only_segments_are_configurable():
+    config = EligibilityConfig.from_config({"excluded_scope_segments": {"test": ["tests"]}})
+    assert file_scope("test/x/main.tf", config) == INFRASTRUCTURE      # sem a regra de raiz
+    assert config.snapshot()["root_scope_segments"] == {}
+    assert CONFIG.snapshot()["root_scope_segments"] == {"test": TEST}
+
+
 def test_config_rejects_unknown_scope_and_duplicate_segments():
     with pytest.raises(ValueError, match="unknown scope"):
         EligibilityConfig.from_config({"excluded_scope_segments": {"tests_dir": ["tests"]}})
-    with pytest.raises(ValueError, match="two scopes"):
+    with pytest.raises(ValueError, match="listed twice"):
         EligibilityConfig.from_config({"excluded_scope_segments": {"test": ["tests"], "example": ["Tests"]}})
+    with pytest.raises(ValueError, match="listed twice"):
+        EligibilityConfig.from_config({"excluded_scope_segments": {"test": ["test"]},
+                                       "root_only_scope_segments": {"test": ["test"]}})
+    with pytest.raises(ValueError, match="unknown scope"):
+        EligibilityConfig.from_config({"root_only_scope_segments": {"tst": ["test"]}})

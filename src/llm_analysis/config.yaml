@@ -27,13 +27,15 @@ eligibility:                    # scope filter (not a bug-fix decision), before 
     - "^Merge remote-tracking branch '.*'"
     - "^Merge branch '.*'"
     - "^\\s*Merged in .*"
-  excluded_scope_segments:      # whole directory names; the outermost one decides. No generic "test".
+  excluded_scope_segments:      # whole directory names, any depth; the outermost one decides
     test: ["tests", "testdata", "fixtures"]
     example: ["examples", "example"]
     documentation: ["docs", "doc"]
     vendor: ["vendor"]
     generated: [".terraform"]
     repository_metadata: [".github"]
+  root_only_scope_segments:     # only as the FIRST directory: test/ at the repo root is a test suite
+    test: ["test"]              # (Terratest/Kitchen convention); environments/test/ stays infrastructure
   require_in_scope_patch: true  # in-scope files without any patch -> INSUFFICIENT_DATA
 
 preparation:

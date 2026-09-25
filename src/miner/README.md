@@ -7,7 +7,7 @@ This module automates the mining of GitHub repositories containing Terraform cod
 
 - **GitHub API Integration**: Search and filter Terraform repositories
 - **Intelligent Repository Selection**: Filter by stars, commits, and quality criteria
-- **Commit Analysis**: Identify bug-fixing commits using keyword patterns
+- **Candidate Retrieval**: Select candidate bug-fix commits with an article-derived keyword heuristic
 - **Data Export**: Export structured data in JSONL format
 - **Comprehensive Logging**: Detailed logging and progress tracking
 - **Statistical Reporting**: Generate summary statistics and reports
@@ -164,12 +164,39 @@ For each relevant commit, the module extracts:
 - Modified files and patches
 - Diff statistics
 
-### Bug Fix Detection
-Commits are classified as bug fixes based on:
-- Message keywords (`fix`, `bug`, `error`, `issue`, `patch`)
-- File modification patterns
-- Commit message structure analysis
-- Pull request integration patterns
+### Candidate Retrieval (not bug-fix classification)
+The miner only **retrieves candidates**. A commit is exported when:
+- its message contains one of the `keywords` in `config.yaml` (`fix`, `bug`, `issue`, `resolve`, `error`,
+  `failure`, `incorrect`; case-insensitive substring match). This list comes from a published article and
+  is kept unchanged so the candidate selection is traceable to the literature;
+- it changes at least one `.tf` file. **Every** `.tf` file of the commit is exported, one record per file,
+  whatever its directory (`tests/`, `examples/`, `docs/`, ...).
+
+The keyword heuristic identifies candidate commits. It is **not** used as ground truth: whether a
+candidate is really a bug fix is decided later by `src/llm_analysis` (LLM classification).
+
+The miner applies **no scope filter**. Deciding which changes belong to the study (infrastructure code vs.
+tests, examples, docs, vendored or generated files, merges) is done only by the eligibility stage of
+`src/llm_analysis` (`eligibility.py`), which keeps the evidence it removes in an audit file.
+
+> Until 2026-09-24 the miner dropped `.tf` files under `test/`, `tests/`, `examples/`, `example/`,
+> `docs/`, `fixtures/`, `sample/` and `mock/` (and files such as `test.tf`) before export
+> (`is_real_infra_file`, now removed). That loss cannot be undone afterwards, so the study dataset was
+> re-mined with `--replay-from` at the same commits. The previous mining is kept in
+> `../data_pre_eligibility_fix/`.
+
+### Reproducibility
+`../data/logs/summary.json` records the `run_id`, start/end time, miner commit (`miner_version`), the
+parameters (keywords, `replay_from`, `replay_cutoff`), each repository's status and `replay_rev`, the number
+of failed repositories and the exported record/commit counts (`dataset_counts`).
+
+`--replay-from <old data dir>` re-mines the repositories of an earlier run at the **same commits**: it uses
+the exact `replay_rev` recorded in the old `summary.json` when there is one, then the old `head_hash`, and
+only then the `--replay-cutoff` date. It requires empty `../data/dataset` and `../data/checkpoints`, so
+checkpoints of an older run are never reused. It needs no GitHub token.
+
+The GitHub token (only needed to search repositories) is read from `--token`, then the `GITHUB_TOKEN`
+environment variable or the gitignored `.env`, then `github_token` in `config.yaml`.
 
 ## Output Formats
 
