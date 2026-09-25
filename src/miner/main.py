@@ -376,6 +376,14 @@ def dataset_counts(dataset_dir):
     }
 
 
+def resolve_github_token(cli_token, cfg, env_file=os.path.join(PROJECT_ROOT, '.env')):
+    """--token, then GITHUB_TOKEN (shell or the gitignored .env), then config.yaml's github_token."""
+    if os.path.isfile(env_file):
+        from dotenv import load_dotenv
+        load_dotenv(env_file, override=False)
+    return cli_token or os.environ.get('GITHUB_TOKEN') or cfg.get('github_token')
+
+
 def main():
     """
     Função principal que coordena a mineração de repositórios.
@@ -432,7 +440,7 @@ def main():
     # Logging setup (agora que LOGS_DIR está definido e pode ser usado)
 
     # Inicialização dos componentes principais
-    token = args.token or cfg.get('github_token')
+    token = resolve_github_token(args.token, cfg)
     cloner = RepoCloner(REPOS_DIR) 
     
     # CommitMiner é instanciado sem caminhos, pois não lida diretamente com exportação.

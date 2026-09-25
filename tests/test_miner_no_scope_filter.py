@@ -114,3 +114,14 @@ def test_dataset_counts(tmp_path):
                                                       make_record(commit_hash="c2")])
     assert main.dataset_counts(str(tmp_path)) == {"raw_record_count": 3, "unique_commit_count": 2,
                                                   "repositories_with_records": 1}
+
+
+def test_github_token_precedence(tmp_path, monkeypatch):
+    env_file = tmp_path / ".env"
+    env_file.write_text("GITHUB_TOKEN=from_env_file\n")
+    monkeypatch.delenv("GITHUB_TOKEN", raising=False)
+    cfg = {"github_token": "from_config"}
+    assert main.resolve_github_token("from_cli", cfg, str(env_file)) == "from_cli"
+    assert main.resolve_github_token(None, cfg, str(env_file)) == "from_env_file"
+    monkeypatch.delenv("GITHUB_TOKEN")
+    assert main.resolve_github_token(None, cfg, str(tmp_path / "missing")) == "from_config"

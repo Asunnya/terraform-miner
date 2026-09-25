@@ -1,6 +1,7 @@
 # config.yaml (atualizado)
 
 # Token de autenticação GitHub 
+# Prefer GITHUB_TOKEN in the gitignored .env; this value is only a fallback. Never commit a real token.
 github_token: ""
 
 # Estrelas mínimas para filtrar repositórios
