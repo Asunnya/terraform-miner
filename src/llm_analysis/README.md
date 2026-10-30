@@ -238,14 +238,23 @@ python src/llm_analysis/02_classify_commits.py                     # the real ru
 python src/llm_analysis/02_classify_commits.py --commits-file commits_analysis/gold.csv   # only gold commits
 
 python src/llm_analysis/03_summarize_results.py [--gold-labels gold.csv]
+python src/llm_analysis/04_cost_report.py                          # tokens (from the API) and cost per call and total
+python src/llm_analysis/04_cost_report.py --estimate --all --model openai/gpt-4.1-mini   # estimate before running
+python src/llm_analysis/05_export_review.py                        # review spreadsheet (.xlsx), readable back as --gold-labels
 ```
 
 ### Cheaper runs: batch
 
-`--batch` sends the same requests through LiteLLM's batch API (half the price on OpenAI, results within
-24 hours). Supported vendors: `openai`, `azure`, `vertex_ai`, `bedrock`, `hosted_vllm`; not `anthropic`
-(LiteLLM cannot create Anthropic batches yet) or `gemini` (use `vertex_ai`). Before submitting, the
-configured parameters are checked against what the vendor accepts.
+`--batch` sends the same requests through a batch API (half the price on OpenAI, results within
+24 hours). Supported vendors: `openai`, `azure`, `vertex_ai`, `bedrock`, `hosted_vllm` (LiteLLM's batch
+API) and `anthropic` (Message Batches through the `anthropic` SDK, since LiteLLM cannot create Anthropic
+batches); not `gemini` (use `vertex_ai`). Before submitting, the configured parameters are checked
+against what the vendor accepts.
+
+For `anthropic`: set `llm.seed: null` (not accepted), and `llm.temperature: null` for the Claude 5
+models (they only accept the default). `json_mode` is not sent, as in the synchronous path. The
+requests are sent inline (no file upload), so `batches/` keeps the input JSONL in OpenAI's format and
+the results converted to it.
 
 ```bash
 python src/llm_analysis/02_classify_commits.py --batch submit          # upload the pending requests
@@ -298,7 +307,9 @@ prompt_version, prompt_sha256, timestamp, label, confidence, reason, message_evi
 uncertainty, diff_truncated, original_diff_chars, submitted_diff_chars, files_submitted,
 files_omitted, prepared_commit_sha256, user_prompt_sha256, user_prompt, raw_response, parse_success,
 parse_error, parse_warnings, error, error_type, attempts, batch_id, input_tokens, output_tokens,
-stop_reason, latency_seconds`.
+usage, cost_usd, litellm_cost_usd, stop_reason, latency_seconds`. `usage` is the raw token object returned by
+the API; `cost_usd` is computed at call time from it and `pricing` in `config.yaml` (batch price for batch calls);
+`litellm_cost_usd` is LiteLLM's own computation (sync calls). The API returns tokens, never a cost.
 
 **Audit trail:** each record links the repository and SHA to the commit's content hash, the exact
 user prompt (or its hash), the system prompt (via `prompt_version`, `prompt_sha256` and

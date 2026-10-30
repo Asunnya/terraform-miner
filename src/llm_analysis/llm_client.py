@@ -71,6 +71,8 @@ class LLMResponse:
     stop_reason: str | None = None
     attempts: int = 1
     latency_seconds: float | None = None
+    usage: dict[str, Any] | None = None       # raw usage object returned by the API
+    litellm_cost_usd: float | None = None     # LiteLLM's own cost computation (sync calls only)
 
 
 class LLMClient(ABC):
@@ -121,6 +123,7 @@ def chat_completion_to_response(body: dict[str, Any]) -> LLMResponse:
         input_tokens=usage.get("prompt_tokens"),
         output_tokens=usage.get("completion_tokens"),
         stop_reason=choice.get("finish_reason"),
+        usage=body.get("usage"),
     )
 
 
@@ -143,6 +146,11 @@ class LiteLLMClient(LLMClient):
         except Exception as e:  # noqa: BLE001 - LiteLLM raises several types
             raise LLMConfigError(f"LiteLLM does not recognize llm.model {settings.model!r}: {e}") from e
         self._api_key_value = self._api_key("", required=True) if settings.api_key_env else None
+
+    @property
+    def api_key(self) -> str | None:
+        """Key from llm.api_key_env; None = the vendor's usual variable."""
+        return self._api_key_value
 
     def request_params(self) -> dict[str, Any]:
         """Sampling and format parameters, shared by the sync and batch paths."""
@@ -194,6 +202,8 @@ class LiteLLMClient(LLMClient):
             input_tokens=getattr(usage, "prompt_tokens", None),
             output_tokens=getattr(usage, "completion_tokens", None),
             stop_reason=choice.finish_reason,
+            usage=usage.model_dump() if hasattr(usage, "model_dump") else None,
+            litellm_cost_usd=(getattr(response, "_hidden_params", None) or {}).get("response_cost"),
         )
 
 

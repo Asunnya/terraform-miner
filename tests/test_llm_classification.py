@@ -252,3 +252,33 @@ def test_only_litellm_and_mock_providers():
     assert LLMSettings.from_config({"model": "openai/gpt-4.1-nano"}).provider == "litellm"
     with pytest.raises(LLMConfigError, match="Unknown llm.provider"):
         create_client(LLMSettings(provider="openai", model="gpt-4.1-nano"))
+
+
+
+def test_sync_record_keeps_usage_and_cost_from_the_call(tmp_path, caplog):
+    """Via LiteLLM (mock_response): usage da resposta, custo calculado e o custo do próprio LiteLLM."""
+    pytest.importorskip("litellm")
+    import logging
+    from src.llm_analysis.costs import load_pricing
+    from src.llm_analysis.llm_client import create_client
+    pricing = load_pricing({"models": {"gpt-4.1-nano": {"sync": {"input": 0.10, "output": 0.40},
+                                                        "batch": {"input": 0.05, "output": 0.20}}}})
+    settings = LLMSettings(model="openai/gpt-4.1-nano", extra_params={"mock_response": VALID})
+    exp = replace(experiment(), model="openai/gpt-4.1-nano")
+    with caplog.at_level(logging.INFO, logger="src.llm_analysis.classification"):
+        stats = run_classification(create_client(settings), [make_commit()], ["message_only"], exp, PROMPT_V1,
+                                   tmp_path, pricing=pricing)
+    record = next(iter(load_results(result_path(tmp_path, "message_only")).values()))
+
+    assert record["usage"]["prompt_tokens"] == record["input_tokens"]
+    assert record["usage"]["completion_tokens"] == record["output_tokens"]
+    expected = (record["input_tokens"] * 0.10 + record["output_tokens"] * 0.40) / 1e6
+    assert record["cost_usd"] == pytest.approx(expected)
+    assert record["litellm_cost_usd"] == pytest.approx(expected)          # confere com a tabela do LiteLLM
+    assert stats.input_tokens == record["input_tokens"] and stats.cost_usd == pytest.approx(expected)
+    assert "in /" in caplog.text and "US$" in caplog.text                 # linha de log por chamada
+
+
+def test_cost_is_none_without_a_price(tmp_path):
+    rec = classify_commit(FakeClient(), make_commit(), "message_only", experiment(), PROMPT_V1, pricing={})
+    assert rec["cost_usd"] is None and rec["input_tokens"] == 10

@@ -1,4 +1,4 @@
-"""Batch via LiteLLM, com uma BatchAPI falsa (sem rede)."""
+"""Batch via LiteLLM e via SDK da Anthropic, com APIs falsas (sem rede)."""
 import json
 from types import SimpleNamespace
 
@@ -131,7 +131,8 @@ def test_collect_waits_for_running_batches(openai_client, tmp_path):
     client, _ = openai_client
     submit(client, [make_commit()], tmp_path)
     totals = collect(client, [make_commit()], tmp_path)
-    assert totals == {"batches_collected": 0, "records_written": 0, "api_failures": 0, "still_running": 1}
+    assert totals == {"batches_collected": 0, "records_written": 0, "api_failures": 0, "still_running": 1,
+                      "input_tokens": 0, "output_tokens": 0, "cost_usd": 0.0}
     assert not result_path(tmp_path, "diff_only").exists()
 
 
@@ -214,8 +215,8 @@ def test_batch_requires_litellm_and_a_batch_vendor():
     pytest.importorskip("litellm")
     with pytest.raises(batch.BatchError, match="provider: litellm"):
         batch.batch_api_for(FakeClient())
-    with pytest.raises(batch.BatchError, match="no batch support for 'anthropic'"):
-        batch.batch_api_for(LiteLLMClient(LLMSettings(model="anthropic/claude-sonnet-5")))
+    with pytest.raises(batch.BatchError, match="No batch support for 'gemini'"):
+        batch.batch_api_for(LiteLLMClient(LLMSettings(model="gemini/gemini-2.5-flash", seed=None)))
     assert batch.batch_api_for(LiteLLMClient(SETTINGS)).vendor == "openai"
 
 
@@ -224,3 +225,149 @@ def test_batch_rejects_parameters_the_vendor_does_not_accept():
     bedrock = LiteLLMClient(LLMSettings(model="bedrock/anthropic.claude-3-5-sonnet-20240620-v1:0", seed=1))
     with pytest.raises(LLMConfigError, match="seed"):  # o Bedrock não aceita seed
         batch.batch_api_for(bedrock)
+
+
+def test_batch_records_keep_api_usage_and_batch_price(openai_client, tmp_path):
+    from src.llm_analysis.costs import load_pricing
+    pricing = load_pricing({"models": {"gpt-4.1-nano": {"sync": {"input": 0.10, "output": 0.40},
+                                                        "batch": {"input": 0.05, "output": 0.20}}}})
+    client, fake = openai_client
+    _, [state] = submit(client, [make_commit()], tmp_path)
+    fake.finish(state["batch_id"])
+    totals = collect(client, [make_commit()], tmp_path, pricing=pricing)
+
+    record = next(iter(load_results(result_path(tmp_path, "diff_only")).values()))
+    assert record["usage"] == {"prompt_tokens": 100, "completion_tokens": 20}   # como veio da API
+    assert record["cost_usd"] == pytest.approx((100 * 0.05 + 20 * 0.20) / 1e6)  # preço de batch
+    assert totals["input_tokens"] == 200 and totals["output_tokens"] == 40
+    assert totals["cost_usd"] == pytest.approx(2 * record["cost_usd"])
+
+
+ANTHROPIC_SETTINGS = LLMSettings(provider="litellm", model="anthropic/claude-haiku-5-5", temperature=None, seed=None,
+                                 json_mode=True, max_output_tokens=256)
+
+
+class Dumpable(SimpleNamespace):
+    """Imita um objeto pydantic do SDK (só model_dump)."""
+
+    def model_dump(self, mode="python"):
+        return dict(self.data)
+
+
+class FakeAnthropicBatches:
+    """Imita anthropic.Anthropic().messages.batches; `finish` simula a Anthropic processando o batch."""
+
+    def __init__(self):
+        self.created, self.state, self.out = {}, {}, {}
+
+    def _batch(self, batch_id):
+        return Dumpable(data=self.state[batch_id])
+
+    def create(self, requests):
+        batch_id = f"msgbatch_{len(self.created)}"
+        self.created[batch_id] = requests
+        self.state[batch_id] = {"id": batch_id, "processing_status": "in_progress", "cancel_initiated_at": None,
+                                "request_counts": {"processing": len(requests), "succeeded": 0, "errored": 0,
+                                                   "canceled": 0, "expired": 0}}
+        return self._batch(batch_id)
+
+    def retrieve(self, batch_id):
+        return self._batch(batch_id)
+
+    def cancel(self, batch_id):
+        self.state[batch_id].update(processing_status="ended", cancel_initiated_at="2026-10-30T00:00:00Z")
+
+    def results(self, batch_id):
+        return [Dumpable(data=entry) for entry in self.out[batch_id]]
+
+    def finish(self, batch_id, fail=(), expire=(), text=VALID):
+        entries = []
+        for req in self.created[batch_id]:
+            cid = req["custom_id"]
+            if cid in fail:
+                result = {"type": "errored", "error": {"type": "error", "error": {
+                    "type": "invalid_request_error", "message": "temperature: must be 1"}}}
+            elif cid in expire:
+                result = {"type": "expired"}
+            else:
+                result = {"type": "succeeded", "message": {
+                    "id": "msg_1", "model": "claude-haiku-5-5", "stop_reason": "end_turn",
+                    "content": [{"type": "text", "text": text}],
+                    "usage": {"input_tokens": 90, "cache_read_input_tokens": 10, "output_tokens": 20}}}
+            entries.append({"custom_id": cid, "result": result})
+        self.out[batch_id] = entries
+        types = [e["result"]["type"] for e in entries]
+        self.state[batch_id].update(processing_status="ended", request_counts={
+            "processing": 0, "succeeded": types.count("succeeded"), "errored": types.count("errored"),
+            "canceled": 0, "expired": types.count("expired")})
+
+
+@pytest.fixture
+def anthropic_client():
+    pytest.importorskip("litellm")
+    client = LiteLLMClient(ANTHROPIC_SETTINGS)
+    fake = FakeAnthropicBatches()
+    client.batch_api = batch.AnthropicBatchAPI(sdk=SimpleNamespace(messages=SimpleNamespace(batches=fake)))
+    return client, fake
+
+
+def anthropic_experiment():
+    return Experiment.build("candidate_validation", ANTHROPIC_SETTINGS, PROMPT, LIMITS)
+
+
+def test_anthropic_submit_translates_the_synchronous_request(anthropic_client, tmp_path):
+    client, fake = anthropic_client
+    _, [state] = batch.submit(client, client.batch_api, [make_commit("c1")], MODES, anthropic_experiment(), PROMPT,
+                              tmp_path, BATCH_LIMITS)
+
+    requests = fake.created[state["batch_id"]]
+    assert {r["custom_id"] for r in requests} == set(state["requests"]) and state["vendor"] == "anthropic"
+    params = requests[0]["params"]
+    assert params["model"] == "claude-haiku-5-5" and params["max_tokens"] == 256
+    assert params["system"] == PROMPT.system
+    assert [m["role"] for m in params["messages"]] == ["user"]
+    assert "response_format" not in params and "temperature" not in params and "seed" not in params
+    assert batch.describe(batch.status(client.batch_api, tmp_path, anthropic_experiment().experiment_id)[0]).split()[1] \
+        == "in_progress"
+
+
+def test_anthropic_collect_writes_records_and_resubmits_failed_and_expired(anthropic_client, tmp_path):
+    client, fake = anthropic_client
+    commits = [make_commit("c1"), make_commit("c2")]
+    exp = anthropic_experiment()
+    _, [state] = batch.submit(client, client.batch_api, commits, MODES, exp, PROMPT, tmp_path, BATCH_LIMITS)
+    failed, expired = sorted(state["requests"])[:2]
+    fake.finish(state["batch_id"], fail={failed}, expire={expired})
+
+    totals = batch.collect(client.batch_api, commits, exp, PROMPT, tmp_path)
+    assert totals["records_written"] == 3 and totals["api_failures"] == 1
+    assert totals["input_tokens"] == 200 and totals["output_tokens"] == 40  # 90 + 10 lidos do cache
+
+    records = {**load_results(result_path(tmp_path, "message_only")),
+               **load_results(result_path(tmp_path, "diff_only"))}
+    ok = next(r for rid, r in records.items() if rid != failed)
+    assert ok["label"] == "BUG_FIX" and ok["batch_id"] == state["batch_id"] and ok["stop_reason"] == "stop"
+    assert ok["response_model"] == "claude-haiku-5-5" and ok["usage"]["cache_read_input_tokens"] == 10
+    assert records[failed]["error"] == "temperature: must be 1"
+    assert records[failed]["error_type"] == "invalid_request_error"
+    assert expired not in records
+
+    stats, [retry] = batch.submit(client, client.batch_api, commits, MODES, exp, PROMPT, tmp_path, BATCH_LIMITS)
+    assert set(retry["requests"]) == {failed, expired} and stats.skipped_existing == 2
+
+
+def test_anthropic_cancel(anthropic_client, tmp_path):
+    client, fake = anthropic_client
+    exp = anthropic_experiment()
+    batch.submit(client, client.batch_api, [make_commit()], MODES, exp, PROMPT, tmp_path, BATCH_LIMITS)
+    [batch_id] = batch.cancel(client.batch_api, tmp_path, exp.experiment_id)
+    fake.out[batch_id] = []
+    assert batch.load_states(tmp_path, exp.experiment_id)[0]["status"] == "cancelled"
+    assert batch.collect(client.batch_api, [make_commit()], exp, PROMPT, tmp_path)["batches_collected"] == 1
+    assert batch.pending_record_ids(tmp_path, exp.experiment_id) == set()
+
+
+def test_anthropic_batch_rejects_seed():
+    pytest.importorskip("litellm")
+    with pytest.raises(LLMConfigError, match="seed"):
+        batch.batch_api_for(LiteLLMClient(LLMSettings(model="anthropic/claude-haiku-5-5", seed=1)))

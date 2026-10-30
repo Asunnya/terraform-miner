@@ -44,16 +44,16 @@ preparation:
 
 llm:
   provider: "litellm"           # litellm | mock (fake labels, tests only)
-  model: "openai/gpt-4.1-nano"  # "<vendor>/<model>", e.g. anthropic/claude-sonnet-5, vertex_ai/gemini-2.5-pro
-  temperature: 0                # null = not sent
-  max_output_tokens: 1024
+  model: "anthropic/claude-haiku-4-5"  # "<vendor>/<model>", e.g. anthropic/claude-sonnet-5, vertex_ai/gemini-2.5-pro
+  temperature: 0                # null = not sent; Claude 5 models reject any temperature (400)
+  max_output_tokens: 1024       # Claude 5: raise it (adaptive thinking tokens count toward it)
   timeout_seconds: 120
   retries: 3
   retry_backoff_seconds: 2      # doubles on each retry
   workers: 1                    # concurrent requests
   api_key_env: null             # null = the vendor's usual variable (OPENAI_API_KEY, ...), from .env
   base_url: null                # local server, e.g. http://localhost:8000/v1 (hosted_vllm/<model>)
-  seed: 42
+  seed: null                    # Anthropic does not accept seed
   json_mode: true
   max_tokens_param: "max_tokens"  # "max_completion_tokens" for OpenAI reasoning models
   extra_params: {}
@@ -76,3 +76,19 @@ batch:                          # LiteLLM batch: openai, azure, vertex_ai, bedro
   max_requests_per_batch: 50000
   max_file_mb: 190
   poll_interval_seconds: 60
+
+pricing:                        # USD per 1M tokens, for 04_cost_report.py
+  as_of: "2026-10-06"
+  source: "https://developers.openai.com/api/docs/pricing, https://platform.claude.com/docs/en/about-claude/pricing"
+  estimate_output_tokens: 150   # --estimate fallback when no call was made yet
+  models:
+    gpt-4.1-nano: {sync: {input: 0.10, output: 0.40}, batch: {input: 0.05, output: 0.20}}
+    gpt-4.1-mini: {sync: {input: 0.40, output: 1.60}, batch: {input: 0.20, output: 0.80}}
+    gpt-4.1:      {sync: {input: 2.00, output: 8.00}, batch: {input: 1.00, output: 4.00}}
+    gpt-5.4-mini: {sync: {input: 0.75, output: 4.50}, batch: {input: 0.375, output: 2.25}}
+    gpt-5.4:      {sync: {input: 2.50, output: 15.00}, batch: {input: 1.25, output: 7.50}}
+    gpt-5-mini:   {sync: {input: 0.25, output: 2.00}, batch: {input: 0.125, output: 1.00}}
+    gpt-5:        {sync: {input: 1.25, output: 10.00}, batch: {input: 0.625, output: 5.00}}
+    o4-mini:      {sync: {input: 1.10, output: 4.40}, batch: {input: 0.55, output: 2.20}}
+    claude-haiku-4-5: {sync: {input: 1.00, output: 5.00}, batch: {input: 0.50, output: 2.50}}
+    claude-haiku-5-5: {sync: {input: 0.10, output: 0.50}, batch: {input: 0.05, output: 0.25}}

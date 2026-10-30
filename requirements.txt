@@ -25,5 +25,9 @@ pytest
 PyYAML
 # src/llm_analysis: single client for every LLM vendor, including batch
 litellm
+# src/llm_analysis: Anthropic batches (LiteLLM cannot create them)
+anthropic
 # src/llm_analysis: loads API keys from a gitignored .env file at the repo root
 python-dotenv
+# src/llm_analysis: review spreadsheet (05_export_review.py)
+openpyxl

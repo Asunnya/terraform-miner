@@ -69,6 +69,9 @@ RESULT_FIELDS = (
     "batch_id",
     "input_tokens",
     "output_tokens",
+    "usage",
+    "cost_usd",
+    "litellm_cost_usd",
     "stop_reason",
     "latency_seconds",
 )

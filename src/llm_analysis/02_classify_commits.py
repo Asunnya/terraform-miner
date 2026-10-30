@@ -21,6 +21,7 @@ from src.llm_analysis.classification import (  # noqa: E402
     run_classification,
 )
 from src.llm_analysis.evaluation import extract_commit_hash  # noqa: E402
+from src.llm_analysis.costs import load_pricing  # noqa: E402
 from src.llm_analysis.llm_client import LLMConfigError, LiteLLMClient, create_client  # noqa: E402
 from src.llm_analysis.prompts import PromptTemplate  # noqa: E402
 from src.llm_analysis.schemas import INPUT_MODES, PreparedCommit  # noqa: E402
@@ -53,7 +54,7 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser.add_argument("--retry-parse-failures", action="store_true",
                         help="Also redo requests whose response could not be parsed")
     parser.add_argument("--batch", choices=("submit", "status", "collect", "cancel"),
-                        help="Use the OpenAI Batch API (provider openai); see the description above")
+                        help="Use the vendor's batch API (LiteLLM; anthropic through its SDK); see the README")
     parser.add_argument("--wait", action="store_true",
                         help="With --batch collect: poll until every batch of the experiment has finished")
     parser.add_argument("--dry-run", action="store_true",
@@ -127,7 +128,8 @@ def run_batch_action(args: argparse.Namespace, cfg: dict, client: LiteLLMClient,
         print("\n".join(batch.describe(s) for s in states) or "No batches for this experiment.")
     elif args.batch == "collect":
         totals = batch.collect(api, all_commits, experiment, template, output_dir, store_prompts,
-                               wait=args.wait, poll_interval_seconds=limits.poll_interval_seconds)
+                               wait=args.wait, poll_interval_seconds=limits.poll_interval_seconds,
+                               pricing=load_pricing(cfg.get("pricing") or {}))
         log_run(output_dir, {**entry, **totals})
         logger.info("Collect: %s", totals)
         if totals["still_running"]:
@@ -203,6 +205,7 @@ def main(argv: list[str] | None = None) -> int:
             force=args.force, retry_parse_failures=args.retry_parse_failures, workers=workers,
             store_prompts=store_prompts,
             exclude_record_ids=batch.pending_record_ids(output_dir, experiment.experiment_id),
+            pricing=load_pricing(cfg.get("pricing") or {}),
         )
     except ResultConflictError as e:
         logger.error("%s", e)
@@ -217,6 +220,8 @@ def main(argv: list[str] | None = None) -> int:
         **stats.to_dict(),
     })
     logger.info("Done: %s", stats.to_dict())
+    logger.info("Total desta execução: %d chamadas, %d tokens de entrada, %d de saída, US$ %.6f",
+                stats.classified, stats.input_tokens, stats.output_tokens, stats.cost_usd)
     if stats.api_failures:
         logger.warning("%d requests failed; rerun the same command to retry them.", stats.api_failures)
     return 0

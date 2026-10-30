@@ -269,10 +269,26 @@ def _pick_column(columns: Iterable[str], preferred: str | None, candidates: tupl
     return next((by_lower[c] for c in candidates if c in by_lower), None)
 
 
+REVIEW_SHEET = "Revisao"  # sheet written by 05_export_review.py
+
+
+def _xlsx_rows(path: Path) -> list[dict[str, Any]]:
+    """Rows of the review sheet (or the first sheet) as dicts keyed by the header row."""
+    from openpyxl import load_workbook
+
+    wb = load_workbook(path, read_only=True, data_only=True)
+    ws = wb[REVIEW_SHEET] if REVIEW_SHEET in wb.sheetnames else wb.worksheets[0]
+    rows = ws.iter_rows(values_only=True)
+    header = [str(h) if h is not None else "" for h in next(rows, [])]
+    return [dict(zip(header, row)) for row in rows]
+
+
 def load_gold_labels(path: Path, label_column: str | None = None, commit_column: str | None = None) -> GoldLabels:
     """Load an adjudicated gold file (.csv/.jsonl); commits with contradictory labels are excluded."""
     if path.suffix.lower() == ".jsonl":
         rows = [r for _, r in read_jsonl(path)]
+    elif path.suffix.lower() == ".xlsx":
+        rows = _xlsx_rows(path)
     else:
         with open(path, encoding="utf-8-sig", newline="") as f:
             rows = list(csv.DictReader(f))

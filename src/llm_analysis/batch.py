@@ -1,11 +1,13 @@
-"""Stage 02 through LiteLLM's batch API: submit, status, collect, cancel."""
+"""Stage 02 through a batch API (LiteLLM's, or the anthropic SDK): submit, status, collect, cancel."""
 from __future__ import annotations
 
 import json
 import logging
+import os
 import time
 from dataclasses import dataclass
 from pathlib import Path
+from types import SimpleNamespace
 from typing import Any, Callable
 
 from src.llm_analysis.classification import (
@@ -15,9 +17,11 @@ from src.llm_analysis.classification import (
     append_records,
     new_record,
     plan_tasks,
+    log_call,
     record_with_error,
     record_with_response,
 )
+from src.llm_analysis.costs import ModelPricing
 from src.llm_analysis.llm_client import LiteLLMClient, chat_completion_to_response
 from src.llm_analysis.prompts import PromptTemplate
 from src.llm_analysis.schemas import PreparedCommit
@@ -77,8 +81,10 @@ def pending_record_ids(output_dir: Path, experiment_id: str) -> set[str]:
     return {rid for s in load_states(output_dir, experiment_id) if not s.get("collected") for rid in s["requests"]}
 
 
-# Vendors whose batch creation LiteLLM supports (anthropic: pending LiteLLM PR #42576).
+# Vendors whose batch creation LiteLLM supports. anthropic goes through AnthropicBatchAPI: LiteLLM cannot
+# create Anthropic batches (1.106.6; PR #42576 was closed unmerged).
 BATCH_VENDORS = frozenset({"openai", "azure", "vertex_ai", "bedrock", "hosted_vllm"})
+ANTHROPIC_VENDOR = "anthropic"
 
 
 class BatchAPI:
@@ -110,12 +116,133 @@ class BatchAPI:
         self._litellm.cancel_batch(batch_id=batch_id, custom_llm_provider=self.vendor)
 
 
-def batch_api_for(client: Any) -> BatchAPI:
-    """BatchAPI for the configured model; fails if its vendor has no LiteLLM batch support."""
+ANTHROPIC_FINISH_REASONS = {"end_turn": "stop", "stop_sequence": "stop", "max_tokens": "length"}
+
+
+def anthropic_request(line: dict[str, Any]) -> dict[str, Any]:
+    """OpenAI batch input line (Chat Completions body) -> Anthropic Message Batches request."""
+    body = dict(line["body"])
+    messages = body.pop("messages")
+    max_tokens = body.pop("max_tokens", None)
+    max_tokens = body.pop("max_completion_tokens", max_tokens)
+    # json_object has no Anthropic equivalent; LiteLLM's sync path drops it too and the prompt asks for JSON.
+    body.pop("response_format", None)
+    params = {
+        "model": body.pop("model"),
+        "max_tokens": max_tokens,
+        "messages": [m for m in messages if m["role"] != "system"],
+        **body,
+    }
+    system = [m["content"] for m in messages if m["role"] == "system"]
+    if system:
+        params["system"] = "\n\n".join(system)
+    return {"custom_id": line["custom_id"], "params": params}
+
+
+def anthropic_result_line(entry: dict[str, Any]) -> dict[str, Any] | None:
+    """Anthropic batch result -> OpenAI batch output line; None for canceled/expired (resubmitted later)."""
+    result = entry["result"]
+    if result["type"] == "succeeded":
+        message = result["message"]
+        usage = message.get("usage") or {}
+        prompt_tokens = sum(usage.get(k) or 0 for k in
+                            ("input_tokens", "cache_creation_input_tokens", "cache_read_input_tokens"))
+        body = {
+            "id": message.get("id"),
+            "model": message.get("model"),
+            "choices": [{
+                "message": {"role": "assistant",
+                            "content": "".join(b.get("text", "") for b in message.get("content") or []
+                                               if b.get("type") == "text")},
+                "finish_reason": ANTHROPIC_FINISH_REASONS.get(message.get("stop_reason"), message.get("stop_reason")),
+            }],
+            "usage": {**usage, "prompt_tokens": prompt_tokens, "completion_tokens": usage.get("output_tokens"),
+                      "prompt_tokens_details": {"cached_tokens": usage.get("cache_read_input_tokens") or 0}},
+        }
+        return {"custom_id": entry["custom_id"], "error": None, "response": {"status_code": HTTP_OK, "body": body}}
+    if result["type"] == "errored":
+        error = (result.get("error") or {}).get("error") or {}
+        return {"custom_id": entry["custom_id"], "response": None,
+                "error": {"message": error.get("message"), "code": error.get("type")}}
+    return None
+
+
+def anthropic_status(batch: dict[str, Any]) -> str:
+    """Anthropic processing_status -> OpenAI batch status."""
+    if batch["processing_status"] == "in_progress":
+        return "in_progress"
+    if batch["processing_status"] == "canceling":
+        return "cancelling"
+    if batch.get("cancel_initiated_at"):
+        return "cancelled"
+    return "expired" if (batch.get("request_counts") or {}).get("expired") else "completed"
+
+
+class AnthropicBatchAPI:
+    """Anthropic Message Batches through the anthropic SDK, with the BatchAPI interface.
+
+    There is no file upload: `upload` returns the local path and `create` sends its requests inline.
+    The result stream of a batch is exposed as its output file (id = batch id), in OpenAI's format.
+    """
+
+    vendor = ANTHROPIC_VENDOR
+
+    def __init__(self, api_key: str | None = None, sdk: Any = None):
+        if sdk is None:
+            try:
+                import anthropic
+            except ImportError as e:
+                raise BatchError("Anthropic batches need the 'anthropic' package: "
+                                 "uv pip install -r requirements.txt") from e
+            api_key = api_key or os.environ.get("ANTHROPIC_API_KEY")
+            if not api_key:
+                raise BatchError("ANTHROPIC_API_KEY is not set (shell or .env)")
+            sdk = anthropic.Anthropic(api_key=api_key)
+        self._batches = sdk.messages.batches
+
+    def upload(self, path: Path) -> str:
+        return str(path)
+
+    def create(self, input_file_id: str, metadata: dict[str, str]) -> Any:
+        requests = [anthropic_request(line) for _, line in read_jsonl(Path(input_file_id))]
+        return self._as_openai(self._batches.create(requests=requests))
+
+    def retrieve(self, batch_id: str) -> Any:
+        return self._as_openai(self._batches.retrieve(batch_id))
+
+    def content(self, file_id: str) -> str:
+        lines = (anthropic_result_line(entry.model_dump(mode="json")) for entry in self._batches.results(file_id))
+        return "".join(json.dumps(line, ensure_ascii=False) + "\n" for line in lines if line is not None)
+
+    def cancel(self, batch_id: str) -> None:
+        self._batches.cancel(batch_id)
+
+    @staticmethod
+    def _as_openai(batch: Any) -> SimpleNamespace:
+        data = batch.model_dump(mode="json")
+        counts = data.get("request_counts") or {}
+        status = anthropic_status(data)
+        return SimpleNamespace(
+            id=data["id"],
+            status=status,
+            request_counts={"total": sum(counts.values()), "completed": counts.get("succeeded", 0),
+                            "failed": counts.get("errored", 0), **counts},
+            output_file_id=data["id"] if status in TERMINAL_STATUSES else None,
+            error_file_id=None,
+            errors=None,
+        )
+
+
+def batch_api_for(client: Any) -> BatchAPI | AnthropicBatchAPI:
+    """Batch API for the configured model; fails if its vendor has no batch support."""
     if not isinstance(client, LiteLLMClient):
         raise BatchError(f"--batch needs llm.provider: litellm (configured: {client.settings.provider!r})")
+    if client.vendor == ANTHROPIC_VENDOR:
+        client.check_supported_params()
+        return AnthropicBatchAPI(api_key=client.api_key)
     if client.vendor not in BATCH_VENDORS:
-        raise BatchError(f"LiteLLM has no batch support for {client.vendor!r} (supported: {sorted(BATCH_VENDORS)})")
+        raise BatchError(f"No batch support for {client.vendor!r} "
+                         f"(supported: {sorted(BATCH_VENDORS | {ANTHROPIC_VENDOR})})")
     client.check_supported_params()
     return BatchAPI(client.vendor)
 
@@ -247,7 +374,8 @@ def _download(api: BatchAPI, file_id: str | None, path: Path) -> list[dict[str, 
 
 
 def _line_to_record(line: dict[str, Any], state: dict[str, Any], commits: dict[tuple[str, str], PreparedCommit],
-                    experiment: Experiment, template: PromptTemplate, store_prompts: bool) -> dict[str, Any] | None:
+                    experiment: Experiment, template: PromptTemplate, store_prompts: bool,
+                    pricing: dict[str, ModelPricing] | None = None) -> dict[str, Any] | None:
     meta = state["requests"].get(line.get("custom_id"))
     if meta is None:
         logger.warning("Batch %s returned unknown custom_id %r", state["batch_id"], line.get("custom_id"))
@@ -268,7 +396,7 @@ def _line_to_record(line: dict[str, Any], state: dict[str, Any], commits: dict[t
     if status_code == HTTP_OK:
         result = chat_completion_to_response(response.get("body") or {})
         result.attempts = 1
-        return record_with_response(record, result)
+        return record_with_response(record, result, pricing)
 
     error = line.get("error") or (response.get("body") or {}).get("error") or {}
     message = error.get("message") if isinstance(error, dict) else str(error)
@@ -286,10 +414,12 @@ def collect(
     wait: bool = False,
     poll_interval_seconds: float = 60,
     sleep: Callable[[float], None] = time.sleep,
+    pricing: dict[str, ModelPricing] | None = None,
 ) -> dict[str, int]:
     """Save the results of finished batches."""
     by_key = {(c.repo, c.commit_hash): c for c in commits}
-    totals = {"batches_collected": 0, "records_written": 0, "api_failures": 0, "still_running": 0}
+    totals = {"batches_collected": 0, "records_written": 0, "api_failures": 0, "still_running": 0,
+              "input_tokens": 0, "output_tokens": 0, "cost_usd": 0.0}
     while True:
         open_states = [s for s in load_states(output_dir, experiment.experiment_id) if not s.get("collected")]
         running = 0
@@ -301,8 +431,13 @@ def collect(
             folder = batch_dir(output_dir)
             lines = (_download(api, state["output_file_id"], folder / f"{state['batch_id']}_output.jsonl")
                      + _download(api, state["error_file_id"], folder / f"{state['batch_id']}_errors.jsonl"))
-            records = [r for r in (_line_to_record(line, state, by_key, experiment, template, store_prompts)
+            records = [r for r in (_line_to_record(line, state, by_key, experiment, template, store_prompts, pricing)
                                    for line in lines) if r is not None]
+            for record in records:
+                log_call(record)
+                totals["input_tokens"] += record.get("input_tokens") or 0
+                totals["output_tokens"] += record.get("output_tokens") or 0
+                totals["cost_usd"] = round(totals["cost_usd"] + (record.get("cost_usd") or 0.0), 8)
             written = append_records(output_dir, records)
             failures = sum(1 for r in records if r.get("error"))
             missing = state["n_requests"] - len(records)

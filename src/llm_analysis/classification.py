@@ -9,6 +9,7 @@ from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import Any, Iterable
 
+from src.llm_analysis.costs import BATCH, SYNC, ModelPricing, pricing_for
 from src.llm_analysis.diff_context import DIFF_FORMAT_VERSION, ContextLimits, RenderedDiff, render_diffs
 from src.llm_analysis.llm_client import LLMClient, LLMError, LLMResponse, LLMSettings
 from src.llm_analysis.prompts import PromptTemplate, build_user_prompt, get_prompt
@@ -144,7 +145,21 @@ def new_record(commit: PreparedCommit, input_mode: str, experiment: Experiment, 
     return record, prompt.user_prompt
 
 
-def record_with_response(record: dict[str, Any], response: LLMResponse) -> dict[str, Any]:
+def call_cost(record: dict[str, Any], response: LLMResponse,
+              pricing: dict[str, ModelPricing] | None) -> float | None:
+    """Cost of this call from the API's token counts (batch price when it came from a batch)."""
+    if not pricing or response.input_tokens is None:
+        return None
+    try:
+        prices = pricing_for(record["model"], pricing)
+    except KeyError:
+        return None
+    price = prices.batch if record.get("batch_id") else prices.sync
+    return round(price.cost(response.input_tokens, response.output_tokens or 0), 8)
+
+
+def record_with_response(record: dict[str, Any], response: LLMResponse,
+                         pricing: dict[str, ModelPricing] | None = None) -> dict[str, Any]:
     parsed = parse_llm_response(response.text)
     record.update(
         timestamp=utc_now_iso(),
@@ -153,6 +168,9 @@ def record_with_response(record: dict[str, Any], response: LLMResponse) -> dict[
         attempts=response.attempts,
         input_tokens=response.input_tokens,
         output_tokens=response.output_tokens,
+        usage=response.usage,
+        cost_usd=call_cost(record, response, pricing),
+        litellm_cost_usd=response.litellm_cost_usd,
         stop_reason=response.stop_reason,
         latency_seconds=response.latency_seconds,
         parse_success=parsed.parse_success,
@@ -178,14 +196,25 @@ def record_with_error(record: dict[str, Any], error: str, error_type: str, attem
 
 
 def classify_commit(client: LLMClient, commit: PreparedCommit, input_mode: str, experiment: Experiment,
-                    template: PromptTemplate, store_prompt: bool = True) -> dict[str, Any]:
+                    template: PromptTemplate, store_prompt: bool = True,
+                    pricing: dict[str, ModelPricing] | None = None) -> dict[str, Any]:
     """Classify one (commit, mode); API and parse errors go in the record."""
     record, user_prompt = new_record(commit, input_mode, experiment, template, store_prompt)
     try:
         response = client.classify(template.system, user_prompt)
     except LLMError as e:
         return record_with_error(record, str(e), e.error_type, e.attempts)
-    return record_with_response(record, response)
+    return record_with_response(record, response, pricing)
+
+
+def log_call(record: dict[str, Any]) -> None:
+    """One line per call with the API's token counts and the cost."""
+    if record.get("input_tokens") is None:
+        return
+    cost = record.get("cost_usd")
+    logger.info("%s %s [%s] %s: %d in / %d out tokens, US$ %s", record["repo"], record["commit_hash"][:10],
+                record["input_mode"], BATCH if record.get("batch_id") else SYNC, record["input_tokens"],
+                record.get("output_tokens") or 0, f"{cost:.6f}" if cost is not None else "n/a (no price)")
 
 
 def load_results(path: Path) -> dict[str, dict[str, Any]]:
@@ -241,6 +270,14 @@ class RunStats:
     parse_failures: int = 0
     api_failures: int = 0
     skipped_pending_batch: int = 0
+    input_tokens: int = 0
+    output_tokens: int = 0
+    cost_usd: float = 0.0
+
+    def add_usage(self, record: dict[str, Any]) -> None:
+        self.input_tokens += record.get("input_tokens") or 0
+        self.output_tokens += record.get("output_tokens") or 0
+        self.cost_usd = round(self.cost_usd + (record.get("cost_usd") or 0.0), 8)
 
     def to_dict(self) -> dict[str, int]:
         return asdict(self)
@@ -307,6 +344,7 @@ def run_classification(
     workers: int = 1,
     store_prompts: bool = True,
     exclude_record_ids: set[str] | frozenset[str] = frozenset(),
+    pricing: dict[str, ModelPricing] | None = None,
 ) -> RunStats:
     """Classify pending pairs, saving each record as it finishes."""
     input_modes = list(input_modes)
@@ -323,6 +361,8 @@ def run_classification(
         with lock:
             handle = handles[record["input_mode"]]
             handle.write(json.dumps(record, ensure_ascii=False) + "\n")
+            log_call(record)
+            stats.add_usage(record)
             handle.flush()
             stats.classified += 1
             if record.get("error"):
@@ -339,10 +379,10 @@ def run_classification(
     try:
         if workers <= 1:
             for commit, mode in tasks:
-                persist(classify_commit(client, commit, mode, experiment, template, store_prompts))
+                persist(classify_commit(client, commit, mode, experiment, template, store_prompts, pricing))
         else:
             with ThreadPoolExecutor(max_workers=workers) as pool:
-                futures = [pool.submit(classify_commit, client, c, m, experiment, template, store_prompts)
+                futures = [pool.submit(classify_commit, client, c, m, experiment, template, store_prompts, pricing)
                            for c, m in tasks]
                 try:
                     for future in as_completed(futures):
