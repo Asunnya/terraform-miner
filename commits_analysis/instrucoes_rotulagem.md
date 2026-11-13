@@ -18,9 +18,15 @@ aleatória diferente:
 
 Abra `rotulagem/visualizador.html` no navegador e arraste a planilha da rodada para a página. Ele mostra a
 mensagem e o diff colorido por arquivo, e você rotula com os botões ou com as teclas `B` (BUG_FIX) e `N`
-(NON_BUG_FIX). O progresso fica guardado no navegador. No fim, clique em **Salvar planilha**: o arquivo
-baixado tem o mesmo nome e é ele que você devolve. Precisa de internet só para abrir; a planilha não sai
-do seu computador.
+(NON_BUG_FIX). No Chrome ou Edge, ele grava os rótulos na própria planilha: clique em **Salvar na planilha**
+(ou `Ctrl+S`) uma vez para dar permissão e, a partir daí, ele salva sozinho a cada rótulo; mantenha a
+planilha fechada no Excel enquanto isso. Nos outros navegadores (Firefox, Safari), **Baixar planilha** baixa
+uma cópia com o mesmo nome, que é a que você devolve. O progresso também fica guardado no navegador.
+Precisa de internet só para abrir; a planilha não sai do seu computador.
+
+**Dica para o Firefox:** em Configurações → Geral → Arquivos e aplicativos, marque "Sempre perguntar onde
+salvar arquivos". Assim o **Baixar planilha** abre a janela de salvar com o nome original, e você pode
+escolher a pasta da planilha e substituir o arquivo, em vez de juntar cópias em Downloads.
 
 Se preferir rotular direto no Excel: alguns itens muito longos não cabem numa célula e continuam nas
 colunas `evidencia_2`, `evidencia_3`, ... à direita.

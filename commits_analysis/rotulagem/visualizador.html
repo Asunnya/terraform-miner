@@ -140,6 +140,7 @@ kbd { font: 11px var(--mono); border: 1px solid var(--line); border-bottom-width
     <h1>Rotulagem de commits Terraform</h1>
     <span class="badge" id="round" hidden></span>
     <span class="file" id="fname"></span>
+    <span class="file" id="savestate"></span>
     <span class="spacer"></span>
     <span class="progress" id="prog" hidden><span class="bar"><i id="barfill"></i></span><span id="progtxt"></span></span>
     <label class="btn" style="display:flex;gap:6px;align-items:center"><input type="checkbox" id="wrap"> Quebrar linhas</label>
@@ -161,7 +162,7 @@ kbd { font: 11px var(--mono); border: 1px solid var(--line); border-bottom-width
       <ol>
         <li>Rotule cada item com <b>BUG_FIX</b> ou <b>NON_BUG_FIX</b> (teclas <kbd>B</kbd> e <kbd>N</kbd>).</li>
         <li>O progresso fica guardado neste navegador enquanto você trabalha.</li>
-        <li>No fim, clique em <b>Salvar planilha</b>: o arquivo baixado tem o mesmo nome e é ele que você devolve.</li>
+        <li>No Chrome ou Edge, a página grava os rótulos na própria planilha (o botão <b>Salvar na planilha</b> ou <kbd>Ctrl</kbd>+<kbd>S</kbd> pede permissão uma vez; depois salva sozinha). Nos outros navegadores, <b>Baixar planilha</b> baixa uma cópia com o mesmo nome.</li>
       </ol>
       <p id="libwarn" hidden style="color:var(--del-mark)">A biblioteca de planilhas não carregou. Verifique a conexão com a internet e recarregue a página.</p>
     </div>
@@ -177,7 +178,7 @@ kbd { font: 11px var(--mono); border: 1px solid var(--line); border-bottom-width
         <button class="btn" id="next" title="Próximo item (J ou →)">Próximo →</button>
       </div>
     </div>
-    <div class="keys"><kbd>B</kbd> BUG_FIX · <kbd>N</kbd> NON_BUG_FIX · <kbd>J</kbd>/<kbd>→</kbd> próximo · <kbd>K</kbd>/<kbd>←</kbd> anterior · <kbd>U</kbd> próximo sem rótulo · <kbd>O</kbd> escrever obs · <kbd>Esc</kbd> sair da obs</div>
+    <div class="keys"><kbd>B</kbd> BUG_FIX · <kbd>N</kbd> NON_BUG_FIX · <kbd>J</kbd>/<kbd>→</kbd> próximo · <kbd>K</kbd>/<kbd>←</kbd> anterior · <kbd>U</kbd> próximo sem rótulo · <kbd>O</kbd> escrever obs · <kbd>Esc</kbd> sair da obs · <kbd>Ctrl</kbd>+<kbd>S</kbd> salvar</div>
   </footer>
 </div>
 <div class="toast" id="toast" role="status"></div>
@@ -399,7 +400,7 @@ function go(i) {
 function setLabel(label) {
   const r = state.rows[state.cur];
   r.rotulo = r.rotulo === label ? "" : label;
-  persist();
+  persist(); changed();
   if (r.rotulo && state.cur < state.rows.length - 1) go(state.cur + 1);
   else { renderList(); renderDock(); }
 }
@@ -413,7 +414,9 @@ function nextPending() {
 }
 
 /* ---------- abrir e salvar ---------- */
-async function openFile(file) {
+// Chrome e Edge gravam direto no arquivo aberto (File System Access API); os outros navegadores baixam uma cópia
+const canOverwrite = "showOpenFilePicker" in window;
+async function openFile(file, handle = null) {
   if (typeof XLSX === "undefined") { $("libwarn").hidden = false; return; }
   const wb = XLSX.read(await file.arrayBuffer(), { type: "array" });
   const ws = wb.Sheets["Rotulagem"] || wb.Sheets[wb.SheetNames[0]];
@@ -437,7 +440,7 @@ async function openFile(file) {
       obs: col.obs >= 0 ? String(r[col.obs] || "") : "",
     };
   });
-  state = { filename: file.name.replace(/ \(\d+\)(?=\.xlsx$)/, ""), rows, cur: 0, parsed: new Map() };
+  state = { filename: file.name.replace(/ \(\d+\)(?=\.xlsx$)/, ""), rows, cur: 0, parsed: new Map(), handle, dirty: false };
 
   const saved = load(storageKey());
   let restored = 0;
@@ -448,12 +451,14 @@ async function openFile(file) {
   const m = state.filename.match(/rodada\d_(mensagem_diff|mensagem|diff)/);
   $("round").hidden = !m; if (m) $("round").textContent = ROUNDS[m[1]];
   $("fname").textContent = state.filename;
+  $("save").textContent = handle ? "Salvar na planilha" : "Baixar planilha";
+  $("savestate").textContent = handle ? "salva sozinha a cada rótulo, depois da primeira vez" : "";
   $("empty").hidden = true; $("body").hidden = false; $("dock").hidden = false; $("prog").hidden = false; $("save").hidden = false;
   go(state.cur);
   if (restored) toast(`Progresso restaurado: ${restored} itens.`);
 }
 
-function saveFile() {
+function buildWorkbook() {
   const n = Math.max(...state.rows.map((r) => r.parts.length));
   const extra = Array.from({ length: n - 1 }, (_, i) => "evidencia_" + (i + 2));
   const aoa = [["item", "evidencia", "rotulo", "obs", ...extra],
@@ -462,20 +467,59 @@ function saveFile() {
   ws["!cols"] = [{ wch: 8 }, { wch: 120 }, { wch: 16 }, { wch: 40 }, ...extra.map(() => ({ wch: 120 }))];
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, "Rotulagem");
-  XLSX.writeFile(wb, state.filename);
+  return wb;
+}
+
+async function saveFile(auto = false) {
   const left = state.rows.filter((r) => !r.rotulo).length;
-  toast(left ? `Planilha salva. Ainda faltam ${left} itens sem rótulo.` : "Planilha salva com todos os itens rotulados.");
+  const done = left ? `Ainda faltam ${left} itens sem rótulo.` : "Todos os itens estão rotulados.";
+  if (!state.handle) {
+    if (auto) return;
+    XLSX.writeFile(buildWorkbook(), state.filename);
+    toast("Planilha baixada. " + done);
+    return;
+  }
+  try {
+    // a primeira gravação pede permissão (precisa de um clique); o salvamento automático só grava depois dela
+    let perm = await state.handle.queryPermission({ mode: "readwrite" });
+    if (perm !== "granted" && !auto) perm = await state.handle.requestPermission({ mode: "readwrite" });
+    if (perm !== "granted") { if (!auto) toast("Sem permissão para gravar na planilha."); return; }
+    const w = await state.handle.createWritable();
+    await w.write(XLSX.write(buildWorkbook(), { bookType: "xlsx", type: "array" }));
+    await w.close();
+    state.dirty = false;
+    $("savestate").textContent = "salva às " + new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
+    if (!auto) toast("Planilha salva. " + done);
+  } catch (e) {
+    $("savestate").textContent = "não salvou: feche a planilha no Excel/LibreOffice";
+    if (!auto) toast("Não consegui gravar: a planilha está aberta em outro programa? (" + e.message + ")");
+  }
+}
+function changed() {
+  if (!state.handle) return;
+  state.dirty = true;
+  $("savestate").textContent = "alterações não salvas";
+  clearTimeout(changed.timer);
+  changed.timer = setTimeout(() => saveFile(true), 1500);
+}
+async function pickFile() {
+  if (!canOverwrite) return $("fileinput").click();
+  try {
+    const [h] = await window.showOpenFilePicker({ types: [{ description: "Planilha de rotulagem",
+      accept: { "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": [".xlsx"] } }] });
+    await openFile(await h.getFile(), h);
+  } catch (e) { if (e.name !== "AbortError") toast("Não consegui abrir a planilha: " + e.message); }
 }
 
 /* ---------- eventos ---------- */
-$("open").addEventListener("click", () => $("fileinput").click());
+$("open").addEventListener("click", pickFile);
 $("fileinput").addEventListener("change", (e) => { if (e.target.files[0]) openFile(e.target.files[0]); e.target.value = ""; });
-$("save").addEventListener("click", saveFile);
+$("save").addEventListener("click", () => saveFile());
 $("bBug").addEventListener("click", () => setLabel("BUG_FIX"));
 $("bNon").addEventListener("click", () => setLabel("NON_BUG_FIX"));
 $("prev").addEventListener("click", () => go(state.cur - 1));
 $("next").addEventListener("click", () => go(state.cur + 1));
-$("obs").addEventListener("input", (e) => { state.rows[state.cur].obs = e.target.value; persist(); });
+$("obs").addEventListener("input", (e) => { state.rows[state.cur].obs = e.target.value; persist(); changed(); });
 $("obs").addEventListener("change", renderList);
 $("wrap").addEventListener("change", (e) => { document.body.classList.toggle("wrap", e.target.checked); store("rotulagem-wrap", e.target.checked); });
 if (load("rotulagem-wrap")) { $("wrap").checked = true; document.body.classList.add("wrap"); }
@@ -483,10 +527,19 @@ if (load("rotulagem-wrap")) { $("wrap").checked = true; document.body.classList.
 const drop = $("drop");
 ["dragenter", "dragover"].forEach((t) => document.addEventListener(t, (e) => { e.preventDefault(); drop.classList.add("over"); }));
 ["dragleave", "drop"].forEach((t) => document.addEventListener(t, (e) => { e.preventDefault(); drop.classList.remove("over"); }));
-document.addEventListener("drop", (e) => { const f = e.dataTransfer.files[0]; if (f) openFile(f); });
+document.addEventListener("drop", async (e) => {
+  const it = [...e.dataTransfer.items].find((i) => i.kind === "file");
+  if (!it) return;
+  // os dois precisam ser pedidos antes do primeiro await
+  const pending = it.getAsFileSystemHandle ? it.getAsFileSystemHandle() : null;
+  const file = it.getAsFile();
+  const h = pending ? await pending.catch(() => null) : null;
+  openFile(file, h && h.kind === "file" ? h : null);
+});
 
 document.addEventListener("keydown", (e) => {
   if (!state) return;
+  if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "s") { e.preventDefault(); saveFile(); return; }
   if (e.target === $("obs")) { if (e.key === "Escape") $("obs").blur(); return; }
   if (e.ctrlKey || e.metaKey || e.altKey) return;
   const k = e.key.toLowerCase();
@@ -499,7 +552,7 @@ document.addEventListener("keydown", (e) => {
   else return;
   e.preventDefault();
 });
-window.addEventListener("beforeunload", () => { if (state) persist(); });
+window.addEventListener("beforeunload", (e) => { if (!state) return; persist(); if (state.dirty) e.preventDefault(); });
 if (typeof XLSX === "undefined") window.addEventListener("load", () => { if (typeof XLSX === "undefined") $("libwarn").hidden = false; });
 </script>
 </body>
