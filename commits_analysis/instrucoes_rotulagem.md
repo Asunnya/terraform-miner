@@ -14,6 +14,17 @@ aleatória diferente:
 | 2 | `<nome>_rodada2_mensagem.xlsx` | só a mensagem do commit |
 | 3 | `<nome>_rodada3_mensagem_diff.xlsx` | mensagem + diff |
 
+## Visualizador (recomendado)
+
+Abra `rotulagem/visualizador.html` no navegador e arraste a planilha da rodada para a página. Ele mostra a
+mensagem e o diff colorido por arquivo, e você rotula com os botões ou com as teclas `B` (BUG_FIX) e `N`
+(NON_BUG_FIX). O progresso fica guardado no navegador. No fim, clique em **Salvar planilha**: o arquivo
+baixado tem o mesmo nome e é ele que você devolve. Precisa de internet só para abrir; a planilha não sai
+do seu computador.
+
+Se preferir rotular direto no Excel: alguns itens muito longos não cabem numa célula e continuam nas
+colunas `evidencia_2`, `evidencia_3`, ... à direita.
+
 ## Regras
 
 1. **Faça as rodadas em ordem (1, 2, 3) e termine uma antes de abrir a próxima.** Não volte a uma

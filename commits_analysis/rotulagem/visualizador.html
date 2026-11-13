@@ -1,0 +1,506 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Visualizador de Rotulagem</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;600&display=swap">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+/* Layout: barra de topo, lista de itens à esquerda, evidência no centro, barra de rótulo fixa embaixo */
+:root {
+  --bg: #f6f7f9; --panel: #ffffff; --fg: #1d2330; --muted: #5f6878; --line: #dde1e8;
+  --accent: #3355cc; --accent-fg: #ffffff;
+  --add-bg: #e6f6ea; --add-fg: #14532d; --add-mark: #2f9e55;
+  --del-bg: #fdecec; --del-fg: #7f1d1d; --del-mark: #d14343;
+  --hunk-bg: #eef2fb; --hunk-fg: #3a4f8f;
+  --bug: #c2410c; --bug-bg: #fff1e7; --non: #0f766e; --non-bg: #e5f6f3;
+  --warn-bg: #fff7d6; --warn-fg: #6b5200;
+  --sans: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono: "JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #12151b; --panel: #1a1e26; --fg: #e3e7ee; --muted: #9aa3b2; --line: #2c323d;
+    --accent: #7d98f0; --accent-fg: #10131a;
+    --add-bg: #12301d; --add-fg: #b8f0c8; --add-mark: #4cc27a;
+    --del-bg: #3a1618; --del-fg: #f7c3c3; --del-mark: #ee6b6b;
+    --hunk-bg: #1d2742; --hunk-fg: #a9bbf2;
+    --bug: #fb923c; --bug-bg: #3a2114; --non: #2dd4bf; --non-bg: #10302c;
+    --warn-bg: #3a3212; --warn-fg: #f3df9a;
+    color-scheme: dark;
+  }
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html, body { height: 100%; }
+body { margin: 0; background: var(--bg); color: var(--fg); font: 14px/1.5 var(--sans); }
+button { font: inherit; color: inherit; cursor: pointer; }
+button:focus-visible, textarea:focus-visible, input:focus-visible, .item:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+code, pre { font-family: var(--mono); }
+
+.app { display: grid; grid-template-rows: auto 1fr auto; height: 100%; }
+.top { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; padding: 10px 16px; background: var(--panel); border-bottom: 1px solid var(--line); }
+.top h1 { font-size: 15px; font-weight: 600; margin: 0; }
+.top .file { color: var(--muted); font-family: var(--mono); font-size: 12px; overflow-wrap: anywhere; }
+.badge { font-size: 11px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; padding: 2px 8px; border-radius: 999px; background: var(--hunk-bg); color: var(--hunk-fg); }
+.spacer { flex: 1; }
+.progress { display: flex; align-items: center; gap: 8px; font-variant-numeric: tabular-nums; color: var(--muted); font-size: 13px; }
+.bar { width: 120px; height: 6px; border-radius: 3px; background: var(--line); overflow: hidden; }
+.bar > i { display: block; height: 100%; background: var(--accent); width: 0; }
+.btn { border: 1px solid var(--line); background: var(--panel); padding: 6px 12px; border-radius: 6px; }
+.btn:hover { border-color: var(--accent); }
+.btn.primary { background: var(--accent); color: var(--accent-fg); border-color: var(--accent); font-weight: 600; }
+
+.body { display: grid; grid-template-columns: 210px minmax(0, 1fr); min-height: 0; }
+.list { border-right: 1px solid var(--line); overflow-y: auto; background: var(--panel); }
+.list .filter { position: sticky; top: 0; background: var(--panel); padding: 8px 12px; border-bottom: 1px solid var(--line); font-size: 12px; color: var(--muted); display: flex; gap: 6px; align-items: center; }
+.item { display: flex; align-items: center; gap: 8px; width: 100%; border: 0; background: none; text-align: left; padding: 6px 12px; font-family: var(--mono); font-size: 13px; }
+.item:hover { background: var(--bg); }
+.item.cur { background: var(--hunk-bg); color: var(--hunk-fg); font-weight: 600; }
+.dot { width: 9px; height: 9px; border-radius: 50%; border: 1.5px solid var(--muted); flex: none; }
+.dot.BUG_FIX { background: var(--bug); border-color: var(--bug); }
+.dot.NON_BUG_FIX { background: var(--non); border-color: var(--non); }
+.item .lab { margin-left: auto; font-size: 10px; color: var(--muted); }
+
+.main { overflow-y: auto; padding: 16px max(16px, env(safe-area-inset-right, 0px)) 24px max(16px, env(safe-area-inset-left, 0px)); min-width: 0; }
+.main > * { max-width: 1100px; margin-inline: auto; }
+.head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 12px; margin-bottom: 12px; }
+.head .id { font: 600 20px var(--mono); }
+.head .repo { color: var(--muted); font-family: var(--mono); font-size: 13px; overflow-wrap: anywhere; }
+section.block { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; margin-bottom: 14px; min-width: 0; }
+section.block > h2 { margin: 0; padding: 8px 14px; font-size: 11px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); border-bottom: 1px solid var(--line); }
+.msg { margin: 0; padding: 12px 14px; white-space: pre-wrap; overflow-wrap: anywhere; font: 13.5px/1.6 var(--mono); }
+.absent { padding: 12px 14px; color: var(--muted); font-style: italic; }
+.files { list-style: none; margin: 0; padding: 8px 14px; font-family: var(--mono); font-size: 12.5px; }
+.files li { display: flex; gap: 10px; padding: 2px 0; overflow-wrap: anywhere; }
+.files a { color: inherit; text-decoration: none; }
+.files a:hover { text-decoration: underline; }
+.files .n { margin-left: auto; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.plus { color: var(--add-mark); } .minus { color: var(--del-mark); }
+.note { margin: 0; padding: 8px 14px; background: var(--warn-bg); color: var(--warn-fg); font-size: 12.5px; border-top: 1px solid var(--line); }
+.note:first-child { border-top: 0; border-radius: 8px 8px 0 0; }
+
+.fhead { display: flex; align-items: center; gap: 10px; padding: 8px 14px; border-bottom: 1px solid var(--line); font-family: var(--mono); font-size: 12.5px; font-weight: 600; overflow-wrap: anywhere; }
+.fhead button { border: 0; background: none; padding: 0 4px; color: var(--muted); }
+.fhead .n { margin-left: auto; font-weight: 400; white-space: nowrap; }
+.also { padding: 4px 14px; font-size: 12px; color: var(--muted); border-bottom: 1px solid var(--line); overflow-wrap: anywhere; }
+.diff { overflow-x: auto; }
+.diff table { border-collapse: collapse; width: 100%; font: 12.5px/1.55 var(--mono); }
+.diff td { padding: 0 10px; vertical-align: top; }
+.diff td.ln { width: 1%; text-align: right; color: var(--muted); user-select: none; font-variant-numeric: tabular-nums; opacity: .7; padding: 0 6px; }
+.diff td.sg { width: 1%; padding: 0 2px 0 6px; user-select: none; }
+.diff td.code { white-space: pre; }
+body.wrap .diff td.code { white-space: pre-wrap; overflow-wrap: anywhere; }
+.diff tr.add { background: var(--add-bg); color: var(--add-fg); }
+.diff tr.add td.sg { color: var(--add-mark); font-weight: 600; }
+.diff tr.del { background: var(--del-bg); color: var(--del-fg); }
+.diff tr.del td.sg { color: var(--del-mark); font-weight: 600; }
+.diff tr.hunk { background: var(--hunk-bg); color: var(--hunk-fg); }
+.diff tr.hunk td { padding-block: 3px; }
+.diff tr.meta td.code { color: var(--muted); font-style: italic; }
+.collapsed .diff, .collapsed .also { display: none; }
+.raw { margin: 0; padding: 12px 14px; white-space: pre-wrap; overflow-wrap: anywhere; font: 12.5px/1.55 var(--mono); }
+
+.dock { background: var(--panel); border-top: 1px solid var(--line); padding: 10px max(16px, env(safe-area-inset-right, 0px)) calc(10px + env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px)); }
+.dock .row { max-width: 1100px; margin-inline: auto; display: flex; flex-wrap: wrap; gap: 10px; align-items: stretch; }
+.lbl { border: 2px solid var(--line); background: var(--panel); border-radius: 8px; padding: 8px 16px; font-weight: 600; min-width: 150px; display: flex; flex-direction: column; align-items: flex-start; }
+.lbl small { font-weight: 400; color: var(--muted); font-size: 11px; }
+.lbl.b:hover, .lbl.b.on { border-color: var(--bug); }
+.lbl.b.on { background: var(--bug-bg); color: var(--bug); }
+.lbl.n:hover, .lbl.n.on { border-color: var(--non); }
+.lbl.n.on { background: var(--non-bg); color: var(--non); }
+.dock textarea { flex: 1 1 260px; min-width: 0; min-height: 52px; resize: vertical; border: 1px solid var(--line); border-radius: 8px; padding: 6px 10px; background: var(--bg); color: var(--fg); font: 13px var(--sans); }
+.nav { display: flex; gap: 6px; align-items: center; }
+.keys { max-width: 1100px; margin: 6px auto 0; font-size: 11.5px; color: var(--muted); }
+kbd { font: 11px var(--mono); border: 1px solid var(--line); border-bottom-width: 2px; border-radius: 4px; padding: 0 4px; background: var(--bg); }
+
+.empty { display: grid; place-items: center; height: 100%; padding: 24px 16px; }
+.drop { max-width: 560px; width: 100%; border: 2px dashed var(--line); border-radius: 12px; padding: 32px 24px; text-align: center; background: var(--panel); }
+.drop.over { border-color: var(--accent); }
+.drop h2 { margin: 0 0 6px; font-size: 18px; text-wrap: balance; }
+.drop p { color: var(--muted); margin: 6px 0; }
+.drop ol { text-align: left; color: var(--muted); margin: 16px auto 0; max-width: 440px; padding-left: 20px; }
+.toast { position: fixed; right: 16px; bottom: 120px; background: var(--fg); color: var(--bg); padding: 8px 14px; border-radius: 8px; font-size: 13px; opacity: 0; transition: opacity .2s; pointer-events: none; max-width: calc(100% - 32px); }
+.toast.show { opacity: 1; }
+@media (prefers-reduced-motion: reduce) { .toast { transition: none; } }
+
+@media (max-width: 760px) {
+  .body { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto 1fr; }
+  .list { border-right: 0; border-bottom: 1px solid var(--line); max-height: 26vh; }
+  .lbl { min-width: 0; flex: 1; }
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="top">
+    <h1>Rotulagem de commits Terraform</h1>
+    <span class="badge" id="round" hidden></span>
+    <span class="file" id="fname"></span>
+    <span class="spacer"></span>
+    <span class="progress" id="prog" hidden><span class="bar"><i id="barfill"></i></span><span id="progtxt"></span></span>
+    <label class="btn" style="display:flex;gap:6px;align-items:center"><input type="checkbox" id="wrap"> Quebrar linhas</label>
+    <button class="btn" id="open">Abrir planilha</button>
+    <button class="btn primary" id="save" hidden>Salvar planilha</button>
+    <input type="file" id="fileinput" accept=".xlsx" hidden>
+  </header>
+
+  <div class="body" id="body" hidden>
+    <nav class="list" id="list" aria-label="Itens"></nav>
+    <main class="main" id="main"></main>
+  </div>
+
+  <div class="empty" id="empty">
+    <div class="drop" id="drop">
+      <h2>Abra a planilha da rodada</h2>
+      <p>Arraste aqui o arquivo <code>&lt;nome&gt;_rodadaN_….xlsx</code> ou clique em <b>Abrir planilha</b>.</p>
+      <p>A planilha é lida só no seu navegador; nada é enviado para lugar nenhum.</p>
+      <ol>
+        <li>Rotule cada item com <b>BUG_FIX</b> ou <b>NON_BUG_FIX</b> (teclas <kbd>B</kbd> e <kbd>N</kbd>).</li>
+        <li>O progresso fica guardado neste navegador enquanto você trabalha.</li>
+        <li>No fim, clique em <b>Salvar planilha</b>: o arquivo baixado tem o mesmo nome e é ele que você devolve.</li>
+      </ol>
+      <p id="libwarn" hidden style="color:var(--del-mark)">A biblioteca de planilhas não carregou. Verifique a conexão com a internet e recarregue a página.</p>
+    </div>
+  </div>
+
+  <footer class="dock" id="dock" hidden>
+    <div class="row">
+      <button class="lbl b" id="bBug">BUG_FIX <small>tecla B</small></button>
+      <button class="lbl n" id="bNon">NON_BUG_FIX <small>tecla N</small></button>
+      <textarea id="obs" placeholder="obs: dúvidas, evidência conflitante, falta de informação…"></textarea>
+      <div class="nav">
+        <button class="btn" id="prev" title="Item anterior (K ou ←)">← Anterior</button>
+        <button class="btn" id="next" title="Próximo item (J ou →)">Próximo →</button>
+      </div>
+    </div>
+    <div class="keys"><kbd>B</kbd> BUG_FIX · <kbd>N</kbd> NON_BUG_FIX · <kbd>J</kbd>/<kbd>→</kbd> próximo · <kbd>K</kbd>/<kbd>←</kbd> anterior · <kbd>U</kbd> próximo sem rótulo · <kbd>O</kbd> escrever obs · <kbd>Esc</kbd> sair da obs</div>
+  </footer>
+</div>
+<div class="toast" id="toast" role="status"></div>
+
+<script>
+"use strict";
+const LABELS = ["BUG_FIX", "NON_BUG_FIX"];
+const ROUNDS = { diff: "Rodada 1 · só diff", mensagem: "Rodada 2 · só mensagem", mensagem_diff: "Rodada 3 · mensagem + diff" };
+const $ = (id) => document.getElementById(id);
+let state = null; // {filename, rows: [{item, evidencia, rotulo, obs}], cur, parsed: Map}
+
+function store(key, value) { try { localStorage.setItem(key, JSON.stringify(value)); } catch (e) {} }
+function load(key) { try { return JSON.parse(localStorage.getItem(key) || "null"); } catch (e) { return null; } }
+function storageKey() { return "rotulagem:" + state.filename; }
+function persist() {
+  const saved = {};
+  for (const r of state.rows) if (r.rotulo || r.obs) saved[r.item] = { rotulo: r.rotulo, obs: r.obs };
+  store(storageKey(), saved);
+  store("rotulagem-pos:" + state.filename, state.cur);
+}
+
+function toast(text) {
+  const t = $("toast"); t.textContent = text; t.classList.add("show");
+  clearTimeout(toast.timer); toast.timer = setTimeout(() => t.classList.remove("show"), 2600);
+}
+function el(tag, cls, text) {
+  const e = document.createElement(tag);
+  if (cls) e.className = cls;
+  if (text != null) e.textContent = text;
+  return e;
+}
+
+/* ---------- leitura da evidência (formato do prompt v2) ---------- */
+const CUT_CELL_LENGTH = 31500; // perto do limite de 32.767 de uma célula do Excel: as planilhas antigas foram cortadas aí
+function between(text, start, end, out) {
+  const i = text.indexOf(start);
+  if (i < 0) return null;
+  const j = text.lastIndexOf(end);
+  if (j > i) return text.slice(i + start.length, j);
+  out.cut = true; // sem o marcador final: a célula foi cortada no meio deste trecho
+  return text.slice(i + start.length);
+}
+function parseEvidence(text) {
+  const out = { repo: "", message: null, noMessage: false, files: [], blocks: [], notes: [], noDiff: false, cut: false, raw: text };
+  const repo = text.match(/^Repository:\n(.*)$/m);
+  if (repo) out.repo = repo[1].trim();
+  out.message = between(text, "<<<COMMIT_MESSAGE\n", "\nCOMMIT_MESSAGE", out);
+  out.noMessage = text.includes("No commit message is available");
+  out.noDiff = text.includes("No source-code diff is available");
+  const fl = between(text, "Modified Terraform files:\n", "\n\nTerraform diff:", out);
+  if (fl) out.files = fl.split("\n").map((l) => l.replace(/^- /, "").trim()).filter(Boolean);
+  const diff = between(text, "<<<TERRAFORM_DIFF\n", "\nTERRAFORM_DIFF", out);
+  if (diff != null) parseDiffs(diff, out);
+  return out;
+}
+function parseDiffs(text, out) {
+  const lines = text.split("\n");
+  let cur = null, inFence = false;
+  for (const line of lines) {
+    if (inFence) {
+      if (line === "```") { inFence = false; continue; }
+      cur.lines.push(line);
+    } else if (line.startsWith("FILE: ")) {
+      cur = { file: line.slice(6), also: "", lines: [], notes: [] };
+      out.blocks.push(cur);
+    } else if (line === "```diff" && cur) {
+      inFence = true;
+    } else if (cur && line.startsWith("(the identical patch was also applied to:")) {
+      cur.also = line.replace(/^\(|\)$/g, "");
+    } else if (cur && line.startsWith("NOTE:")) {
+      cur.notes.push(line);
+    } else if (line.trim()) {
+      out.notes.push(line);
+    }
+  }
+}
+function countChanges(lines) {
+  let a = 0, d = 0;
+  for (const l of lines) { if (l[0] === "+") a++; else if (l[0] === "-") d++; }
+  return [a, d];
+}
+
+/* ---------- renderização ---------- */
+function renderDiffTable(lines) {
+  const table = el("table");
+  let o = 0, n = 0;
+  for (const line of lines) {
+    const tr = el("tr");
+    let ol = "", nl = "", sign = "", code = line, cls = "";
+    const h = line.match(/^@@ -(\d+)(?:,\d+)? \+(\d+)(?:,\d+)? @@(.*)$/);
+    if (h) {
+      o = +h[1]; n = +h[2]; cls = "hunk"; code = line;
+    } else if (line[0] === "+") { cls = "add"; sign = "+"; code = line.slice(1); nl = n++; }
+    else if (line[0] === "-") { cls = "del"; sign = "-"; code = line.slice(1); ol = o++; }
+    else if (line[0] === "\\") { cls = "meta"; code = line; }
+    else { sign = ""; code = line.slice(1); ol = o++; nl = n++; }
+    if (cls) tr.className = cls;
+    if (cls === "hunk") {
+      const td = el("td", "code", code); td.colSpan = 4; tr.append(td);
+    } else {
+      tr.append(el("td", "ln", ol === "" ? "" : String(ol)), el("td", "ln", nl === "" ? "" : String(nl)), el("td", "sg", sign), el("td", "code", code));
+    }
+    table.append(tr);
+  }
+  const wrap = el("div", "diff"); wrap.append(table);
+  return wrap;
+}
+
+function renderItem() {
+  const row = state.rows[state.cur];
+  const p = state.parsed.get(row.item) || (state.parsed.set(row.item, parseEvidence(row.evidencia)), state.parsed.get(row.item));
+  const main = $("main");
+  main.replaceChildren();
+
+  const head = el("div", "head");
+  head.append(el("span", "id", row.item), el("span", "repo", p.repo ? "repositório " + p.repo : ""),
+    el("span", "repo", `${state.cur + 1} de ${state.rows.length}`));
+  main.append(head);
+  if (p.cut || row.cellCut) {
+    const w = el("section", "block");
+    w.append(el("p", "note", "O texto deste item passa do limite de 32.767 caracteres de uma célula do Excel e foi cortado: o final não aparece aqui, mas a LLM o recebeu inteiro. Rotule com o que estiver visível e escreva \"célula cortada\" em obs."));
+    main.append(w);
+  }
+
+  const parsedOk = p.message != null || p.noMessage || p.blocks.length || p.noDiff;
+  if (!parsedOk) {
+    const s = el("section", "block"); s.append(el("h2", null, "Evidência"), el("pre", "raw", row.evidencia));
+    main.append(s); return;
+  }
+
+  const ms = el("section", "block");
+  ms.append(el("h2", null, "Mensagem do commit"));
+  if (p.message != null) ms.append(el("pre", "msg", p.message));
+  else ms.append(el("div", "absent", "Sem mensagem nesta rodada."));
+  main.append(ms);
+
+  if (p.noDiff) {
+    const s = el("section", "block"); s.append(el("h2", null, "Diff"), el("div", "absent", "Sem diff nesta rodada."));
+    main.append(s); return;
+  }
+
+  const fs = el("section", "block");
+  fs.append(el("h2", null, `Arquivos alterados (${p.files.length || p.blocks.length})`));
+  const ul = el("ul", "files");
+  const names = p.files.length ? p.files : p.blocks.map((b) => b.file);
+  names.forEach((f) => {
+    const li = el("li");
+    const b = p.blocks.findIndex((x) => x.file === f);
+    if (b >= 0) {
+      const a = el("a", null, f); a.href = "#f" + b;
+      a.addEventListener("click", (e) => { e.preventDefault(); document.getElementById("f" + b).scrollIntoView({ block: "start" }); });
+      const [ad, de] = countChanges(p.blocks[b].lines);
+      const n = el("span", "n"); n.append(el("span", "plus", "+" + ad), " ", el("span", "minus", "−" + de));
+      li.append(a, n);
+    } else li.append(el("span", null, f));
+    ul.append(li);
+  });
+  fs.append(ul);
+  for (const note of p.notes) fs.append(el("p", "note", note));
+  main.append(fs);
+
+  p.blocks.forEach((b, i) => {
+    const s = el("section", "block"); s.id = "f" + i;
+    const fh = el("div", "fhead");
+    const tog = el("button", null, "▾"); tog.title = "Recolher ou expandir";
+    tog.addEventListener("click", () => { s.classList.toggle("collapsed"); tog.textContent = s.classList.contains("collapsed") ? "▸" : "▾"; });
+    const [ad, de] = countChanges(b.lines);
+    const n = el("span", "n"); n.append(el("span", "plus", "+" + ad), " ", el("span", "minus", "−" + de));
+    fh.append(tog, el("span", null, b.file), n);
+    s.append(fh);
+    if (b.also) s.append(el("div", "also", b.also));
+    for (const note of b.notes) s.append(el("p", "note", note.replace(/^NOTE: /, "Diff cortado (como a LLM recebe): ")));
+    s.append(renderDiffTable(b.lines));
+    main.append(s);
+  });
+}
+
+function renderList() {
+  const list = $("list");
+  const onlyPending = $("pend") && $("pend").checked;
+  list.replaceChildren();
+  const f = el("label", "filter");
+  const cb = el("input"); cb.type = "checkbox"; cb.id = "pend"; cb.checked = !!onlyPending;
+  cb.addEventListener("change", renderList);
+  f.append(cb, "Só sem rótulo");
+  list.append(f);
+  state.rows.forEach((r, i) => {
+    if (onlyPending && r.rotulo && i !== state.cur) return;
+    const b = el("button", "item" + (i === state.cur ? " cur" : ""));
+    b.append(el("span", "dot " + (r.rotulo || "")), r.item);
+    if (r.rotulo) b.append(el("span", "lab", r.rotulo === "BUG_FIX" ? "BUG" : "NON"));
+    if (r.obs) b.title = "obs: " + r.obs;
+    b.addEventListener("click", () => go(i));
+    list.append(b);
+  });
+  const cur = list.querySelector(".cur");
+  if (cur) cur.scrollIntoView({ block: "nearest" });
+}
+
+function renderDock() {
+  const r = state.rows[state.cur];
+  $("bBug").classList.toggle("on", r.rotulo === "BUG_FIX");
+  $("bNon").classList.toggle("on", r.rotulo === "NON_BUG_FIX");
+  $("bBug").setAttribute("aria-pressed", r.rotulo === "BUG_FIX");
+  $("bNon").setAttribute("aria-pressed", r.rotulo === "NON_BUG_FIX");
+  $("obs").value = r.obs || "";
+  const done = state.rows.filter((x) => x.rotulo).length;
+  $("progtxt").textContent = `${done} de ${state.rows.length} rotulados`;
+  $("barfill").style.width = (100 * done / state.rows.length) + "%";
+}
+
+function go(i) {
+  if (i < 0 || i >= state.rows.length) return;
+  state.cur = i;
+  renderItem(); renderList(); renderDock();
+  $("main").scrollTop = 0;
+  persist();
+}
+function setLabel(label) {
+  const r = state.rows[state.cur];
+  r.rotulo = r.rotulo === label ? "" : label;
+  persist();
+  if (r.rotulo && state.cur < state.rows.length - 1) go(state.cur + 1);
+  else { renderList(); renderDock(); }
+}
+function nextPending() {
+  const n = state.rows.length;
+  for (let k = 1; k <= n; k++) {
+    const i = (state.cur + k) % n;
+    if (!state.rows[i].rotulo) return go(i);
+  }
+  toast("Todos os itens já têm rótulo.");
+}
+
+/* ---------- abrir e salvar ---------- */
+async function openFile(file) {
+  if (typeof XLSX === "undefined") { $("libwarn").hidden = false; return; }
+  const wb = XLSX.read(await file.arrayBuffer(), { type: "array" });
+  const ws = wb.Sheets["Rotulagem"] || wb.Sheets[wb.SheetNames[0]];
+  const aoa = XLSX.utils.sheet_to_json(ws, { header: 1, defval: "", raw: false });
+  const header = (aoa[0] || []).map((h) => String(h).trim().toLowerCase());
+  const col = Object.fromEntries(["item", "evidencia", "rotulo", "obs"].map((k) => [k, header.indexOf(k)]));
+  if (col.item < 0 || col.evidencia < 0) { toast("Essa planilha não tem as colunas item e evidencia."); return; }
+  // textos longos continuam nas colunas evidencia_2, evidencia_3, ... (limite de uma célula do Excel)
+  const extra = header.map((h, i) => [h.match(/^evidencia_(\d+)$/), i]).filter(([m]) => m)
+    .sort((a, b) => a[0][1] - b[0][1]).map(([, i]) => i);
+  const rows = aoa.slice(1).filter((r) => String(r[col.item]).trim()).map((r) => {
+    // \r viraria _x000d_ literal ao salvar
+    const parts = [col.evidencia, ...extra].map((i) => String(r[i] || "").replace(/\r\n?/g, "\n"));
+    while (parts.length > 1 && !parts[parts.length - 1]) parts.pop();
+    return {
+      item: String(r[col.item]).trim(),
+      parts,
+      evidencia: parts.join(""),
+      cellCut: parts.some((t) => t.length >= CUT_CELL_LENGTH),
+      rotulo: LABELS.includes(String(r[col.rotulo] || "").trim()) ? String(r[col.rotulo]).trim() : "",
+      obs: col.obs >= 0 ? String(r[col.obs] || "") : "",
+    };
+  });
+  state = { filename: file.name.replace(/ \(\d+\)(?=\.xlsx$)/, ""), rows, cur: 0, parsed: new Map() };
+
+  const saved = load(storageKey());
+  let restored = 0;
+  if (saved) for (const r of rows) if (saved[r.item]) { Object.assign(r, saved[r.item]); restored++; }
+  const pos = load("rotulagem-pos:" + state.filename);
+  if (Number.isInteger(pos) && pos < rows.length) state.cur = pos;
+
+  const m = state.filename.match(/rodada\d_(mensagem_diff|mensagem|diff)/);
+  $("round").hidden = !m; if (m) $("round").textContent = ROUNDS[m[1]];
+  $("fname").textContent = state.filename;
+  $("empty").hidden = true; $("body").hidden = false; $("dock").hidden = false; $("prog").hidden = false; $("save").hidden = false;
+  go(state.cur);
+  if (restored) toast(`Progresso restaurado: ${restored} itens.`);
+}
+
+function saveFile() {
+  const n = Math.max(...state.rows.map((r) => r.parts.length));
+  const extra = Array.from({ length: n - 1 }, (_, i) => "evidencia_" + (i + 2));
+  const aoa = [["item", "evidencia", "rotulo", "obs", ...extra],
+    ...state.rows.map((r) => [r.item, r.parts[0], r.rotulo, r.obs, ...extra.map((_, i) => r.parts[i + 1] || "")])];
+  const ws = XLSX.utils.aoa_to_sheet(aoa);
+  ws["!cols"] = [{ wch: 8 }, { wch: 120 }, { wch: 16 }, { wch: 40 }, ...extra.map(() => ({ wch: 120 }))];
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "Rotulagem");
+  XLSX.writeFile(wb, state.filename);
+  const left = state.rows.filter((r) => !r.rotulo).length;
+  toast(left ? `Planilha salva. Ainda faltam ${left} itens sem rótulo.` : "Planilha salva com todos os itens rotulados.");
+}
+
+/* ---------- eventos ---------- */
+$("open").addEventListener("click", () => $("fileinput").click());
+$("fileinput").addEventListener("change", (e) => { if (e.target.files[0]) openFile(e.target.files[0]); e.target.value = ""; });
+$("save").addEventListener("click", saveFile);
+$("bBug").addEventListener("click", () => setLabel("BUG_FIX"));
+$("bNon").addEventListener("click", () => setLabel("NON_BUG_FIX"));
+$("prev").addEventListener("click", () => go(state.cur - 1));
+$("next").addEventListener("click", () => go(state.cur + 1));
+$("obs").addEventListener("input", (e) => { state.rows[state.cur].obs = e.target.value; persist(); });
+$("obs").addEventListener("change", renderList);
+$("wrap").addEventListener("change", (e) => { document.body.classList.toggle("wrap", e.target.checked); store("rotulagem-wrap", e.target.checked); });
+if (load("rotulagem-wrap")) { $("wrap").checked = true; document.body.classList.add("wrap"); }
+
+const drop = $("drop");
+["dragenter", "dragover"].forEach((t) => document.addEventListener(t, (e) => { e.preventDefault(); drop.classList.add("over"); }));
+["dragleave", "drop"].forEach((t) => document.addEventListener(t, (e) => { e.preventDefault(); drop.classList.remove("over"); }));
+document.addEventListener("drop", (e) => { const f = e.dataTransfer.files[0]; if (f) openFile(f); });
+
+document.addEventListener("keydown", (e) => {
+  if (!state) return;
+  if (e.target === $("obs")) { if (e.key === "Escape") $("obs").blur(); return; }
+  if (e.ctrlKey || e.metaKey || e.altKey) return;
+  const k = e.key.toLowerCase();
+  if (k === "b") setLabel("BUG_FIX");
+  else if (k === "n") setLabel("NON_BUG_FIX");
+  else if (k === "j" || e.key === "ArrowRight") go(state.cur + 1);
+  else if (k === "k" || e.key === "ArrowLeft") go(state.cur - 1);
+  else if (k === "u") nextPending();
+  else if (k === "o") { e.preventDefault(); $("obs").focus(); }
+  else return;
+  e.preventDefault();
+});
+window.addEventListener("beforeunload", () => { if (state) persist(); });
+if (typeof XLSX === "undefined") window.addEventListener("load", () => { if (typeof XLSX === "undefined") $("libwarn").hidden = false; });
+</script>
+</body>
+</html>

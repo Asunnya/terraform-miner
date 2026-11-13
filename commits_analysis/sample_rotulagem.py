@@ -9,8 +9,9 @@ uma por rodada, cada uma em ordem aleatória própria e com o texto exatamente c
   rodada2_mensagem:      só a mensagem (message_only)
   rodada3_mensagem_diff: mensagem + diff (message_and_diff)
 
-Saídas em commits_analysis/rotulagem/: <anotador>/<anotador>_rodadaN_*.xlsx e manifest.csv
-(item de cada planilha -> commit; só para quem coordena).
+Saídas em commits_analysis/rotulagem/ (ou --out): <anotador>/<anotador>_rodadaN_*.xlsx e manifest.csv
+(item de cada planilha -> commit; só para quem coordena). Uma célula do Excel guarda no máximo 32.767
+caracteres: texto mais longo continua nas colunas evidencia_2, evidencia_3, ... (o visualizador.html junta).
 """
 from __future__ import annotations
 
@@ -42,6 +43,7 @@ ROUNDS = [  # (arquivo, input_mode, prefixo do item)
 LABELS = ("BUG_FIX", "NON_BUG_FIX")
 SHA_BLOCK = re.compile(r"Commit SHA:\n[0-9a-f]{40}\n\n")
 OUT_DIR = HERE / "rotulagem"
+CELL_CHARS = 30000  # abaixo do limite do Excel (32.767), com folga para o escape de \r (_x000D_)
 
 
 def evidence(user_prompt: str) -> str:
@@ -58,23 +60,49 @@ def assign(hashes: list[str], overlap: int) -> dict[str, list[str]]:
     return who
 
 
+def split_cells(text: str) -> list[str]:
+    """Corta em fim de linha em pedaços de até CELL_CHARS (contando o escape de \\r); juntos refazem o texto."""
+    parts, current, size = [], [], 0
+    for line in text.splitlines(keepends=True):
+        while line:
+            cost = len(line) + 6 * line.count("\r")
+            if size + cost <= CELL_CHARS:
+                current.append(line)
+                size += cost
+                break
+            if current:
+                parts.append("".join(current))
+                current, size = [], 0
+                continue
+            cut = CELL_CHARS // 7  # linha sozinha maior que uma célula
+            parts.append(line[:cut])
+            line = line[cut:]
+    if current or not parts:
+        parts.append("".join(current))
+    return parts
+
+
 def write_sheet(path: Path, rows: list[tuple[str, str]]) -> None:
+    cells = [(item, split_cells(text)) for item, text in rows]
+    extra = [f"evidencia_{i}" for i in range(2, max(len(parts) for _, parts in cells) + 1)]
     wb = Workbook()
     ws = wb.active
     ws.title = "Rotulagem"
-    ws.append(["item", "evidencia", "rotulo", "obs"])
+    ws.append(["item", "evidencia", "rotulo", "obs", *extra])
     for cell in ws[1]:
         cell.font = Font(bold=True)
         cell.fill = PatternFill("solid", fgColor="DDDDDD")
-    for item, text in rows:
-        ws.append([item, text, "", ""])
+    for item, parts in cells:
+        ws.append([item, parts[0], "", "", *parts[1:]])
     for row in ws.iter_rows(min_row=2):
-        row[1].alignment = Alignment(wrap_text=True, vertical="top")
-        row[0].alignment = row[2].alignment = row[3].alignment = Alignment(vertical="top", wrap_text=True)
+        for cell in row:
+            cell.alignment = Alignment(wrap_text=True, vertical="top")
     ws.column_dimensions["A"].width = 8
     ws.column_dimensions["B"].width = 120
     ws.column_dimensions["C"].width = 16
     ws.column_dimensions["D"].width = 40
+    for i in range(len(extra)):
+        ws.column_dimensions[chr(ord("E") + i)].width = 120
     ws.freeze_panes = "A2"
     validation = DataValidation(type="list", formula1=f'"{",".join(LABELS)}"', allow_blank=True)
     ws.add_data_validation(validation)
@@ -88,6 +116,7 @@ def main() -> None:
     parser.add_argument("--n", type=int, default=361, help="tamanho da amostra (95%%, ±5%%, N=5.941: 361)")
     parser.add_argument("--overlap", type=int, default=40, help="commits rotulados por dois anotadores")
     parser.add_argument("--seed", type=int, default=42)
+    parser.add_argument("--out", type=Path, default=OUT_DIR, help="pasta de saída (padrão: %(default)s)")
     args = parser.parse_args()
 
     cfg = load_config(None)
@@ -113,14 +142,14 @@ def main() -> None:
                 manifest.append({"anotador": annotator, "rodada": name, "input_mode": mode, "item": item,
                                  "repo": commits[h].repo, "commit_hash": h,
                                  "dupla": ";".join(who[h]) if len(who[h]) > 1 else ""})
-            write_sheet(OUT_DIR / annotator / f"{annotator}_{name}.xlsx", rows)
+            write_sheet(args.out / annotator / f"{annotator}_{name}.xlsx", rows)
         print(f"{annotator}: {len(mine)} commits x {len(ROUNDS)} rodadas")
 
-    with open(OUT_DIR / "manifest.csv", "w", newline="", encoding="utf-8") as f:
+    with open(args.out / "manifest.csv", "w", newline="", encoding="utf-8") as f:
         writer = csv.DictWriter(f, fieldnames=list(manifest[0]))
         writer.writeheader()
         writer.writerows(manifest)
-    print(f"amostra: {len(sample)} commits, {args.overlap} com dois anotadores; manifest: {OUT_DIR / 'manifest.csv'}")
+    print(f"amostra: {len(sample)} commits, {args.overlap} com dois anotadores; manifest: {args.out / 'manifest.csv'}")
 
 
 if __name__ == "__main__":
