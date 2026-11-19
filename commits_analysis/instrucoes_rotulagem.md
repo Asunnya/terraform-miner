@@ -14,6 +14,19 @@ aleatória diferente:
 | 2 | `<nome>_rodada2_mensagem.xlsx` | só a mensagem do commit |
 | 3 | `<nome>_rodada3_mensagem_diff.xlsx` | mensagem + diff |
 
+## Duas etapas: primeiro os comuns
+
+Cerca de 20 dos seus commits também são rotulados por outra pessoa do grupo. Eles têm **SIM** na coluna
+`comum` (linha amarela no Excel). Com eles medimos a concordância entre anotadores e, se ela for baixa,
+discutimos as divergências e ajustamos a definição antes de seguir.
+
+1. **Etapa 1:** rotule só os itens comuns nas rodadas 1, 2 e 3, nessa ordem, e entregue as três planilhas.
+2. **Espere o aviso** e só então faça a **etapa 2**: o resto dos itens, de novo nas rodadas 1, 2 e 3.
+
+No visualizador, a opção **Só comuns** começa marcada enquanto houver item comum sem rótulo: a lista, o
+progresso e as teclas de navegação passam a considerar só os comuns. Na etapa 2, desmarque a opção. No
+Excel, filtre a coluna `comum`.
+
 ## Visualizador (recomendado)
 
 Abra `rotulagem/visualizador.html` no navegador e arraste a planilha da rodada para a página. Ele mostra a
@@ -33,8 +46,8 @@ colunas `evidencia_2`, `evidencia_3`, ... à direita.
 
 ## Regras
 
-1. **Faça as rodadas em ordem (1, 2, 3) e termine uma antes de abrir a próxima.** Não volte a uma
-   rodada já entregue para mudar respostas.
+1. **Em cada etapa, faça as rodadas em ordem (1, 2, 3) e termine uma antes de abrir a próxima.** Não
+   mude respostas de uma rodada já entregue.
 2. **Use só o que está na planilha.** Não abra o commit no GitHub, não pesquise o repositório, a issue
    ou o PR. A LLM não vê nada disso, e a comparação só vale se você também não vir.
 3. Se reconhecer um commit de uma rodada anterior, rotule mesmo assim com base apenas no que a rodada
@@ -76,4 +89,5 @@ reestruturação que não repara um defeito.
 
 ## Entrega
 
-Devolva cada planilha preenchida assim que terminar a rodada, sem renomear o arquivo.
+Devolva cada planilha preenchida assim que terminar a rodada, sem renomear o arquivo. Não converse com
+os outros anotadores sobre os commits até a concordância ser calculada.

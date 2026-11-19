@@ -9,6 +9,7 @@ uma por rodada, cada uma em ordem aleatória própria e com o texto exatamente c
   rodada2_mensagem:      só a mensagem (message_only)
   rodada3_mensagem_diff: mensagem + diff (message_and_diff)
 
+Os commits comuns têm "SIM" na coluna comum (rotulados primeiro, para medir a concordância).
 Saídas em commits_analysis/rotulagem/ (ou --out): <anotador>/<anotador>_rodadaN_*.xlsx e manifest.csv
 (item de cada planilha -> commit; só para quem coordena). Uma célula do Excel guarda no máximo 32.767
 caracteres: texto mais longo continua nas colunas evidencia_2, evidencia_3, ... (o visualizador.html junta).
@@ -82,31 +83,38 @@ def split_cells(text: str) -> list[str]:
     return parts
 
 
-def write_sheet(path: Path, rows: list[tuple[str, str]]) -> None:
-    cells = [(item, split_cells(text)) for item, text in rows]
+def write_sheet(path: Path, rows: list[dict]) -> None:
+    """rows: dicts com item, evidencia, comum (bool) e, opcionalmente, rotulo e obs já preenchidos."""
+    cells = [(r, split_cells(r["evidencia"])) for r in rows]
     extra = [f"evidencia_{i}" for i in range(2, max(len(parts) for _, parts in cells) + 1)]
     wb = Workbook()
     ws = wb.active
     ws.title = "Rotulagem"
-    ws.append(["item", "evidencia", "rotulo", "obs", *extra])
+    ws.append(["item", "comum", "evidencia", "rotulo", "obs", *extra])
     for cell in ws[1]:
         cell.font = Font(bold=True)
         cell.fill = PatternFill("solid", fgColor="DDDDDD")
-    for item, parts in cells:
-        ws.append([item, parts[0], "", "", *parts[1:]])
+    for r, parts in cells:
+        ws.append([r["item"], "SIM" if r["comum"] else "", parts[0], r.get("rotulo", ""), r.get("obs", ""),
+                   *parts[1:]])
     for row in ws.iter_rows(min_row=2):
         for cell in row:
             cell.alignment = Alignment(wrap_text=True, vertical="top")
-    ws.column_dimensions["A"].width = 8
-    ws.column_dimensions["B"].width = 120
-    ws.column_dimensions["C"].width = 16
-    ws.column_dimensions["D"].width = 40
+    common_fill = PatternFill("solid", fgColor="FFF2CC")
+    for row in ws.iter_rows(min_row=2, max_col=2):
+        if row[1].value:
+            for cell in row:
+                cell.fill = common_fill
+    widths = {"A": 8, "B": 9, "C": 120, "D": 16, "E": 40}
     for i in range(len(extra)):
-        ws.column_dimensions[chr(ord("E") + i)].width = 120
+        widths[chr(ord("F") + i)] = 120
+    for col, width in widths.items():
+        ws.column_dimensions[col].width = width
     ws.freeze_panes = "A2"
+    ws.auto_filter.ref = f"A1:E{len(rows) + 1}"
     validation = DataValidation(type="list", formula1=f'"{",".join(LABELS)}"', allow_blank=True)
     ws.add_data_validation(validation)
-    validation.add(f"C2:C{len(rows) + 1}")
+    validation.add(f"D2:D{len(rows) + 1}")
     path.parent.mkdir(parents=True, exist_ok=True)
     wb.save(path)
 
@@ -138,7 +146,7 @@ def main() -> None:
             for i, h in enumerate(order, start=1):
                 item = f"{prefix}{i:03d}"
                 prompt = build_prompt_input(commits[h], mode, template, experiment.limits).user_prompt
-                rows.append((item, evidence(prompt)))
+                rows.append({"item": item, "evidencia": evidence(prompt), "comum": len(who[h]) > 1})
                 manifest.append({"anotador": annotator, "rodada": name, "input_mode": mode, "item": item,
                                  "repo": commits[h].repo, "commit_hash": h,
                                  "dupla": ";".join(who[h]) if len(who[h]) > 1 else ""})
